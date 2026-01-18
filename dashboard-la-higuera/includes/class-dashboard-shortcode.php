@@ -52,6 +52,18 @@ class Dashboard_Higuera_Shortcode {
                 margin-top: 0 !important;
             }
 
+            /* === TEMAS DE BLOQUES (FSE) - Twenty Twenty-Five, etc === */
+            .wp-block-template-part,
+            .wp-site-blocks > header,
+            .wp-site-blocks > footer,
+            .wp-site-blocks > .wp-block-template-part,
+            header.wp-block-template-part,
+            footer.wp-block-template-part,
+            .wp-block-group.has-global-padding > header,
+            .wp-block-group.has-global-padding > footer {
+                display: none !important;
+            }
+
             /* Ocultar header del tema (selectores comunes) */
             body > header,
             #header,
@@ -110,6 +122,21 @@ class Dashboard_Higuera_Shortcode {
                 overflow-x: hidden;
             }
 
+            /* === Contenedores de temas FSE === */
+            .wp-site-blocks {
+                padding: 0 !important;
+                margin: 0 !important;
+            }
+            .wp-site-blocks > main,
+            .wp-site-blocks > .wp-block-group,
+            .wp-site-blocks > .entry-content,
+            .is-layout-constrained,
+            .is-layout-flow {
+                max-width: 100% !important;
+                padding: 0 !important;
+                margin: 0 !important;
+            }
+
             /* Hacer el contenido principal fullwidth */
             #content,
             .site-content,
@@ -134,7 +161,8 @@ class Dashboard_Higuera_Shortcode {
             .site-container,
             .wrapper,
             .page-wrapper,
-            .content-wrapper {
+            .content-wrapper,
+            .wp-block-post-content {
                 width: 100% !important;
                 max-width: 100% !important;
                 padding: 0 !important;
