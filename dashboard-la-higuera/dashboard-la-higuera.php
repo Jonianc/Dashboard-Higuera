@@ -3,7 +3,7 @@
  * Plugin Name: Dashboard La Higuera
  * Plugin URI: https://github.com/Jonianc/Dashboard-Higuera
  * Description: Dashboard interactivo para visualizar datos de costos y faenas de Agrícola La Higuera
- * Version: 1.0.0
+ * Version: 1.1.0
  * Author: Agrícola La Higuera S.A.
  * Author URI: https://lahiguera.cl
  * License: GPL v2 or later
@@ -18,7 +18,7 @@ if (!defined('WPINC')) {
 }
 
 // Definir constantes del plugin
-define('DASHBOARD_HIGUERA_VERSION', '1.0.0');
+define('DASHBOARD_HIGUERA_VERSION', '1.1.0');
 define('DASHBOARD_HIGUERA_PLUGIN_DIR', plugin_dir_path(__FILE__));
 define('DASHBOARD_HIGUERA_PLUGIN_URL', plugin_dir_url(__FILE__));
 
@@ -66,6 +66,10 @@ class Dashboard_La_Higuera {
 
         // Encolar scripts y estilos
         add_action('wp_enqueue_scripts', array($this, 'enqueue_assets'));
+
+        // Registrar template de página personalizado
+        add_filter('theme_page_templates', array($this, 'add_page_template'));
+        add_filter('template_include', array($this, 'load_page_template'));
     }
 
     /**
@@ -106,6 +110,43 @@ class Dashboard_La_Higuera {
                 'pluginUrl' => DASHBOARD_HIGUERA_PLUGIN_URL
             ));
         }
+    }
+
+    /**
+     * Agregar template de página personalizado a la lista
+     *
+     * @param array $templates Templates existentes
+     * @return array Templates con el nuevo agregado
+     */
+    public function add_page_template($templates) {
+        $templates['templates/template-dashboard-fullwidth.php'] = 'Dashboard Full Width (Sin Header/Footer)';
+        return $templates;
+    }
+
+    /**
+     * Cargar el template personalizado cuando se selecciona
+     *
+     * @param string $template Ruta del template actual
+     * @return string Ruta del template a usar
+     */
+    public function load_page_template($template) {
+        global $post;
+
+        if (!$post) {
+            return $template;
+        }
+
+        $page_template = get_post_meta($post->ID, '_wp_page_template', true);
+
+        if ('templates/template-dashboard-fullwidth.php' === $page_template) {
+            $plugin_template = DASHBOARD_HIGUERA_PLUGIN_DIR . 'templates/template-dashboard-fullwidth.php';
+
+            if (file_exists($plugin_template)) {
+                return $plugin_template;
+            }
+        }
+
+        return $template;
     }
 }
 

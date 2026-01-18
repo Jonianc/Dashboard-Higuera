@@ -46,6 +46,32 @@ Para mostrar el dashboard en cualquier página o entrada:
 3. Escribe `[dashboard_higuera]`
 4. Publica o actualiza la página
 
+### 🎯 Modo Ancho Completo (Sin Header/Footer) - RECOMENDADO
+
+Para mostrar el dashboard a **ancho completo sin el header ni footer** de tu tema WordPress:
+
+1. **Crea una nueva página:**
+   - WordPress → Páginas → Añadir nueva
+   - Título: "Dashboard" (o el que prefieras)
+
+2. **Selecciona el template:**
+   - En el panel derecho, busca "Atributos de página"
+   - En "Plantilla", selecciona: **"Dashboard Full Width (Sin Header/Footer)"**
+
+3. **Agrega el shortcode:**
+   - En el contenido de la página, agrega: `[dashboard_higuera]`
+
+4. **Publica:**
+   - Haz clic en "Publicar"
+   - La página mostrará SOLO el dashboard, sin header ni footer, a ancho completo
+
+**Ventajas del modo Full Width:**
+- ✅ Sin header ni footer del tema
+- ✅ Ancho completo (100% de la pantalla)
+- ✅ Máximo espacio para visualizar datos
+- ✅ Experiencia inmersiva
+- ✅ No hay distracciones del tema
+
 ## 📊 Funcionalidades
 
 - **Filtros dinámicos**: Por predio, cultivo, nivel 1, faena, métrica, meses y orden

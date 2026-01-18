@@ -75,6 +75,51 @@ Bienvenido al dashboard de Agrícola La Higuera.
 Aquí puedes ver todos los datos de la temporada actual.
 ```
 
+### 🎯 Modo Ancho Completo (Sin Header/Footer) - **RECOMENDADO**
+
+Para mostrar el dashboard a **ancho completo sin el header ni footer** de tu tema WordPress:
+
+**Pasos:**
+
+1. **Crear página:**
+   - WordPress → Páginas → Añadir nueva
+   - Título: "Dashboard" (o el nombre que prefieras)
+
+2. **Seleccionar template:**
+   - En el panel derecho de la página, busca **"Atributos de página"**
+   - En el selector **"Plantilla"**, selecciona:
+     ```
+     Dashboard Full Width (Sin Header/Footer)
+     ```
+
+3. **Agregar shortcode:**
+   - En el contenido de la página, escribe:
+     ```
+     [dashboard_higuera]
+     ```
+
+4. **Publicar:**
+   - Haz clic en "Publicar"
+   - ¡Listo! Tu dashboard se verá a pantalla completa
+
+**Resultado:**
+- ✅ **Sin header** del tema WordPress
+- ✅ **Sin footer** del tema WordPress
+- ✅ **Ancho 100%** de la pantalla
+- ✅ **Sin menús de navegación**
+- ✅ **Máxima visualización** de datos
+- ✅ **Experiencia dedicada** al dashboard
+
+**Antes vs Después:**
+
+| Con tema normal | Con template Full Width |
+|----------------|------------------------|
+| Header del tema | ❌ Sin header |
+| Menú de navegación | ❌ Sin menú |
+| Ancho limitado (container) | ✅ Ancho 100% |
+| Footer del tema | ❌ Sin footer |
+| Sidebar (algunos temas) | ❌ Sin sidebar |
+
 ## 📊 Características del Plugin
 
 - ✅ **Shortcode simple:** `[dashboard_higuera]`
