@@ -3,7 +3,7 @@
  * Plugin Name: Dashboard La Higuera
  * Plugin URI: https://github.com/Jonianc/Dashboard-Higuera
  * Description: Dashboard interactivo para visualizar datos de costos y faenas de Agrícola La Higuera
- * Version: 1.1.0
+ * Version: 1.1.1
  * Author: Agrícola La Higuera S.A.
  * Author URI: https://lahiguera.cl
  * License: GPL v2 or later
@@ -18,7 +18,7 @@ if (!defined('WPINC')) {
 }
 
 // Definir constantes del plugin
-define('DASHBOARD_HIGUERA_VERSION', '1.1.0');
+define('DASHBOARD_HIGUERA_VERSION', '1.1.1');
 define('DASHBOARD_HIGUERA_PLUGIN_DIR', plugin_dir_path(__FILE__));
 define('DASHBOARD_HIGUERA_PLUGIN_URL', plugin_dir_url(__FILE__));
 
@@ -70,6 +70,9 @@ class Dashboard_La_Higuera {
         // Registrar template de página personalizado
         add_filter('theme_page_templates', array($this, 'add_page_template'));
         add_filter('template_include', array($this, 'load_page_template'));
+
+        // Registrar endpoints REST para servir CSVs
+        add_action('rest_api_init', array($this, 'register_rest_routes'));
     }
 
     /**
@@ -103,11 +106,12 @@ class Dashboard_La_Higuera {
                 true
             );
 
-            // Pasar URLs de datos CSV a JavaScript
+            // Pasar URLs de datos CSV a JavaScript usando REST API
             wp_localize_script('dashboard-higuera-js', 'dashboardHigueraData', array(
-                'csv2526Url' => DASHBOARD_HIGUERA_PLUGIN_URL . 'data/temporada-2025-26.csv',
-                'csv2425Url' => DASHBOARD_HIGUERA_PLUGIN_URL . 'data/temporada-2024-25.csv',
-                'pluginUrl' => DASHBOARD_HIGUERA_PLUGIN_URL
+                'csv2526Url' => rest_url('dashboard-higuera/v1/csv/2025-26'),
+                'csv2425Url' => rest_url('dashboard-higuera/v1/csv/2024-25'),
+                'pluginUrl' => DASHBOARD_HIGUERA_PLUGIN_URL,
+                'restNonce' => wp_create_nonce('wp_rest')
             ));
         }
     }
@@ -147,6 +151,61 @@ class Dashboard_La_Higuera {
         }
 
         return $template;
+    }
+
+    /**
+     * Registrar rutas REST API para servir archivos CSV
+     */
+    public function register_rest_routes() {
+        // Ruta para CSV 2025-26
+        register_rest_route('dashboard-higuera/v1', '/csv/2025-26', array(
+            'methods' => 'GET',
+            'callback' => array($this, 'serve_csv_2526'),
+            'permission_callback' => '__return_true'
+        ));
+
+        // Ruta para CSV 2024-25
+        register_rest_route('dashboard-higuera/v1', '/csv/2024-25', array(
+            'methods' => 'GET',
+            'callback' => array($this, 'serve_csv_2425'),
+            'permission_callback' => '__return_true'
+        ));
+    }
+
+    /**
+     * Servir archivo CSV 2025-26
+     */
+    public function serve_csv_2526() {
+        $file = DASHBOARD_HIGUERA_PLUGIN_DIR . 'data/temporada-2025-26.csv';
+
+        if (!file_exists($file)) {
+            return new WP_Error('file_not_found', 'Archivo CSV no encontrado', array('status' => 404));
+        }
+
+        $content = file_get_contents($file);
+
+        return new WP_REST_Response($content, 200, array(
+            'Content-Type' => 'text/csv; charset=utf-8',
+            'Cache-Control' => 'public, max-age=3600'
+        ));
+    }
+
+    /**
+     * Servir archivo CSV 2024-25
+     */
+    public function serve_csv_2425() {
+        $file = DASHBOARD_HIGUERA_PLUGIN_DIR . 'data/temporada-2024-25.csv';
+
+        if (!file_exists($file)) {
+            return new WP_Error('file_not_found', 'Archivo CSV no encontrado', array('status' => 404));
+        }
+
+        $content = file_get_contents($file);
+
+        return new WP_REST_Response($content, 200, array(
+            'Content-Type' => 'text/csv; charset=utf-8',
+            'Cache-Control' => 'public, max-age=3600'
+        ));
     }
 }
 
