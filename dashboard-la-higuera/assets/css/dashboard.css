@@ -17,8 +17,12 @@ select,button{background:var(--card);border:1px solid var(--border);color:var(--
 .card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:12px;margin-top:12px}
 .note{color:var(--muted);font-size:13px;margin:8px 0}
 .table-wrap{overflow:auto;border:1px solid var(--border);border-radius:12px}
+/* Tabla adaptable */
+#resumen{overflow-x:auto;border:1px solid var(--border);border-radius:12px}
+#resumen table{width:100%;table-layout:auto;border-collapse:collapse}
 table{border-collapse:collapse;width:max-content;min-width:100%}
-th,td{border-bottom:1px solid var(--border);padding:8px 10px;white-space:nowrap}
+th,td{border-bottom:1px solid var(--border);padding:8px 10px;white-space:nowrap;text-align:right}
+th:first-child,td:first-child{text-align:left;min-width:180px}
 thead th{position:sticky;top:0;background:#131723;z-index:1}
 tfoot td{font-weight:600;background:#111522;position:sticky;bottom:0}
 .cuartel-btn{background:transparent;border:0;color:var(--text);cursor:pointer;font-weight:600}
@@ -49,3 +53,44 @@ tfoot td{font-weight:600;background:#111522;position:sticky;bottom:0}
 .mes-dropdown-item.todos{border-bottom:1px solid var(--border);margin-bottom:4px;padding-bottom:10px;color:var(--accent)}
 .mes-dropdown-item label{cursor:pointer;flex:1}
 .mes-count{background:var(--accent2);color:#0f1115;font-size:11px;padding:2px 6px;border-radius:999px;font-weight:600}
+
+/* === RESPONSIVE: Tabla adaptable === */
+@media (max-width: 1600px) {
+  #resumen table th,
+  #resumen table td {
+    padding: 6px 8px;
+    font-size: 13px;
+  }
+  th:first-child,td:first-child{min-width:160px}
+}
+
+@media (max-width: 1400px) {
+  #resumen table th,
+  #resumen table td {
+    padding: 5px 6px;
+    font-size: 12px;
+  }
+  th:first-child,td:first-child{min-width:140px}
+  .pct{padding:2px 5px;font-size:10px}
+}
+
+@media (max-width: 1200px) {
+  #resumen table th,
+  #resumen table td {
+    padding: 4px 5px;
+    font-size: 11px;
+  }
+  th:first-child,td:first-child{min-width:120px}
+  .cuartel-btn{font-size:11px}
+}
+
+@media (max-width: 992px) {
+  #resumen table th,
+  #resumen table td {
+    padding: 4px;
+    font-size: 10px;
+  }
+  th:first-child,td:first-child{min-width:100px}
+  .cuartel-btn{font-size:10px}
+  .pct{display:none}
+}
