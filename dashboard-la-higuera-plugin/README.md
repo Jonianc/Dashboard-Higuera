@@ -6,12 +6,33 @@ Plugin de WordPress para visualizar el dashboard interactivo de Agrícola La Hig
 
 Este plugin permite integrar el Dashboard La Higuera en cualquier sitio WordPress mediante un simple shortcode. Muestra datos de costos y faenas de forma interactiva con múltiples filtros y visualizaciones.
 
+
+## 🧭 Estructura del repositorio (verificada)
+
+La raíz del repositorio corresponde al plugin. La estructura actual es:
+
+```
+.
+├── dashboard-la-higuera.php          # Archivo principal del plugin
+├── README.md                         # Documentación del plugin
+├── assets/                           # Recursos estáticos
+│   ├── css/                          # Estilos del dashboard
+│   └── js/                           # Lógica JavaScript
+├── includes/                         # Clases PHP
+│   └── class-dashboard-shortcode.php # Shortcode y registro de assets
+├── templates/                        # Plantillas de salida
+│   └── dashboard-template.php        # Template HTML
+└── data/                             # Datos CSV de temporadas
+    ├── temporada-2025-26.csv         # Datos temporada actual
+    └── temporada-2024-25.csv         # Datos temporada anterior
+```
+
 ## 🚀 Instalación
 
 ### Método 1: Instalación Manual
 
 1. Descarga o clona este repositorio
-2. Comprime la carpeta `dashboard-la-higuera` en un archivo ZIP
+2. Comprime la carpeta del plugin (por ejemplo `dashboard-la-higuera`) en un archivo ZIP
 3. Ve a tu panel de WordPress → Plugins → Añadir nuevo
 4. Haz clic en "Subir plugin"
 5. Selecciona el archivo ZIP y haz clic en "Instalar ahora"
@@ -19,7 +40,7 @@ Este plugin permite integrar el Dashboard La Higuera en cualquier sitio WordPres
 
 ### Método 2: Instalación FTP
 
-1. Sube la carpeta `dashboard-la-higuera` a `/wp-content/plugins/`
+1. Sube la carpeta del plugin (por ejemplo `dashboard-la-higuera`) a `/wp-content/plugins/`
 2. Ve a WordPress → Plugins
 3. Activa "Dashboard La Higuera"
 
@@ -83,32 +104,12 @@ Para mostrar el dashboard a **ancho completo sin el header ni footer** de tu tem
 - **Métricas**: Gasto total y costo por hectárea
 - **Responsive**: Se adapta a dispositivos móviles
 
-## 📁 Estructura del Plugin
-
-```
-dashboard-la-higuera/
-├── dashboard-la-higuera.php          # Archivo principal del plugin
-├── README.md                          # Este archivo
-├── assets/
-│   ├── css/
-│   │   └── dashboard.css              # Estilos del dashboard
-│   └── js/
-│       └── dashboard.js               # Lógica JavaScript
-├── includes/
-│   └── class-dashboard-shortcode.php  # Clase del shortcode
-├── templates/
-│   └── dashboard-template.php         # Template HTML
-└── data/
-    ├── temporada-2025-26.csv          # Datos temporada actual
-    └── temporada-2024-25.csv          # Datos temporada anterior
-```
-
 ## 🔧 Actualización de Datos
 
 Para actualizar los datos del dashboard:
 
 1. Accede al servidor vía FTP o cPanel
-2. Navega a `/wp-content/plugins/dashboard-la-higuera/data/`
+2. Navega a `/wp-content/plugins/<carpeta-del-plugin>/data/`
 3. Reemplaza los archivos CSV:
    - `temporada-2025-26.csv`
    - `temporada-2024-25.csv`
