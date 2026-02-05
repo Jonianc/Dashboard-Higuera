@@ -785,8 +785,6 @@ function initDashboardFromRawCSV(raw){
 window.__initDashboardFromRawCSV = initDashboardFromRawCSV;
 
 const btnInv2425 = document.getElementById('btnToggleInv2425');
-const file2425 = document.getElementById('file2425');
-const btnUpload2425 = document.getElementById('btnUpload2425');
 
 if(btnInv2425){
   btnInv2425.onclick = ()=>{
@@ -796,34 +794,6 @@ if(btnInv2425){
       : 'Ocultar INVERSIONES VARIAS';
     refreshAll();
   };
-}
-
-if(btnUpload2425 && file2425){
-  btnUpload2425.addEventListener('click', ()=>{
-    const f = file2425.files && file2425.files[0];
-    if(!f){
-      alert('Selecciona primero un archivo CSV con la base 24-25.');
-      return;
-    }
-    const reader = new FileReader();
-    reader.onload = (e)=>{
-      try{
-        const raw = String(e.target.result || "");
-        const nuevo = ingestCSV2425(raw);
-        if(!nuevo || !nuevo.rows || !nuevo.rows.length){
-          alert('No se encontraron registros de la temporada 2024-2025 en el archivo.');
-          return;
-        }
-        comp2425 = nuevo;
-        refreshAll();
-        alert('Base 24-25 actualizada correctamente.');
-      }catch(err){
-        console.error('Error al procesar base 24-25', err);
-        alert('Ocurrió un error al procesar el archivo 24-25.');
-      }
-    };
-    reader.readAsText(f, 'utf-8');
-  });
 }
 
 document.querySelector('#gen').textContent = new Date().toISOString().slice(0,16).replace('T',' ');

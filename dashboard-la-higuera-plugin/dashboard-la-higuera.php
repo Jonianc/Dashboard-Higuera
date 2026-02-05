@@ -57,6 +57,7 @@ class Dashboard_La_Higuera {
         require_once DASHBOARD_HIGUERA_PLUGIN_DIR . 'includes/class-dashboard-shortcode.php';
         require_once DASHBOARD_HIGUERA_PLUGIN_DIR . 'includes/class-dashboard-standalone.php';
         require_once DASHBOARD_HIGUERA_PLUGIN_DIR . 'includes/class-dashboard-settings.php';
+        require_once DASHBOARD_HIGUERA_PLUGIN_DIR . 'includes/class-dashboard-import.php';
     }
 
     /**
@@ -79,10 +80,14 @@ class Dashboard_La_Higuera {
         // Frontend standalone (sin theme)
         Dashboard_Higuera_Standalone::init();
 
-        // Panel de ajustes en el admin
+        // Panel de ajustes e importación en el admin
         if (is_admin()) {
             Dashboard_Higuera_Settings::init();
+            Dashboard_Higuera_Import::init();
         }
+
+        // REST endpoint de importación (necesario fuera de is_admin para REST API)
+        Dashboard_Higuera_Import::register_rest_hooks();
     }
 
     /**

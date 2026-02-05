@@ -63,15 +63,8 @@ if (!defined('ABSPATH')) {
     </div>
     <div id="panel-comparativo" class="card hidden">
       <div class="note">Comparativo de costos por cuartel entre las temporadas 24-25 y 25-26. Usa los filtros de arriba (Predio, Cultivo, Nivel 1, Faena, Métrica, Mes y Orden) para ajustar la vista.</div>
-      <div style="margin:8px 0; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
-        <div style="font-size:11px; text-align:left;">
-          <div><strong>Base 24-25:</strong> cargar CSV actualizado</div>
-          <input id="file2425" type="file" accept=".csv,text/csv">
-          <button id="btnUpload2425" class="pill" type="button">Actualizar BASE 24-25</button>
-        </div>
-        <div style="text-align:right;">
-          <button id="btnToggleInv2425" class="pill" type="button">Ocultar INVERSIONES VARIAS</button>
-        </div>
+      <div style="margin:8px 0; display:flex; justify-content:flex-end; align-items:center; flex-wrap:wrap; gap:8px;">
+        <button id="btnToggleInv2425" class="pill" type="button">Ocultar INVERSIONES VARIAS</button>
       </div>
       <div class="table-wrap">
         <table id="tabla-comparativo">
