@@ -55,6 +55,8 @@ class Dashboard_La_Higuera {
      */
     private function load_dependencies() {
         require_once DASHBOARD_HIGUERA_PLUGIN_DIR . 'includes/class-dashboard-shortcode.php';
+        require_once DASHBOARD_HIGUERA_PLUGIN_DIR . 'includes/class-dashboard-standalone.php';
+        require_once DASHBOARD_HIGUERA_PLUGIN_DIR . 'includes/class-dashboard-settings.php';
     }
 
     /**
@@ -73,6 +75,14 @@ class Dashboard_La_Higuera {
 
         // Registrar endpoints REST para servir CSVs
         add_action('rest_api_init', array($this, 'register_rest_routes'));
+
+        // Frontend standalone (sin theme)
+        Dashboard_Higuera_Standalone::init();
+
+        // Panel de ajustes en el admin
+        if (is_admin()) {
+            Dashboard_Higuera_Settings::init();
+        }
     }
 
     /**
@@ -218,3 +228,13 @@ function dashboard_la_higuera_init() {
 
 // Iniciar el plugin
 dashboard_la_higuera_init();
+
+// Flush rewrite rules al activar el plugin
+register_activation_hook(__FILE__, function () {
+    // Cargar dependencias primero
+    require_once plugin_dir_path(__FILE__) . 'includes/class-dashboard-standalone.php';
+    Dashboard_Higuera_Standalone::flush_rules();
+});
+
+// Flush rewrite rules al desactivar el plugin
+register_deactivation_hook(__FILE__, 'flush_rewrite_rules');
