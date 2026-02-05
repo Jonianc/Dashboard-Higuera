@@ -150,7 +150,14 @@ function ingestCSV2425(raw){
 }
 
 let comp2425 = {rows:[], supMap:{}};
+const HIDE_INV_STORAGE_KEY = 'dlh_hide_inv_2425';
 let hideInv2425 = false;
+
+try {
+  hideInv2425 = localStorage.getItem(HIDE_INV_STORAGE_KEY) === '1';
+} catch (e) {
+  hideInv2425 = false;
+}
 
 function predioClas(row){
   const esInd = strip(row.PREDIO).toUpperCase()==="COSTOS INDIRECTOS" || strip(row.CUARTEL).toUpperCase()==="COSTOS INDIRECTOS";
@@ -170,9 +177,6 @@ function applyFilters(){
   if(state.filtros.sector!=="Todos") rows = rows.filter(r => strip(r.SECTOR||"")===state.filtros.sector);
   if(state.filtros.nivel1!=="Todos") rows = rows.filter(r => strip(r.NIVEL_1||"")===state.filtros.nivel1);
   if(state.filtros.faena!=="Todas") rows = rows.filter(r => strip(r.FAENA||"")===state.filtros.faena);
-  if(hideInv2425){
-    rows = rows.filter(r => strip(r.FAENA||"").toUpperCase()!=="INVERSIONES VARIAS");
-  }
   if(state.filtros.mes!=="Todos"){
     const fm = state.filtros.mes;
     if(Array.isArray(fm) && fm.length){
@@ -720,6 +724,16 @@ return out;
 function refreshAll(){ populateCombos(); buildResumen(); buildCharts(); buildDetalle(); buildComparativo(); }
 function initDashboardFromRawCSV(raw){
   const ing = ingestCSV(raw); state.data = ing.rows; state.supMap = ing.supMap;
+
+  if (EMBED_CSV_2425 && EMBED_CSV_2425.trim()) {
+    try {
+      comp2425 = ingestCSV2425(EMBED_CSV_2425);
+    } catch (error) {
+      console.error('Error procesando CSV 24-25:', error);
+      comp2425 = {rows:[], supMap:{}};
+    }
+  }
+
   document.querySelector("#f_predio").innerHTML = `<option>Todos</option><option>Solo Productivo</option><option>Solo Costos Indirectos</option>`;
   document.querySelector("#f_metrica").innerHTML = `<option value="VALOR">Gasto total</option><option value="COSTO_HA">Costo por hectárea</option>`;
   document.querySelector("#f_orden").innerHTML = `<option value="Desc">Descendente</option><option value="Asc">Ascendente</option>`;
@@ -787,11 +801,24 @@ window.__initDashboardFromRawCSV = initDashboardFromRawCSV;
 const btnInv2425 = document.getElementById('btnToggleInv2425');
 
 if(btnInv2425){
+  btnInv2425.textContent = hideInv2425
+    ? 'Mostrar INVERSIONES VARIAS'
+    : 'Ocultar INVERSIONES VARIAS';
+  btnInv2425.setAttribute('aria-pressed', hideInv2425 ? 'true' : 'false');
+  btnInv2425.classList.toggle('is-active', hideInv2425);
+
   btnInv2425.onclick = ()=>{
     hideInv2425 = !hideInv2425;
     btnInv2425.textContent = hideInv2425
       ? 'Mostrar INVERSIONES VARIAS'
       : 'Ocultar INVERSIONES VARIAS';
+    btnInv2425.setAttribute('aria-pressed', hideInv2425 ? 'true' : 'false');
+    btnInv2425.classList.toggle('is-active', hideInv2425);
+    try {
+      localStorage.setItem(HIDE_INV_STORAGE_KEY, hideInv2425 ? '1' : '0');
+    } catch (e) {
+      // Ignorar errores de almacenamiento en navegación privada/restringida
+    }
     refreshAll();
   };
 }
