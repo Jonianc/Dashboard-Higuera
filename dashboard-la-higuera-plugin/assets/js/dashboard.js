@@ -833,7 +833,14 @@ return out;
 }
 
 
-function refreshAll(){ populateCombos(); buildResumen(); buildCharts(); buildDetalle(); buildComparativo(); }
+function refreshAll(){
+  populateCombos();
+  buildResumen();
+  buildCharts();
+  buildDetalle();
+  const activeTab = document.querySelector('.tab.active');
+  if(activeTab && activeTab.dataset.tab==='comparativo') buildComparativo();
+}
 
 async function ensureComparativo2425Data(){
   if(comp2425Status==='ready' && comp2425.rows.length) return true;
@@ -882,7 +889,6 @@ function initDashboardFromRawCSV(raw){
   const ing = ingestCSV(raw); state.data = ing.rows; state.supMap = ing.supMap;
 
   comp2425Status = 'idle';
-  ensureComparativo2425Data().then(()=> buildComparativo());
 
   document.querySelector("#f_predio").innerHTML = `<option>Todos</option><option>Solo Productivo</option><option>Solo Costos Indirectos</option>`;
   document.querySelector("#f_metrica").innerHTML = `<option value="VALOR">Gasto total</option><option value="COSTO_HA">Costo por hectárea</option>`;
@@ -979,33 +985,22 @@ document.querySelector('#gen').textContent = new Date().toISOString().slice(0,16
 let EMBED_CSV = '';
 let EMBED_CSV_2425 = '';
 
-// Load CSV files from external sources
-// En WordPress, las URLs son proporcionadas por wp_localize_script
+async function loadCsv2526Fallback() {
+  const csv2526Url = (typeof dashboardHigueraData !== 'undefined' && dashboardHigueraData.csv2526Url)
+    ? dashboardHigueraData.csv2526Url
+    : 'data/temporada-2025-26.csv';
+
+  const resp = await fetch(csv2526Url);
+  if(!resp.ok) throw new Error('No se pudo cargar fallback CSV 25-26');
+  const raw = await resp.text();
+  if(!raw || !raw.trim()) throw new Error('Fallback CSV 25-26 vacío');
+  EMBED_CSV = raw;
+  return raw;
+}
+
+// Compatibilidad con template actual (no precargar CSV automáticamente)
 async function loadExternalCSVs() {
-  try {
-    // Obtener URLs desde WordPress (o usar rutas relativas como fallback)
-    const csv2526Url = (typeof dashboardHigueraData !== 'undefined' && dashboardHigueraData.csv2526Url)
-      ? dashboardHigueraData.csv2526Url
-      : 'data/temporada-2025-26.csv';
-
-    const csv2425Url = (typeof dashboardHigueraData !== 'undefined' && dashboardHigueraData.csv2425Url)
-      ? dashboardHigueraData.csv2425Url
-      : 'data/temporada-2024-25.csv';
-
-    const [csv2526Response, csv2425Response] = await Promise.all([
-      fetch(csv2526Url),
-      fetch(csv2425Url)
-    ]);
-
-    if (csv2526Response.ok) {
-      EMBED_CSV = await csv2526Response.text();
-    }
-    if (csv2425Response.ok) {
-      EMBED_CSV_2425 = await csv2425Response.text();
-    }
-  } catch (error) {
-    console.error('Error loading external CSV files:', error);
-  }
+  return true;
 }
 
 
@@ -1022,11 +1017,19 @@ async function initDashboardLive(){
     const chip = document.getElementById('srcChip');
     if(chip) chip.textContent = 'API Agrosmart (en vivo)';
   }catch(e){
-    console.error('No se pudo cargar la API, usando CSV embebido', e);
-    window.__lastCSV = EMBED_CSV;
-    __initDashboardFromRawCSV(EMBED_CSV);
-    const chip = document.getElementById('srcChip');
-    if(chip) chip.textContent = 'CSV embebido';
+    console.error('No se pudo cargar la API, intentando fallback CSV 25-26', e);
+    try{
+      const csvFallback = await loadCsv2526Fallback();
+      window.__lastCSV = csvFallback;
+      __initDashboardFromRawCSV(csvFallback);
+      const chip = document.getElementById('srcChip');
+      if(chip) chip.textContent = 'CSV 25-26 (fallback por falla de API)';
+    }catch(csvError){
+      console.error('Falló también el fallback CSV 25-26', csvError);
+      const chip = document.getElementById('srcChip');
+      if(chip) chip.textContent = 'Error de carga de datos';
+      throw csvError;
+    }
   }
 }
 
@@ -1041,7 +1044,7 @@ function buildCSVFromApi(rows, opts){
   const predioContains = opts.predioContains || null;
 
   if(!rows || !rows.length){
-    return EMBED_CSV;
+    return "";
   }
 
   const headerOut = ["TEMPORADA","FECHA","PREDIO","SECTOR","CUARTEL","FAENA","NIVEL 1","SUPERFICIE REAL (há)","TOTAL CUARTEL"];

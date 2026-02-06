@@ -1,5 +1,15 @@
 # Changelog
 
+## 1.5.0 - 2026-02-06
+
+### Changed
+- Temporada 25-26 ahora se carga al iniciar únicamente desde API Agrosmart; el CSV 25-26 se usa solo como fallback cuando la API falla.
+- Se eliminó la precarga automática de CSVs al iniciar para evitar que el CSV 25-26 pueda pisar datos API.
+- Temporada 24-25 se carga solo desde CSV y de forma lazy al entrar a la pestaña Comparativo.
+
+### Fixed
+- El comparativo usa de forma consistente `state` (25-26 API/fallback) vs `comp2425` (24-25 CSV), evitando mezclas de fuente de datos.
+
 ## 1.4.1 - 2026-02-06
 
 ### Fixed
