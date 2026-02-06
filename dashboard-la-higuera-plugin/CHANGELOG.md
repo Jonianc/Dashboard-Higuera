@@ -1,5 +1,18 @@
 # Changelog
 
+## 1.4.0 - 2026-02-06
+
+### Fixed
+- Se corrigió la pestaña Comparativo para que siempre renderice al abrirse y muestre estados vacíos (`Sin datos`) cuando falta una de las series o no hay resultados.
+- Se protegieron los listeners de botones opcionales (`btnSwap`, `btnSave`) para evitar errores JS que rompían la ejecución del dashboard.
+- Se corrigió el toggle de inversiones para que excluya `INVERSIONES VARIAS` de cálculos y totales en todas las vistas (Resumen, Gráficos, Detalle y Comparativo).
+
+### Added
+- Filtro de meses propio dentro de la pestaña Comparativo, con recálculo y re-render en caliente (sin recargar la página).
+
+### Improved
+- Ajustes UI en la barra de controles del comparativo para alojar filtro de meses + toggle de inversiones.
+
 ## 1.3.0 - 2026-02-05
 
 ### Fixed

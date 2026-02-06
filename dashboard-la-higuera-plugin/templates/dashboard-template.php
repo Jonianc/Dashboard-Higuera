@@ -64,6 +64,7 @@ if (!defined('ABSPATH')) {
     <div id="panel-comparativo" class="card hidden">
       <div class="note">Comparativo de costos por cuartel entre las temporadas 24-25 y 25-26. Usa los filtros de arriba (Predio, Cultivo, Nivel 1, Faena, Métrica, Mes y Orden) para ajustar la vista.</div>
       <div class="comp-toolbar">
+        <div id="comparativo-meses"></div>
         <button id="btnToggleInv2425" class="pill" type="button">Ocultar INVERSIONES VARIAS</button>
       </div>
       <div class="table-wrap">

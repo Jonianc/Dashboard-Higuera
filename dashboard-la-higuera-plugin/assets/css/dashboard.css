@@ -96,8 +96,11 @@ tfoot td{font-weight:600;background:#111522;position:sticky;bottom:0}
 }
 
 /* Comparativo 24-25 vs 25-26 */
-#panel-comparativo .comp-toolbar{margin:8px 0;display:flex;justify-content:flex-end;align-items:center;gap:8px;flex-wrap:wrap}
+#panel-comparativo .comp-toolbar{margin:8px 0;display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap}
 #panel-comparativo .comp-main:hover{background:rgba(96,165,250,.08)}
 #panel-comparativo .comp-main td:first-child{font-weight:600}
 #btnToggleInv2425.is-active{background:rgba(96,165,250,.18);border-color:var(--accent2);color:#cfe5ff}
 #btnToggleInv2425:focus-visible{outline:2px solid var(--accent2);outline-offset:2px}
+
+#comparativo-meses{min-width:220px}
+#comparativo-meses .mes-dropdown{min-width:220px}
