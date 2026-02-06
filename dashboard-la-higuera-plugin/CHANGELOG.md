@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.4.1 - 2026-02-06
+
+### Fixed
+- Se corrigió la lógica de disponibilidad del comparativo 24-25 para evitar falsos "Sin datos temporada 24-25 para comparar" cuando la carga aún está en curso.
+- El comparativo ahora intenta cargar/parsear 24-25 en segundo plano si aún no está disponible y re-renderiza automáticamente al completar.
+- Se agregó estado transitorio de carga: `Cargando temporada 24-25…`.
+
 ## 1.4.0 - 2026-02-06
 
 ### Fixed
