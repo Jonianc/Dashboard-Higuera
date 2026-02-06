@@ -143,6 +143,7 @@ class Dashboard_Higuera_Import {
             update_option('last_import_time', current_time('mysql'));
             update_option('last_rows', (int) $analysis['valid_rows']);
             update_option('last_warnings', (int) $analysis['warnings_count']);
+            update_option('last_2425_updated', current_time('mysql'));
 
             self::redirect_with_notice('success', 'Base 24-25 activada correctamente. Respaldo: ' . basename($backup));
         }

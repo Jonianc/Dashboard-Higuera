@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.8.3 - 2026-02-06
+
+### Added
+- En Comparativo se muestra un bloque “Estado de datos” con fuente, filas leídas/válidas, última actualización y URL final usada para 24-25, además de fuente/filas/actualización para 25-26 y filtros activos (meses + inversiones). 
+
+### Fixed
+- El fetch del CSV 24-25 ahora agrega siempre `?ts=last_2425_updated` para evitar caché y registra (solo en debug) la cantidad de filas válidas detectadas.
+
 ## 1.8.2 - 2026-02-06
 
 ### Fixed

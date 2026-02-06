@@ -181,6 +181,7 @@ let comp2425Status = 'idle';
 let comp2425ErrorReason = '';
 const HIDE_INV_STORAGE_KEY = 'dlh_hide_inv_2425';
 let hideInv2425 = false;
+const debugEnabled = (typeof dashboardHigueraData !== 'undefined' && !!dashboardHigueraData.debug);
 
 try {
   hideInv2425 = localStorage.getItem(HIDE_INV_STORAGE_KEY) === '1';
@@ -199,6 +200,75 @@ const state = {
   detalle: {nivel1:"Todos", metrica:"VALOR", orden:"Desc"},
   comparativo: {meses:"Todos"}
 };
+
+const comparativoMeta = {
+  source2425: 'REST csv 2024-25',
+  source2526: 'API',
+  rows2425Read: 0,
+  rows2425Valid: 0,
+  rows2526Read: 0,
+  last2425Updated: (typeof dashboardHigueraData !== 'undefined' && dashboardHigueraData.last2425Updated)
+    ? dashboardHigueraData.last2425Updated
+    : '—',
+  last2526Updated: '—',
+  url2425: '—'
+};
+
+function formatStatusValue(value){
+  const str = String(value || '').trim();
+  return str ? str : '—';
+}
+
+function formatComparativoMeses(){
+  const meses = getComparativoMesesSeleccionados();
+  if(!meses || !meses.length) return 'Todos';
+  return meses.join(', ');
+}
+
+function updateComparativoStatus(){
+  const wrap = document.getElementById('comparativo-status');
+  if(!wrap) return;
+
+  const html = `
+    <div class="comp-status-title">Estado de datos</div>
+    <div class="comp-status-grid">
+      <div class="comp-status-card">
+        <h4>24-25</h4>
+        <div class="comp-status-row"><span>Fuente</span><strong>${formatStatusValue(comparativoMeta.source2425)}</strong></div>
+        <div class="comp-status-row"><span>Filas leídas</span><strong>${fmt(comparativoMeta.rows2425Read)}</strong></div>
+        <div class="comp-status-row"><span>Filas válidas</span><strong>${fmt(comparativoMeta.rows2425Valid)}</strong></div>
+        <div class="comp-status-row"><span>Última actualización</span><strong>${formatStatusValue(comparativoMeta.last2425Updated)}</strong></div>
+        <div class="comp-status-url"><span>URL final usada:</span> <code>${formatStatusValue(comparativoMeta.url2425)}</code></div>
+      </div>
+      <div class="comp-status-card">
+        <h4>25-26</h4>
+        <div class="comp-status-row"><span>Fuente</span><strong>${formatStatusValue(comparativoMeta.source2526)}</strong></div>
+        <div class="comp-status-row"><span>Filas leídas</span><strong>${fmt(comparativoMeta.rows2526Read)}</strong></div>
+        <div class="comp-status-row"><span>Última actualización</span><strong>${formatStatusValue(comparativoMeta.last2526Updated)}</strong></div>
+      </div>
+      <div class="comp-status-card">
+        <h4>Filtros activos</h4>
+        <div class="comp-status-row"><span>Meses seleccionados</span><strong>${formatComparativoMeses()}</strong></div>
+        <div class="comp-status-row"><span>Inversiones Varias</span><strong>${hideInv2425 ? 'Ocultas' : 'Mostradas'}</strong></div>
+      </div>
+    </div>
+  `;
+
+  wrap.innerHTML = html;
+}
+
+function buildUrlWithTs(baseUrl, tsValue){
+  const ts = String(tsValue || '').trim();
+  const finalTs = ts ? ts : String(Date.now());
+  try{
+    const url = new URL(baseUrl, window.location.href);
+    url.searchParams.set('ts', finalTs);
+    return url.toString();
+  }catch(e){
+    const sep = baseUrl.includes('?') ? '&' : '?';
+    return `${baseUrl}${sep}ts=${encodeURIComponent(finalTs)}`;
+  }
+}
 function applyFilters(){
   let rows = state.data.slice();
   if(state.filtros.predio!=="Todos"){
@@ -576,6 +646,7 @@ function buildComparativo(){
   const tbody = document.querySelector('#tabla-comparativo tbody');
   const tfoot = document.querySelector('#tabla-comparativo tfoot');
   if(!tbody || !tfoot) return;
+  updateComparativoStatus();
   if(!state.data || !state.data.length){
     tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;color:var(--muted)">No hay datos 25-26 cargados (API/fallback). Revisa conexión o URL de API en ajustes.</td></tr>`;
     tfoot.innerHTML = "";
@@ -870,10 +941,17 @@ async function ensureComparativo2425Data(){
   const csv2425Url = (typeof dashboardHigueraData !== 'undefined' && dashboardHigueraData.csv2425Url)
     ? dashboardHigueraData.csv2425Url
     : 'data/temporada-2024-25.csv';
+  const last2425Updated = (typeof dashboardHigueraData !== 'undefined' && dashboardHigueraData.last2425Updated)
+    ? dashboardHigueraData.last2425Updated
+    : '';
+  const csv2425UrlWithTs = buildUrlWithTs(csv2425Url, last2425Updated);
+  comparativoMeta.last2425Updated = last2425Updated || comparativoMeta.last2425Updated;
+  comparativoMeta.url2425 = csv2425UrlWithTs;
+  updateComparativoStatus();
 
   if(!candidates.length){
     try{
-      const resp = await fetch(csv2425Url);
+      const resp = await fetch(csv2425UrlWithTs);
       if(resp.ok){
         const raw = await resp.text();
         if(raw && raw.trim()) candidates.push(raw);
@@ -894,6 +972,12 @@ async function ensureComparativo2425Data(){
       if(parsed.rows && parsed.rows.length){
         EMBED_CSV_2425 = raw;
         comp2425 = parsed;
+        comparativoMeta.rows2425Read = parsed.totalRows || 0;
+        comparativoMeta.rows2425Valid = parsed.rows.length || 0;
+        if(debugEnabled){
+          console.log('CSV 24-25 filas válidas:', comparativoMeta.rows2425Valid, 'filas leídas:', comparativoMeta.rows2425Read);
+        }
+        updateComparativoStatus();
         comp2425Status = 'ready';
         return true;
       }
@@ -914,6 +998,11 @@ async function ensureComparativo2425Data(){
 
 function initDashboardFromRawCSV(raw){
   const ing = ingestCSV(raw); state.data = ing.rows; state.supMap = ing.supMap;
+  comparativoMeta.rows2526Read = ing.totalRows || 0;
+  comparativoMeta.last2526Updated = new Date().toISOString().slice(0,19).replace('T',' ');
+  comparativoMeta.rows2425Read = 0;
+  comparativoMeta.rows2425Valid = 0;
+  updateComparativoStatus();
 
   comp2425Status = 'idle';
   comp2425ErrorReason = '';

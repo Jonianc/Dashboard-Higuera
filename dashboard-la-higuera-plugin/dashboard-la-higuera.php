@@ -3,7 +3,7 @@
  * Plugin Name: Dashboard La Higuera
  * Plugin URI: https://github.com/Jonianc/Dashboard-Higuera
  * Description: Dashboard interactivo para visualizar datos de costos y faenas de Agrícola La Higuera
- * Version: 1.8.2
+ * Version: 1.8.3
  * Author: Agrícola La Higuera S.A.
  * Author URI: https://lahiguera.cl
  * License: GPL v2 or later
@@ -18,7 +18,7 @@ if (!defined('WPINC')) {
 }
 
 // Definir constantes del plugin
-define('DASHBOARD_HIGUERA_VERSION', '1.8.2');
+define('DASHBOARD_HIGUERA_VERSION', '1.8.3');
 define('DASHBOARD_HIGUERA_PLUGIN_DIR', plugin_dir_path(__FILE__));
 define('DASHBOARD_HIGUERA_PLUGIN_URL', plugin_dir_url(__FILE__));
 
@@ -121,6 +121,15 @@ class Dashboard_La_Higuera {
                 true
             );
 
+            $last_2425_updated = get_option('last_2425_updated', '');
+            if (!$last_2425_updated) {
+                $file_2425 = DASHBOARD_HIGUERA_PLUGIN_DIR . 'data/temporada-2024-25.csv';
+                if (file_exists($file_2425)) {
+                    $last_2425_updated = date_i18n('Y-m-d H:i:s', filemtime($file_2425));
+                }
+            }
+            $debug = defined('WP_DEBUG') && WP_DEBUG;
+
             // Pasar URLs de datos CSV a JavaScript usando REST API
             wp_localize_script('dashboard-higuera-js', 'dashboardHigueraData', array(
                 'csv2526Url' => rest_url('dashboard-higuera/v1/csv/2025-26'),
@@ -128,7 +137,9 @@ class Dashboard_La_Higuera {
                 'pluginUrl' => DASHBOARD_HIGUERA_PLUGIN_URL,
                 'restNonce' => wp_create_nonce('wp_rest'),
                 'dataSource' => get_option('dlh_data_source', 'api_fallback_csv'),
-                'apiUrl' => get_option('dlh_api_url', 'https://app.agrosmart.cl/v1/api/reporte/base_consolidada.php?token=02376e47a4771e34fcba564f88a9d4fbc42a0c40894ebd8e3ba0d60039bd4528')
+                'apiUrl' => get_option('dlh_api_url', 'https://app.agrosmart.cl/v1/api/reporte/base_consolidada.php?token=02376e47a4771e34fcba564f88a9d4fbc42a0c40894ebd8e3ba0d60039bd4528'),
+                'last2425Updated' => $last_2425_updated,
+                'debug' => $debug,
             ));
         }
     }
