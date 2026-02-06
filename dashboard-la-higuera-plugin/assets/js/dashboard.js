@@ -164,6 +164,7 @@ function ingestCSV2425(raw){
 
 let comp2425 = {rows:[], supMap:{}};
 let comp2425Status = 'idle';
+let comp2425ErrorReason = '';
 const HIDE_INV_STORAGE_KEY = 'dlh_hide_inv_2425';
 let hideInv2425 = false;
 
@@ -562,7 +563,7 @@ function buildComparativo(){
   const tfoot = document.querySelector('#tabla-comparativo tfoot');
   if(!tbody || !tfoot) return;
   if(!state.data || !state.data.length){
-    tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;color:var(--muted)">Sin datos</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;color:var(--muted)">No hay datos 25-26 cargados (API/fallback). Revisa conexión o URL de API en ajustes.</td></tr>`;
     tfoot.innerHTML = "";
     return;
   }
@@ -575,7 +576,8 @@ function buildComparativo(){
   }
 
   if(!comp2425 || !comp2425.rows || !comp2425.rows.length){
-    tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;color:var(--muted)">Sin datos temporada 24-25 para comparar.</td></tr>`;
+    const reason = comp2425ErrorReason || 'Sin datos temporada 24-25 para comparar.';
+    tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;color:var(--muted)">${reason}</td></tr>`;
     tfoot.innerHTML = "";
     return;
   }
@@ -688,7 +690,7 @@ return out;
   });
 
   if(!rowsComp.length){
-    tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;color:var(--muted)">Sin datos</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;color:var(--muted)">Sin resultados para los filtros seleccionados en Comparativo.</td></tr>`;
     tfoot.innerHTML = "";
     return;
   }
@@ -847,6 +849,7 @@ async function ensureComparativo2425Data(){
   if(comp2425Status==='loading') return false;
 
   comp2425Status = 'loading';
+  comp2425ErrorReason = '';
   const candidates = [];
   if(EMBED_CSV_2425 && EMBED_CSV_2425.trim()) candidates.push(EMBED_CSV_2425);
 
@@ -863,7 +866,12 @@ async function ensureComparativo2425Data(){
       }
     }catch(e){
       console.warn('No se pudo cargar CSV 24-25 para comparativo', e);
+      comp2425ErrorReason = 'No se pudo descargar el CSV 24-25.';
     }
+  }
+
+  if(!candidates.length && !comp2425ErrorReason){
+    comp2425ErrorReason = 'CSV 24-25 no disponible.';
   }
 
   for(const raw of candidates){
@@ -877,10 +885,12 @@ async function ensureComparativo2425Data(){
       }
     }catch(e){
       console.warn('Error parseando CSV 24-25', e);
+      comp2425ErrorReason = 'CSV 24-25 inválido o con formato no reconocido.';
     }
   }
 
   comp2425 = {rows:[], supMap:{}};
+  if(!comp2425ErrorReason) comp2425ErrorReason = 'CSV 24-25 vacío o sin filas válidas.';
   comp2425Status = 'error';
   return false;
 }
@@ -889,6 +899,7 @@ function initDashboardFromRawCSV(raw){
   const ing = ingestCSV(raw); state.data = ing.rows; state.supMap = ing.supMap;
 
   comp2425Status = 'idle';
+  comp2425ErrorReason = '';
 
   document.querySelector("#f_predio").innerHTML = `<option>Todos</option><option>Solo Productivo</option><option>Solo Costos Indirectos</option>`;
   document.querySelector("#f_metrica").innerHTML = `<option value="VALOR">Gasto total</option><option value="COSTO_HA">Costo por hectárea</option>`;

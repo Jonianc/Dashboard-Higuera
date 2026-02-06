@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.6.1 - 2026-02-06
+
+### Fixed
+- Se mejoraron los mensajes de estado del Comparativo para indicar claramente por qué no carga: falta de datos 25-26 (API/fallback), carga 24-25 en curso, CSV 24-25 no disponible, inválido o vacío.
+- Se agregó razón interna de error para la carga de 24-25 (`comp2425ErrorReason`) y se expone en la UI del comparativo en lugar de un `Sin datos` genérico.
+
 ## 1.6.0 - 2026-02-06
 
 ### Fixed
