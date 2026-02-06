@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.8.4 - 2026-02-06
+
+### Changed
+- La base activada 24-25 ahora se guarda en `uploads/dashboard-higuera/temporada-2024-25.csv` con backup en la misma carpeta, en vez de `plugins/.../data`.
+- El endpoint REST `/csv/2024-25` lee desde la ruta de uploads y valida existencia, lectura y tamaño antes de responder.
+- En el admin de Base 24-25 se muestra tamaño/fecha de la base activada para confirmar la activación real.
+
 ## 1.8.3 - 2026-02-06
 
 ### Added

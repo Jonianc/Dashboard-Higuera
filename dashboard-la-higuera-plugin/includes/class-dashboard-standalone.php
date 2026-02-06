@@ -130,7 +130,8 @@ class Dashboard_Higuera_Standalone {
         $api_url     = get_option('dlh_api_url', 'https://app.agrosmart.cl/v1/api/reporte/base_consolidada.php?token=02376e47a4771e34fcba564f88a9d4fbc42a0c40894ebd8e3ba0d60039bd4528');
         $last_2425_updated = get_option('last_2425_updated', '');
         if (!$last_2425_updated) {
-            $file_2425 = DASHBOARD_HIGUERA_PLUGIN_DIR . 'data/temporada-2024-25.csv';
+            $uploads = wp_upload_dir();
+            $file_2425 = trailingslashit($uploads['basedir']) . 'dashboard-higuera/temporada-2024-25.csv';
             if (file_exists($file_2425)) {
                 $last_2425_updated = date_i18n('Y-m-d H:i:s', filemtime($file_2425));
             }

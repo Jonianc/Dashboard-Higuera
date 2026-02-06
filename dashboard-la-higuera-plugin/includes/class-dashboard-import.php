@@ -57,7 +57,7 @@ class Dashboard_Higuera_Import {
     }
 
     private static function get_target_path() {
-        return DASHBOARD_HIGUERA_PLUGIN_DIR . 'data/temporada-2024-25.csv';
+        return trailingslashit(self::get_upload_dir()) . 'temporada-2024-25.csv';
     }
 
     private static function ensure_upload_folder() {
@@ -132,7 +132,7 @@ class Dashboard_Higuera_Import {
 
             $written = file_put_contents($target, $normalized);
             if ($written === false) {
-                self::redirect_with_notice('error', 'No se pudo escribir la base activa en data/temporada-2024-25.csv.');
+                self::redirect_with_notice('error', 'No se pudo escribir la base activa en uploads/dashboard-higuera/temporada-2024-25.csv.');
             }
 
             // Si la fuente fue XLSX, guardar también CSV normalizado en ruta FTP fija .csv
@@ -564,8 +564,12 @@ class Dashboard_Higuera_Import {
         $notice_type = isset($_GET['dlh_notice_type']) ? sanitize_text_field(wp_unslash($_GET['dlh_notice_type'])) : 'success';
 
         $analysis = $source ? self::analyze_source($source) : null;
+        $active_exists = file_exists($target);
+        $active_size = $active_exists ? filesize($target) : 0;
+        $active_modified = $active_exists ? date_i18n('Y-m-d H:i:s', filemtime($target)) : '—';
         $csvHint = '/wp-content/uploads/dashboard-higuera/base-24-25.csv';
         $xlsxHint = '/wp-content/uploads/dashboard-higuera/base-24-25.xlsx';
+        $activeHint = '/wp-content/uploads/dashboard-higuera/temporada-2024-25.csv';
         ?>
         <div class="wrap">
             <h1>Base 24-25 (FTP)</h1>
@@ -597,6 +601,16 @@ class Dashboard_Higuera_Import {
             </div>
 
             <div class="card" style="max-width:1000px;padding:16px;margin-top:16px;">
+                <h2>Estado de la base activada</h2>
+                <ul>
+                    <li><strong>Destino activo:</strong> <code><?php echo esc_html($activeHint); ?></code></li>
+                    <li><strong>Existe:</strong> <?php echo $active_exists ? 'Sí' : 'No'; ?></li>
+                    <li><strong>Tamaño:</strong> <?php echo $active_exists ? esc_html(size_format($active_size)) : '—'; ?></li>
+                    <li><strong>Modificado:</strong> <?php echo esc_html($active_modified); ?></li>
+                </ul>
+            </div>
+
+            <div class="card" style="max-width:1000px;padding:16px;margin-top:16px;">
                 <h2>Acciones</h2>
                 <form method="post" style="display:inline-block;margin-right:12px;">
                     <?php wp_nonce_field('dlh_base_2425_action'); ?>
@@ -612,7 +626,7 @@ class Dashboard_Higuera_Import {
 
                 <p class="description" style="margin-top:12px;">
                     Al activar, la base (CSV o XLSX) se normaliza a CSV UTF-8 con delimitador <code>;</code> y se guarda en
-                    <code>wp-content/plugins/dashboard-la-higuera-plugin/data/temporada-2024-25.csv</code>
+                    <code>wp-content/uploads/dashboard-higuera/temporada-2024-25.csv</code>
                     con respaldo automático <code>.bak.TIMESTAMP</code>.
                     Si la fuente es XLSX, también se genera <code>base-24-25.csv</code> en uploads.
                 </p>
@@ -635,7 +649,7 @@ class Dashboard_Higuera_Import {
                     <li><strong>last_import_time:</strong> <?php echo esc_html((string) get_option('last_import_time', '—')); ?></li>
                     <li><strong>last_rows:</strong> <?php echo esc_html((string) get_option('last_rows', '—')); ?></li>
                     <li><strong>last_warnings:</strong> <?php echo esc_html((string) get_option('last_warnings', '—')); ?></li>
-                    <li><strong>Destino activo:</strong> <code><?php echo esc_html(str_replace(trailingslashit(ABSPATH), '', $target)); ?></code></li>
+                    <li><strong>Destino activo:</strong> <code><?php echo esc_html($activeHint); ?></code></li>
                 </ul>
             </div>
         </div>

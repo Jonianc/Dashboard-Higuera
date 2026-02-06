@@ -3,7 +3,7 @@
  * Plugin Name: Dashboard La Higuera
  * Plugin URI: https://github.com/Jonianc/Dashboard-Higuera
  * Description: Dashboard interactivo para visualizar datos de costos y faenas de Agrícola La Higuera
- * Version: 1.8.3
+ * Version: 1.8.4
  * Author: Agrícola La Higuera S.A.
  * Author URI: https://lahiguera.cl
  * License: GPL v2 or later
@@ -18,7 +18,7 @@ if (!defined('WPINC')) {
 }
 
 // Definir constantes del plugin
-define('DASHBOARD_HIGUERA_VERSION', '1.8.3');
+define('DASHBOARD_HIGUERA_VERSION', '1.8.4');
 define('DASHBOARD_HIGUERA_PLUGIN_DIR', plugin_dir_path(__FILE__));
 define('DASHBOARD_HIGUERA_PLUGIN_URL', plugin_dir_url(__FILE__));
 
@@ -123,7 +123,8 @@ class Dashboard_La_Higuera {
 
             $last_2425_updated = get_option('last_2425_updated', '');
             if (!$last_2425_updated) {
-                $file_2425 = DASHBOARD_HIGUERA_PLUGIN_DIR . 'data/temporada-2024-25.csv';
+                $uploads = wp_upload_dir();
+                $file_2425 = trailingslashit($uploads['basedir']) . 'dashboard-higuera/temporada-2024-25.csv';
                 if (file_exists($file_2425)) {
                     $last_2425_updated = date_i18n('Y-m-d H:i:s', filemtime($file_2425));
                 }
@@ -222,10 +223,31 @@ class Dashboard_La_Higuera {
      * Servir archivo CSV 2024-25
      */
     public function serve_csv_2425() {
-        $file = DASHBOARD_HIGUERA_PLUGIN_DIR . 'data/temporada-2024-25.csv';
+        $uploads = wp_upload_dir();
+        $file = trailingslashit($uploads['basedir']) . 'dashboard-higuera/temporada-2024-25.csv';
 
-        if (!file_exists($file)) {
-            return new WP_Error('file_not_found', 'Archivo CSV no encontrado', array('status' => 404));
+        if (!file_exists($file) || !is_readable($file)) {
+            return new WP_Error(
+                'file_not_found',
+                'Archivo CSV no encontrado o no legible',
+                array(
+                    'status' => 404,
+                    'path' => $file,
+                )
+            );
+        }
+
+        $size = filesize($file);
+        if ($size === false || $size < 50) {
+            return new WP_Error(
+                'file_too_small',
+                'Archivo CSV vacío o demasiado pequeño',
+                array(
+                    'status' => 404,
+                    'path' => $file,
+                    'size' => $size,
+                )
+            );
         }
 
         $content = file_get_contents($file);
