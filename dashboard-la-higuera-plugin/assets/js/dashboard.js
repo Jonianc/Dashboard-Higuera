@@ -4,6 +4,7 @@ const $$ = s=>Array.from(document.querySelectorAll(s));
 const fmt = n => (n===null || n===undefined || Number.isNaN(n)) ? "—" : Math.round(n).toLocaleString('es-CL');
 const pctFmt = x => (x===null||x===undefined||Number.isNaN(x)) ? "—" : Math.round(x*100).toLocaleString('es-CL') + '%';
 const strip = s => String(s||'').trim();
+const isInversionFaena = v => strip(v||'').toUpperCase()==='INVERSIONES VARIAS';
 
 function splitLines(text){ return text.replace(/\r\n/g,'\n').replace(/\r/g,'\n').split('\n'); }
 function detectDelimiter(text){
@@ -48,6 +49,28 @@ function parseDateGuess(s){
   return new Date('Invalid');
 }
 const MES_ABR = ["ENE","FEB","MAR","ABR","MAY","JUN","JUL","AGO","SEP","OCT","NOV","DIC"];
+function sortMesLabels(meses){
+  return meses.sort((a,b)=>{
+    const [ma,ya]=(a||"-").split("-");
+    const [mb,yb]=(b||"-").split("-");
+    const ia=MES_ABR.indexOf(ma);
+    const ib=MES_ABR.indexOf(mb);
+    const ya2=parseInt(ya,10)||0;
+    const yb2=parseInt(yb,10)||0;
+    if(ya2!==yb2) return ya2-yb2;
+    return ia-ib;
+  });
+}
+
+function canonicalSeason(value){
+  const raw = strip(value||"")
+    .replace(/–/g,'-')
+    .replace(/—/g,'-')
+    .replace(/\s+/g,'');
+  const m = raw.match(/(\d{4})[^\d]?(\d{4})/);
+  if(!m) return raw;
+  return `${m[1]}-${m[2]}`;
+}
 
 function ingestCSV(raw){
   const delim = detectDelimiter(raw);
@@ -68,12 +91,14 @@ function ingestCSV(raw){
 
   const data = [];
   const supLast = {};
+  let totalRows = 0;
   for(let r=idx+1;r<rows.length;r++){
     const row = rows[r]; if(!row || row.every(c=>!strip(c))) continue;
+    totalRows++;
     const FECHA = row[iFECHA]||"";
     const d = parseDateGuess(FECHA);
     const ok = isFinite(d);
-    const TEMP = strip(row[iTEMP]||"").replace('–','-');
+    const TEMP = canonicalSeason(row[iTEMP]||"");
     const PREDIO = row[iPRED]||"";
     const SECTOR = row[iSECT]||"";
     const CUARTEL = row[iCUAR]||"";
@@ -96,7 +121,7 @@ function ingestCSV(raw){
       });
     }
   }
-  return {rows:data, supMap:supLast};
+  return {rows:data, supMap:supLast, totalRows};
 }
 
 function ingestCSV2425(raw){
@@ -118,12 +143,14 @@ function ingestCSV2425(raw){
 
   const data = [];
   const supLast = {};
+  let totalRows = 0;
   for(let r=idx+1;r<rows.length;r++){
     const row = rows[r]; if(!row || row.every(c=>!strip(c))) continue;
+    totalRows++;
     const FECHA = row[iFECHA]||"";
     const d = parseDateGuess(FECHA);
     const ok = isFinite(d);
-    const TEMP = strip(row[iTEMP]||"").replace('–','-');
+    const TEMP = canonicalSeason(row[iTEMP]||"");
     const PREDIO = row[iPRED]||"";
     const SECTOR = row[iSECT]||"";
     const CUARTEL = row[iCUAR]||"";
@@ -146,11 +173,20 @@ function ingestCSV2425(raw){
       });
     }
   }
-  return {rows:data, supMap:supLast};
+  return {rows:data, supMap:supLast, totalRows};
 }
 
 let comp2425 = {rows:[], supMap:{}};
+let comp2425Status = 'idle';
+let comp2425ErrorReason = '';
+const HIDE_INV_STORAGE_KEY = 'dlh_hide_inv_2425';
 let hideInv2425 = false;
+
+try {
+  hideInv2425 = localStorage.getItem(HIDE_INV_STORAGE_KEY) === '1';
+} catch (e) {
+  hideInv2425 = false;
+}
 
 function predioClas(row){
   const esInd = strip(row.PREDIO).toUpperCase()==="COSTOS INDIRECTOS" || strip(row.CUARTEL).toUpperCase()==="COSTOS INDIRECTOS";
@@ -160,7 +196,8 @@ function predioClas(row){
 const state = {
   data: [], supMap: {},
   filtros: {predio:"Todos", sector:"Todos", nivel1:"Todos", faena:"Todas", metrica:"VALOR", mes:"Todos", orden:"Desc"},
-  detalle: {nivel1:"Todos", metrica:"VALOR", orden:"Desc"}
+  detalle: {nivel1:"Todos", metrica:"VALOR", orden:"Desc"},
+  comparativo: {meses:"Todos"}
 };
 function applyFilters(){
   let rows = state.data.slice();
@@ -170,9 +207,7 @@ function applyFilters(){
   if(state.filtros.sector!=="Todos") rows = rows.filter(r => strip(r.SECTOR||"")===state.filtros.sector);
   if(state.filtros.nivel1!=="Todos") rows = rows.filter(r => strip(r.NIVEL_1||"")===state.filtros.nivel1);
   if(state.filtros.faena!=="Todas") rows = rows.filter(r => strip(r.FAENA||"")===state.filtros.faena);
-  if(hideInv2425){
-    rows = rows.filter(r => strip(r.FAENA||"").toUpperCase()!=="INVERSIONES VARIAS");
-  }
+  if(hideInv2425) rows = rows.filter(r => !isInversionFaena(r.FAENA));
   if(state.filtros.mes!=="Todos"){
     const fm = state.filtros.mes;
     if(Array.isArray(fm) && fm.length){
@@ -422,7 +457,7 @@ function buildDetalle(){
         if(r.MES_STR!==fm) return false;
       }
     }
-    if(hideInv2425 && strip(r.FAENA||"").toUpperCase()==="INVERSIONES VARIAS") return false;
+    if(hideInv2425 && isInversionFaena(r.FAENA)) return false;
     return true;
   });
   const rows = (state.detalle.nivel1==="Todos")? base : base.filter(r=>strip(r.NIVEL_1||"")===state.detalle.nivel1);
@@ -462,9 +497,104 @@ function buildDetalle(){
   if(col){ col.onclick = ()=> { Array.from(document.querySelectorAll('#detalle .acc-body')).forEach(b=>b.classList.add('hidden')); Array.from(document.querySelectorAll('#detalle .acc-head .acc-caret')).forEach(c=>c.textContent='▶'); } }
 }
 
+function getComparativoMesesSeleccionados(){
+  const fm = state.comparativo?.meses;
+  if(fm==="Todos" || !Array.isArray(fm) || !fm.length) return null;
+  return fm.slice();
+}
+
+function renderComparativoMesesControl(rows25, rows24){
+  const wrap = document.getElementById("comparativo-meses");
+  if(!wrap) return;
+
+  const available = Array.from(new Set([
+    ...rows25.map(r=>r.MES_STR).filter(Boolean),
+    ...rows24.map(r=>r.MES_STR).filter(Boolean)
+  ]));
+  sortMesLabels(available);
+
+  if(!available.length){
+    state.comparativo.meses = "Todos";
+    wrap.innerHTML = '<span class="small">Meses: sin datos</span>';
+    return;
+  }
+
+  const sel = getComparativoMesesSeleccionados();
+  const validSel = sel ? sel.filter(m=>available.includes(m)) : null;
+  if(sel && !validSel.length){
+    state.comparativo.meses = "Todos";
+  }
+
+  const selected = validSel && validSel.length ? validSel : available;
+  const selectedSet = new Set(selected);
+  const allChecked = selected.length===available.length;
+
+  const items = available.map(m=>`<label class="mes-dropdown-item"><input type="checkbox" data-comp-mes="${m}" ${selectedSet.has(m)?'checked':''}><span>${m}</span></label>`).join('');
+  const countText = allChecked ? 'Todos' : `${selectedSet.size} mes(es)`;
+
+  wrap.innerHTML = `<div class="mes-dropdown" id="comp_mes">    <button type="button" class="mes-dropdown-btn">      <span>Meses comparativo</span>      <span class="mes-count">${countText}</span>      <span class="arrow">▼</span>    </button>    <div class="mes-dropdown-panel">      <label class="mes-dropdown-item todos"><input type="checkbox" id="comp_mes_todos" ${allChecked?'checked':''}><span>Todos</span></label>      ${items}    </div>  </div>`;
+
+  const dropdown = wrap.querySelector('#comp_mes');
+  const btn = dropdown.querySelector('.mes-dropdown-btn');
+  btn.onclick = e=>{ e.stopPropagation(); dropdown.classList.toggle('open'); };
+
+  dropdown.addEventListener('change', e=>{
+    const t = e.target;
+    if(!t.matches('input[type="checkbox"]')) return;
+    const panel = dropdown.querySelector('.mes-dropdown-panel');
+    const allBox = panel.querySelector('#comp_mes_todos');
+    const mesBoxes = Array.from(panel.querySelectorAll('input[data-comp-mes]'));
+
+    if(t.id==='comp_mes_todos'){
+      mesBoxes.forEach(x=>x.checked=t.checked);
+      state.comparativo.meses = 'Todos';
+    }else{
+      const checked = mesBoxes.filter(x=>x.checked).map(x=>x.dataset.compMes);
+      if(!checked.length || checked.length===mesBoxes.length){
+        state.comparativo.meses = 'Todos';
+        allBox.checked = true;
+        if(!checked.length) mesBoxes.forEach(x=>x.checked=true);
+      }else{
+        state.comparativo.meses = checked;
+        allBox.checked = false;
+      }
+    }
+    buildComparativo();
+  });
+
+  if(!window.__dlhCompMesDocListener){
+    document.addEventListener('click', e=>{
+      const current = document.getElementById('comp_mes');
+      if(current && !current.contains(e.target)) current.classList.remove('open');
+    });
+    window.__dlhCompMesDocListener = true;
+  }
+}
+
 function buildComparativo(){
-  if(!comp2425 || !comp2425.rows || !comp2425.rows.length || !state.data || !state.data.length) return;
   const filtros = state.filtros;
+  const tbody = document.querySelector('#tabla-comparativo tbody');
+  const tfoot = document.querySelector('#tabla-comparativo tfoot');
+  if(!tbody || !tfoot) return;
+  if(!state.data || !state.data.length){
+    tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;color:var(--muted)">No hay datos 25-26 cargados (API/fallback). Revisa conexión o URL de API en ajustes.</td></tr>`;
+    tfoot.innerHTML = "";
+    return;
+  }
+
+  if(comp2425Status==='idle' || comp2425Status==='loading'){
+    tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;color:var(--muted)">Cargando temporada 24-25…</td></tr>`;
+    tfoot.innerHTML = "";
+    ensureComparativo2425Data().then(()=> buildComparativo());
+    return;
+  }
+
+  if(!comp2425 || !comp2425.rows || !comp2425.rows.length){
+    const reason = comp2425ErrorReason || 'Sin datos temporada 24-25 para comparar.';
+    tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;color:var(--muted)">${reason}</td></tr>`;
+    tfoot.innerHTML = "";
+    return;
+  }
 
   function applyFiltersComparativo(rows, incluirMes){
     let out = rows.slice();
@@ -477,7 +607,7 @@ function buildComparativo(){
     if(filtros.nivel1!=="Todos") out = out.filter(r => strip(r.NIVEL_1||"")===filtros.nivel1);
     if(filtros.faena!=="Todas") out = out.filter(r => strip(r.FAENA||"")===filtros.faena);
     if(hideInv2425){
-      out = out.filter(r => strip(r.FAENA||"").toUpperCase()!=="INVERSIONES VARIAS");
+      out = out.filter(r => !isInversionFaena(r.FAENA));
     }
     
     if(incluirMes && filtros.mes!=="Todos"){
@@ -496,15 +626,21 @@ function buildComparativo(){
 return out;
   }
 
-  // 25-26 respeta el filtro Mes (YTD o mes puntual)
-  const rows25 = applyFiltersComparativo(state.data, true);
-  // 24-25 completa (sin filtro Mes)
+  // Base comparativo (sin usar filtro global de meses)
+  let rows25 = applyFiltersComparativo(state.data, false);
   let rows24Full = applyFiltersComparativo(comp2425.rows, false);
-  // 24-25 solo meses comparables con 25-26
-  let rows24Match = applyFiltersComparativo(comp2425.rows, true);
+  let rows24Match = applyFiltersComparativo(comp2425.rows, false);
 
+  renderComparativoMesesControl(rows25, rows24Full);
+  const compMeses = getComparativoMesesSeleccionados();
+  if(compMeses){
+    const mesSet = new Set(compMeses);
+    rows25 = rows25.filter(r=>mesSet.has(r.MES_STR));
+    rows24Full = rows24Full.filter(r=>mesSet.has(r.MES_STR));
+    rows24Match = rows24Match.filter(r=>mesSet.has(r.MES_STR));
+  }
 
-  if(filtros.mes==="Todos"){
+  if(!compMeses){
     // Meses que existen en 25-26 (JUN, JUL, ...)
     const meses25 = new Set(rows25.map(r => (r.MES_STR||"").slice(0,3)).filter(Boolean));
     if(meses25.size){
@@ -567,12 +703,8 @@ return out;
     return ord==="Asc" ? va-vb : vb-va;
   });
 
-  const tbody = document.querySelector('#tabla-comparativo tbody');
-  const tfoot = document.querySelector('#tabla-comparativo tfoot');
-  if(!tbody || !tfoot) return;
-
   if(!rowsComp.length){
-    tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;color:var(--muted)">Sin datos para los filtros seleccionados.</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;color:var(--muted)">Sin resultados para los filtros seleccionados en Comparativo.</td></tr>`;
     tfoot.innerHTML = "";
     return;
   }
@@ -717,9 +849,75 @@ return out;
 }
 
 
-function refreshAll(){ populateCombos(); buildResumen(); buildCharts(); buildDetalle(); buildComparativo(); }
+function refreshAll(){
+  populateCombos();
+  buildResumen();
+  buildCharts();
+  buildDetalle();
+  const activeTab = document.querySelector('.tab.active');
+  if(activeTab && activeTab.dataset.tab==='comparativo') buildComparativo();
+}
+
+async function ensureComparativo2425Data(){
+  if(comp2425Status==='ready' && comp2425.rows.length) return true;
+  if(comp2425Status==='loading') return false;
+
+  comp2425Status = 'loading';
+  comp2425ErrorReason = '';
+  const candidates = [];
+  if(EMBED_CSV_2425 && EMBED_CSV_2425.trim()) candidates.push(EMBED_CSV_2425);
+
+  const csv2425Url = (typeof dashboardHigueraData !== 'undefined' && dashboardHigueraData.csv2425Url)
+    ? dashboardHigueraData.csv2425Url
+    : 'data/temporada-2024-25.csv';
+
+  if(!candidates.length){
+    try{
+      const resp = await fetch(csv2425Url);
+      if(resp.ok){
+        const raw = await resp.text();
+        if(raw && raw.trim()) candidates.push(raw);
+      }
+    }catch(e){
+      console.warn('No se pudo cargar CSV 24-25 para comparativo', e);
+      comp2425ErrorReason = 'No se pudo descargar el CSV 24-25.';
+    }
+  }
+
+  if(!candidates.length && !comp2425ErrorReason){
+    comp2425ErrorReason = 'CSV 24-25 no disponible.';
+  }
+
+  for(const raw of candidates){
+    try{
+      const parsed = ingestCSV2425(raw);
+      if(parsed.rows && parsed.rows.length){
+        EMBED_CSV_2425 = raw;
+        comp2425 = parsed;
+        comp2425Status = 'ready';
+        return true;
+      }
+      if(parsed.totalRows > 0 && (!parsed.rows || !parsed.rows.length)){
+        comp2425ErrorReason = 'CSV 24-25 cargado, pero no contiene filas con temporada 2024-2025 reconocible.';
+      }
+    }catch(e){
+      console.warn('Error parseando CSV 24-25', e);
+      comp2425ErrorReason = 'CSV 24-25 inválido o con formato no reconocido.';
+    }
+  }
+
+  comp2425 = {rows:[], supMap:{}};
+  if(!comp2425ErrorReason) comp2425ErrorReason = 'CSV 24-25 vacío o sin filas válidas.';
+  comp2425Status = 'error';
+  return false;
+}
+
 function initDashboardFromRawCSV(raw){
   const ing = ingestCSV(raw); state.data = ing.rows; state.supMap = ing.supMap;
+
+  comp2425Status = 'idle';
+  comp2425ErrorReason = '';
+
   document.querySelector("#f_predio").innerHTML = `<option>Todos</option><option>Solo Productivo</option><option>Solo Costos Indirectos</option>`;
   document.querySelector("#f_metrica").innerHTML = `<option value="VALOR">Gasto total</option><option value="COSTO_HA">Costo por hectárea</option>`;
   document.querySelector("#f_orden").innerHTML = `<option value="Desc">Descendente</option><option value="Asc">Ascendente</option>`;
@@ -787,11 +985,24 @@ window.__initDashboardFromRawCSV = initDashboardFromRawCSV;
 const btnInv2425 = document.getElementById('btnToggleInv2425');
 
 if(btnInv2425){
+  btnInv2425.textContent = hideInv2425
+    ? 'Mostrar INVERSIONES VARIAS'
+    : 'Ocultar INVERSIONES VARIAS';
+  btnInv2425.setAttribute('aria-pressed', hideInv2425 ? 'true' : 'false');
+  btnInv2425.classList.toggle('is-active', hideInv2425);
+
   btnInv2425.onclick = ()=>{
     hideInv2425 = !hideInv2425;
     btnInv2425.textContent = hideInv2425
       ? 'Mostrar INVERSIONES VARIAS'
       : 'Ocultar INVERSIONES VARIAS';
+    btnInv2425.setAttribute('aria-pressed', hideInv2425 ? 'true' : 'false');
+    btnInv2425.classList.toggle('is-active', hideInv2425);
+    try {
+      localStorage.setItem(HIDE_INV_STORAGE_KEY, hideInv2425 ? '1' : '0');
+    } catch (e) {
+      // Ignorar errores de almacenamiento en navegación privada/restringida
+    }
     refreshAll();
   };
 }
@@ -802,38 +1013,29 @@ document.querySelector('#gen').textContent = new Date().toISOString().slice(0,16
 let EMBED_CSV = '';
 let EMBED_CSV_2425 = '';
 
-// Load CSV files from external sources
-// En WordPress, las URLs son proporcionadas por wp_localize_script
+async function loadCsv2526Fallback() {
+  const csv2526Url = (typeof dashboardHigueraData !== 'undefined' && dashboardHigueraData.csv2526Url)
+    ? dashboardHigueraData.csv2526Url
+    : 'data/temporada-2025-26.csv';
+
+  const resp = await fetch(csv2526Url);
+  if(!resp.ok) throw new Error('No se pudo cargar fallback CSV 25-26');
+  const raw = await resp.text();
+  if(!raw || !raw.trim()) throw new Error('Fallback CSV 25-26 vacío');
+  EMBED_CSV = raw;
+  return raw;
+}
+
+// Compatibilidad con template actual (no precargar CSV automáticamente)
 async function loadExternalCSVs() {
-  try {
-    // Obtener URLs desde WordPress (o usar rutas relativas como fallback)
-    const csv2526Url = (typeof dashboardHigueraData !== 'undefined' && dashboardHigueraData.csv2526Url)
-      ? dashboardHigueraData.csv2526Url
-      : 'data/temporada-2025-26.csv';
-
-    const csv2425Url = (typeof dashboardHigueraData !== 'undefined' && dashboardHigueraData.csv2425Url)
-      ? dashboardHigueraData.csv2425Url
-      : 'data/temporada-2024-25.csv';
-
-    const [csv2526Response, csv2425Response] = await Promise.all([
-      fetch(csv2526Url),
-      fetch(csv2425Url)
-    ]);
-
-    if (csv2526Response.ok) {
-      EMBED_CSV = await csv2526Response.text();
-    }
-    if (csv2425Response.ok) {
-      EMBED_CSV_2425 = await csv2425Response.text();
-    }
-  } catch (error) {
-    console.error('Error loading external CSV files:', error);
-  }
+  return true;
 }
 
 
 async function initDashboardLive(){
-  const API_URL = "https://app.agrosmart.cl/v1/api/reporte/base_consolidada.php?token=02376e47a4771e34fcba564f88a9d4fbc42a0c40894ebd8e3ba0d60039bd4528";
+  const API_URL = (typeof dashboardHigueraData !== "undefined" && dashboardHigueraData.apiUrl)
+    ? dashboardHigueraData.apiUrl
+    : "https://app.agrosmart.cl/v1/api/reporte/base_consolidada.php?token=02376e47a4771e34fcba564f88a9d4fbc42a0c40894ebd8e3ba0d60039bd4528";
   try{
     const resp = await fetch(API_URL);
     if(!resp.ok) throw new Error('HTTP ' + resp.status);
@@ -845,11 +1047,19 @@ async function initDashboardLive(){
     const chip = document.getElementById('srcChip');
     if(chip) chip.textContent = 'API Agrosmart (en vivo)';
   }catch(e){
-    console.error('No se pudo cargar la API, usando CSV embebido', e);
-    window.__lastCSV = EMBED_CSV;
-    __initDashboardFromRawCSV(EMBED_CSV);
-    const chip = document.getElementById('srcChip');
-    if(chip) chip.textContent = 'CSV embebido';
+    console.error('No se pudo cargar la API, intentando fallback CSV 25-26', e);
+    try{
+      const csvFallback = await loadCsv2526Fallback();
+      window.__lastCSV = csvFallback;
+      __initDashboardFromRawCSV(csvFallback);
+      const chip = document.getElementById('srcChip');
+      if(chip) chip.textContent = 'CSV 25-26 (fallback por falla de API)';
+    }catch(csvError){
+      console.error('Falló también el fallback CSV 25-26', csvError);
+      const chip = document.getElementById('srcChip');
+      if(chip) chip.textContent = 'Error de carga de datos';
+      throw csvError;
+    }
   }
 }
 
@@ -864,7 +1074,7 @@ function buildCSVFromApi(rows, opts){
   const predioContains = opts.predioContains || null;
 
   if(!rows || !rows.length){
-    return EMBED_CSV;
+    return "";
   }
 
   const headerOut = ["TEMPORADA","FECHA","PREDIO","SECTOR","CUARTEL","FAENA","NIVEL 1","SUPERFICIE REAL (há)","TOTAL CUARTEL"];
@@ -943,6 +1153,8 @@ function showTab(id){
   $('#panel-detalle').classList.toggle('hidden', id!=='detalle');
   const nota = $('#nota-resumen');
   if(nota) nota.classList.toggle('hidden', id!=='resumen');
+
+  if(id==='comparativo') buildComparativo();
 }
 $$('.tab').forEach(t=> t.onclick = ()=> showTab(t.dataset.tab));
 document.addEventListener('change', (e)=>{
@@ -955,8 +1167,9 @@ document.addEventListener('change', (e)=>{
 // Cambiar CSV
 const swapBtn = document.getElementById('btnSwap');
 const swapInput = document.getElementById('fileSwap');
-swapBtn.addEventListener('click', ()=>{ swapInput.click(); });
-swapInput.addEventListener('change', async ()=>{
+if(swapBtn && swapInput){
+  swapBtn.addEventListener('click', ()=>{ swapInput.click(); });
+  swapInput.addEventListener('change', async ()=>{
   const f = swapInput.files && swapInput.files[0]; if(!f) return;
   try{
     const raw = await f.text();
@@ -964,7 +1177,8 @@ swapInput.addEventListener('change', async ()=>{
     __initDashboardFromRawCSV(raw);
     const chip = document.getElementById('srcChip'); if(chip) chip.textContent = 'CSV local (cargado) — ' + (f.name || '');
   }catch(e){ alert('No se pudo cargar el CSV nuevo: ' + (e?.message || e)); }
-});
+  });
+}
 // Guardar HTML con datos embebidos
 async function saveHTMLWithData() { 
   try{
@@ -991,4 +1205,5 @@ async function saveHTMLWithData() {
     alert('Listo. Se guardó un HTML independiente con el CSV embebido.');
   }catch(e){ alert('No se pudo guardar el HTML: ' + (e?.message || e)); }
 }
-document.getElementById('btnSave').addEventListener('click', saveHTMLWithData);
+const btnSave = document.getElementById('btnSave');
+if(btnSave) btnSave.addEventListener('click', saveHTMLWithData);
