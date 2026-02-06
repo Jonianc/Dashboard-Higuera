@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.8.6 - 2026-02-06
+
+### Fixed
+- Temporada 25-26 desde API ahora incluye todas las filas de la temporada al cargar el dashboard, evitando excluir registros por filtro de predio y normalizando la temporada al construir el CSV.
+
 ## 1.8.4 - 2026-02-06
 
 ### Changed

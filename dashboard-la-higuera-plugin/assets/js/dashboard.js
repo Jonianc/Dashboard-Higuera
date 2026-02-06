@@ -1147,7 +1147,7 @@ async function initDashboardLive(){
     if(!resp.ok) throw new Error('HTTP ' + resp.status);
     const json = await resp.json();
     const rows = Array.isArray(json) ? json : (Array.isArray(json.data) ? json.data : []);
-    const csv = buildCSVFromApi(rows, {temporada:"2025-2026", predioContains:"HIGUERA"});
+    const csv = buildCSVFromApi(rows, {temporada:"2025-2026"});
     window.__lastCSV = csv;
     __initDashboardFromRawCSV(csv);
     const chip = document.getElementById('srcChip');
@@ -1232,7 +1232,7 @@ function buildCSVFromApi(rows, opts){
 
   for(const r of rows){
     if(temporadaTarget || predioContains){
-      const tempVal = map["TEMPORADA"] ? String(r[map["TEMPORADA"]] || "").trim() : "";
+      const tempVal = map["TEMPORADA"] ? canonicalSeason(String(r[map["TEMPORADA"]] || "").trim()) : "";
       const predVal = map["PREDIO"] ? String(r[map["PREDIO"]] || "").toUpperCase() : "";
       if(temporadaTarget && tempVal !== temporadaTarget) continue;
       if(predioContains && !predVal.includes(predioContains.toUpperCase())) continue;
