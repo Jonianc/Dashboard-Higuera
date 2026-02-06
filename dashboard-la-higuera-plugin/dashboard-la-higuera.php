@@ -3,7 +3,7 @@
  * Plugin Name: Dashboard La Higuera
  * Plugin URI: https://github.com/Jonianc/Dashboard-Higuera
  * Description: Dashboard interactivo para visualizar datos de costos y faenas de Agrícola La Higuera
- * Version: 1.8.4
+ * Version: 1.8.5
  * Author: Agrícola La Higuera S.A.
  * Author URI: https://lahiguera.cl
  * License: GPL v2 or later
@@ -18,7 +18,7 @@ if (!defined('WPINC')) {
 }
 
 // Definir constantes del plugin
-define('DASHBOARD_HIGUERA_VERSION', '1.8.4');
+define('DASHBOARD_HIGUERA_VERSION', '1.8.5');
 define('DASHBOARD_HIGUERA_PLUGIN_DIR', plugin_dir_path(__FILE__));
 define('DASHBOARD_HIGUERA_PLUGIN_URL', plugin_dir_url(__FILE__));
 
@@ -207,16 +207,21 @@ class Dashboard_La_Higuera {
     public function serve_csv_2526() {
         $file = DASHBOARD_HIGUERA_PLUGIN_DIR . 'data/temporada-2025-26.csv';
 
-        if (!file_exists($file)) {
-            return new WP_Error('file_not_found', 'Archivo CSV no encontrado', array('status' => 404));
+        if (!file_exists($file) || !is_readable($file)) {
+            return new WP_Error('file_not_found', 'Archivo CSV no encontrado o no legible', array('status' => 404));
         }
 
+        // Servir CSV crudo (no JSON) para evitar que WP REST lo envuelva como string JSON.
         $content = file_get_contents($file);
+        if ($content === false || trim($content) === '') {
+            return new WP_Error('file_empty', 'Archivo CSV vacío o no se pudo leer', array('status' => 404));
+        }
 
-        return new WP_REST_Response($content, 200, array(
-            'Content-Type' => 'text/csv; charset=utf-8',
-            'Cache-Control' => 'public, max-age=3600'
-        ));
+        nocache_headers();
+        header('Content-Type: text/csv; charset=utf-8');
+        header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+        echo $content;
+        exit;
     }
 
     /**
@@ -250,12 +255,21 @@ class Dashboard_La_Higuera {
             );
         }
 
+        // Servir CSV crudo (no JSON) para que el frontend lo pueda parsear directo.
         $content = file_get_contents($file);
+        if ($content === false || trim($content) === '') {
+            return new WP_Error(
+                'read_failed',
+                'No se pudo leer el CSV 24-25 o está vacío',
+                array('status' => 404, 'path' => $file)
+            );
+        }
 
-        return new WP_REST_Response($content, 200, array(
-            'Content-Type' => 'text/csv; charset=utf-8',
-            'Cache-Control' => 'public, max-age=3600'
-        ));
+        nocache_headers();
+        header('Content-Type: text/csv; charset=utf-8');
+        header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+        echo $content;
+        exit;
     }
 }
 

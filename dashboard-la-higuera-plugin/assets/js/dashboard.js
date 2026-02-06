@@ -953,8 +953,25 @@ async function ensureComparativo2425Data(){
     try{
       const resp = await fetch(csv2425UrlWithTs);
       if(resp.ok){
-        const raw = await resp.text();
-        if(raw && raw.trim()) candidates.push(raw);
+        let raw = await resp.text();
+        // Fallback: algunos servers/implementaciones REST devuelven el CSV envuelto como string JSON.
+        // Intentamos des-envolverlo si viene entre comillas.
+        const t = (raw || '').trim();
+        if(t.startsWith('"') && t.endsWith('"')){
+          try{ raw = JSON.parse(t); }catch(e){ /* ignore */ }
+        }
+        if(raw && String(raw).trim()) candidates.push(raw);
+      } else {
+        // Intentar capturar detalle de error para debug.
+        try{
+          const errTxt = await resp.text();
+          comp2425ErrorReason = `CSV 24-25 no disponible (HTTP ${resp.status}).`;
+          if(errTxt && errTxt.trim() && debugEnabled){
+            console.warn('Respuesta error CSV 24-25:', errTxt.slice(0, 500));
+          }
+        }catch(e){
+          comp2425ErrorReason = `CSV 24-25 no disponible (HTTP ${resp.status}).`;
+        }
       }
     }catch(e){
       console.warn('No se pudo cargar CSV 24-25 para comparativo', e);
