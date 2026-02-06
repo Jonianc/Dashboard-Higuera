@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.6.2 - 2026-02-06
+
+### Fixed
+- Se robusteció la detección de temporada en CSV (normalización de guiones/espacios), evitando falsos negativos al filtrar 2024-2025 y 2025-2026.
+- El comparativo ahora distingue el caso “CSV cargado pero sin filas con temporada 2024-2025 reconocible” del caso “CSV vacío”.
+
 ## 1.6.1 - 2026-02-06
 
 ### Fixed

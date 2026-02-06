@@ -62,6 +62,16 @@ function sortMesLabels(meses){
   });
 }
 
+function canonicalSeason(value){
+  const raw = strip(value||"")
+    .replace(/–/g,'-')
+    .replace(/—/g,'-')
+    .replace(/\s+/g,'');
+  const m = raw.match(/(\d{4})[^\d]?(\d{4})/);
+  if(!m) return raw;
+  return `${m[1]}-${m[2]}`;
+}
+
 function ingestCSV(raw){
   const delim = detectDelimiter(raw);
   const rows = parseCSV(raw, delim);
@@ -81,12 +91,14 @@ function ingestCSV(raw){
 
   const data = [];
   const supLast = {};
+  let totalRows = 0;
   for(let r=idx+1;r<rows.length;r++){
     const row = rows[r]; if(!row || row.every(c=>!strip(c))) continue;
+    totalRows++;
     const FECHA = row[iFECHA]||"";
     const d = parseDateGuess(FECHA);
     const ok = isFinite(d);
-    const TEMP = strip(row[iTEMP]||"").replace('–','-');
+    const TEMP = canonicalSeason(row[iTEMP]||"");
     const PREDIO = row[iPRED]||"";
     const SECTOR = row[iSECT]||"";
     const CUARTEL = row[iCUAR]||"";
@@ -109,7 +121,7 @@ function ingestCSV(raw){
       });
     }
   }
-  return {rows:data, supMap:supLast};
+  return {rows:data, supMap:supLast, totalRows};
 }
 
 function ingestCSV2425(raw){
@@ -131,12 +143,14 @@ function ingestCSV2425(raw){
 
   const data = [];
   const supLast = {};
+  let totalRows = 0;
   for(let r=idx+1;r<rows.length;r++){
     const row = rows[r]; if(!row || row.every(c=>!strip(c))) continue;
+    totalRows++;
     const FECHA = row[iFECHA]||"";
     const d = parseDateGuess(FECHA);
     const ok = isFinite(d);
-    const TEMP = strip(row[iTEMP]||"").replace('–','-');
+    const TEMP = canonicalSeason(row[iTEMP]||"");
     const PREDIO = row[iPRED]||"";
     const SECTOR = row[iSECT]||"";
     const CUARTEL = row[iCUAR]||"";
@@ -159,7 +173,7 @@ function ingestCSV2425(raw){
       });
     }
   }
-  return {rows:data, supMap:supLast};
+  return {rows:data, supMap:supLast, totalRows};
 }
 
 let comp2425 = {rows:[], supMap:{}};
@@ -882,6 +896,9 @@ async function ensureComparativo2425Data(){
         comp2425 = parsed;
         comp2425Status = 'ready';
         return true;
+      }
+      if(parsed.totalRows > 0 && (!parsed.rows || !parsed.rows.length)){
+        comp2425ErrorReason = 'CSV 24-25 cargado, pero no contiene filas con temporada 2024-2025 reconocible.';
       }
     }catch(e){
       console.warn('Error parseando CSV 24-25', e);
