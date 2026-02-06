@@ -1,5 +1,15 @@
 # Changelog
 
+## 1.8.0 - 2026-02-06
+
+### Added
+- Convertidor Excel (`.xlsx`) a CSV compatible con plugin dentro de **Base 24-25 por FTP**.
+- Soporte de fuente FTP alternativa `base-24-25.xlsx` (además de `base-24-25.csv`).
+
+### Improved
+- La validación/activación ahora funciona para CSV y XLSX con la misma lógica de normalización a UTF-8 y delimitador `;`.
+- Al activar desde XLSX se genera también `uploads/dashboard-higuera/base-24-25.csv` normalizado.
+
 ## 1.7.0 - 2026-02-06
 
 ### Added

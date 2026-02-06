@@ -10,7 +10,6 @@ if (!defined('WPINC')) {
 class Dashboard_Higuera_Import {
 
     const SUBMENU_SLUG = 'dlh-import-2425';
-    const SOURCE_RELATIVE_PATH = 'dashboard-higuera/base-24-25.csv';
 
     public static function init() {
         add_action('admin_menu', array(__CLASS__, 'add_submenu'));
@@ -18,7 +17,7 @@ class Dashboard_Higuera_Import {
     }
 
     public static function register_rest_hooks() {
-        // Legacy: sin rutas REST para flujo FTP.
+        // Legacy: sin rutas REST para flujo FTP/admin.
     }
 
     public static function add_submenu() {
@@ -37,8 +36,12 @@ class Dashboard_Higuera_Import {
         return trailingslashit($uploads['basedir']) . 'dashboard-higuera';
     }
 
-    private static function get_source_path() {
+    private static function get_source_csv_path() {
         return trailingslashit(self::get_upload_dir()) . 'base-24-25.csv';
+    }
+
+    private static function get_source_xlsx_path() {
+        return trailingslashit(self::get_upload_dir()) . 'base-24-25.xlsx';
     }
 
     private static function get_target_path() {
@@ -51,6 +54,20 @@ class Dashboard_Higuera_Import {
             wp_mkdir_p($dir);
         }
         return $dir;
+    }
+
+    private static function resolve_source_path() {
+        $csv = self::get_source_csv_path();
+        $xlsx = self::get_source_xlsx_path();
+
+        if (file_exists($csv)) {
+            return $csv;
+        }
+        if (file_exists($xlsx)) {
+            return $xlsx;
+        }
+
+        return null;
     }
 
     public static function handle_post_actions() {
@@ -66,13 +83,13 @@ class Dashboard_Higuera_Import {
         self::ensure_upload_folder();
 
         $action = sanitize_text_field(wp_unslash($_POST['dlh_import_action']));
-        $source = self::get_source_path();
+        $source = self::resolve_source_path();
 
-        if (!file_exists($source)) {
-            self::redirect_with_notice('error', 'No existe base-24-25.csv en uploads/dashboard-higuera.');
+        if (!$source) {
+            self::redirect_with_notice('error', 'No existe base-24-25.csv ni base-24-25.xlsx en uploads/dashboard-higuera.');
         }
 
-        $analysis = self::analyze_csv($source);
+        $analysis = self::analyze_source($source);
         if (is_wp_error($analysis)) {
             self::redirect_with_notice('error', $analysis->get_error_message());
         }
@@ -80,12 +97,14 @@ class Dashboard_Higuera_Import {
         if ($action === 'validate') {
             update_option('dlh_last_validation_2425', array(
                 'time' => current_time('mysql'),
+                'source' => basename($source),
                 'rows' => $analysis['valid_rows'],
                 'warnings' => $analysis['warnings_count'],
                 'incomplete' => $analysis['incomplete_count'],
                 'excessive' => $analysis['excessive_count'],
                 'encoding' => $analysis['encoding'],
                 'delimiter' => $analysis['delimiter'],
+                'format' => $analysis['format'],
             ));
             self::redirect_with_notice('success', 'Validación completada.');
         }
@@ -102,6 +121,11 @@ class Dashboard_Higuera_Import {
             $written = file_put_contents($target, $normalized);
             if ($written === false) {
                 self::redirect_with_notice('error', 'No se pudo escribir la base activa en data/temporada-2024-25.csv.');
+            }
+
+            // Si la fuente fue XLSX, guardar también CSV normalizado en ruta FTP fija .csv
+            if ($analysis['format'] === 'xlsx') {
+                @file_put_contents(self::get_source_csv_path(), $normalized);
             }
 
             update_option('last_import_time', current_time('mysql'));
@@ -195,6 +219,106 @@ class Dashboard_Higuera_Import {
         return $count;
     }
 
+    private static function col_to_index($letters) {
+        $letters = strtoupper(preg_replace('/[^A-Z]/', '', $letters));
+        $index = 0;
+        $len = strlen($letters);
+        for ($i = 0; $i < $len; $i++) {
+            $index = $index * 26 + (ord($letters[$i]) - 64);
+        }
+        return max(0, $index - 1);
+    }
+
+    private static function parse_xlsx_rows($path) {
+        if (!class_exists('ZipArchive')) {
+            return new WP_Error('zip_missing', 'ZipArchive no está disponible en el servidor para leer XLSX.');
+        }
+
+        $zip = new ZipArchive();
+        if ($zip->open($path) !== true) {
+            return new WP_Error('xlsx_open', 'No se pudo abrir el archivo XLSX.');
+        }
+
+        $sharedStrings = array();
+        $sharedXml = $zip->getFromName('xl/sharedStrings.xml');
+        if ($sharedXml !== false) {
+            $sx = @simplexml_load_string($sharedXml);
+            if ($sx) {
+                foreach ($sx->si as $si) {
+                    if (isset($si->t)) {
+                        $sharedStrings[] = (string) $si->t;
+                        continue;
+                    }
+                    $text = '';
+                    foreach ($si->r as $run) {
+                        $text .= (string) $run->t;
+                    }
+                    $sharedStrings[] = $text;
+                }
+            }
+        }
+
+        $sheetXml = $zip->getFromName('xl/worksheets/sheet1.xml');
+        if ($sheetXml === false) {
+            $zip->close();
+            return new WP_Error('sheet_missing', 'No se encontró xl/worksheets/sheet1.xml en el XLSX.');
+        }
+
+        $sheet = @simplexml_load_string($sheetXml);
+        if (!$sheet) {
+            $zip->close();
+            return new WP_Error('sheet_parse', 'No se pudo parsear la hoja principal del XLSX.');
+        }
+
+        $rows = array();
+        if (!isset($sheet->sheetData->row)) {
+            $zip->close();
+            return array();
+        }
+
+        foreach ($sheet->sheetData->row as $rowNode) {
+            $row = array();
+            foreach ($rowNode->c as $cell) {
+                $ref = (string) $cell['r'];
+                $idx = self::col_to_index($ref);
+                $type = (string) $cell['t'];
+                $value = '';
+
+                if ($type === 's') {
+                    $ssIdx = (int) ((string) $cell->v);
+                    $value = isset($sharedStrings[$ssIdx]) ? $sharedStrings[$ssIdx] : '';
+                } elseif ($type === 'inlineStr') {
+                    $value = isset($cell->is->t) ? (string) $cell->is->t : '';
+                } else {
+                    $value = isset($cell->v) ? (string) $cell->v : '';
+                }
+
+                $row[$idx] = $value;
+            }
+
+            if (!empty($row)) {
+                ksort($row);
+                $max = max(array_keys($row));
+                $normalized = array();
+                for ($i = 0; $i <= $max; $i++) {
+                    $normalized[] = isset($row[$i]) ? $row[$i] : '';
+                }
+                $rows[] = $normalized;
+            }
+        }
+
+        $zip->close();
+        return $rows;
+    }
+
+    private static function analyze_source($path) {
+        $ext = strtolower(pathinfo($path, PATHINFO_EXTENSION));
+        if ($ext === 'xlsx') {
+            return self::analyze_xlsx($path);
+        }
+        return self::analyze_csv($path);
+    }
+
     private static function analyze_csv($path) {
         $content = self::read_file_utf8($path);
         if (is_wp_error($content)) {
@@ -217,11 +341,41 @@ class Dashboard_Higuera_Import {
         $delimiter = self::detect_delimiter($lines);
         $records = self::split_repaired_records($content);
         $records = array_values(array_filter($records, function ($r) { return trim($r) !== ''; }));
-        if (count($records) < 2) {
-            return new WP_Error('few_records', 'No se detectaron registros suficientes en el CSV.');
+
+        $rows = array();
+        foreach ($records as $record) {
+            $rows[] = str_getcsv($record, $delimiter);
         }
 
-        $header = str_getcsv($records[0], $delimiter);
+        return self::analyze_rows($rows, $path, 'csv', $delimiter, 'UTF-8');
+    }
+
+    private static function analyze_xlsx($path) {
+        $rows = self::parse_xlsx_rows($path);
+        if (is_wp_error($rows)) {
+            return $rows;
+        }
+        return self::analyze_rows($rows, $path, 'xlsx', '(excel)', 'UTF-8');
+    }
+
+    private static function analyze_rows($rows, $path, $format, $delimiter, $encoding) {
+        $rows = array_values(array_filter($rows, function ($row) {
+            if (!is_array($row)) {
+                return false;
+            }
+            foreach ($row as $value) {
+                if (trim((string) $value) !== '') {
+                    return true;
+                }
+            }
+            return false;
+        }));
+
+        if (count($rows) < 2) {
+            return new WP_Error('few_records', 'No se detectaron registros suficientes en la base.');
+        }
+
+        $header = array_map('strval', $rows[0]);
         $colCount = count($header);
         if ($colCount < 2) {
             return new WP_Error('bad_header', 'No se pudo detectar un encabezado válido.');
@@ -233,9 +387,9 @@ class Dashboard_Higuera_Import {
         $warnings = array();
         $dataRows = array();
 
-        for ($i = 1; $i < count($records); $i++) {
-            $cols = str_getcsv($records[$i], $delimiter);
-            $count = count($cols);
+        for ($i = 1; $i < count($rows); $i++) {
+            $row = array_map('strval', $rows[$i]);
+            $count = count($row);
             if ($count === $colCount) {
                 $validRows++;
             } elseif ($count < $colCount) {
@@ -245,16 +399,12 @@ class Dashboard_Higuera_Import {
                 $excessive++;
                 $warnings[] = 'Fila ' . ($i + 1) . ': con columnas extra (' . $count . '/' . $colCount . ').';
             }
-            $dataRows[] = $cols;
-        }
-
-        $encoding = mb_detect_encoding($content, array('UTF-8', 'ISO-8859-1', 'Windows-1252'), true);
-        if (!$encoding) {
-            $encoding = 'UTF-8';
+            $dataRows[] = $row;
         }
 
         return array(
             'path' => $path,
+            'format' => $format,
             'encoding' => $encoding,
             'delimiter' => $delimiter,
             'header' => $header,
@@ -297,14 +447,15 @@ class Dashboard_Higuera_Import {
         }
 
         self::ensure_upload_folder();
-        $source = self::get_source_path();
+
+        $source = self::resolve_source_path();
         $target = self::get_target_path();
         $notice = isset($_GET['dlh_notice']) ? sanitize_text_field(wp_unslash($_GET['dlh_notice'])) : '';
         $notice_type = isset($_GET['dlh_notice_type']) ? sanitize_text_field(wp_unslash($_GET['dlh_notice_type'])) : 'success';
 
-        $analysis = file_exists($source) ? self::analyze_csv($source) : null;
-        $uploads = wp_upload_dir();
-        $relativeHint = str_replace(trailingslashit(ABSPATH), '', $source);
+        $analysis = $source ? self::analyze_source($source) : null;
+        $csvHint = '/wp-content/uploads/dashboard-higuera/base-24-25.csv';
+        $xlsxHint = '/wp-content/uploads/dashboard-higuera/base-24-25.xlsx';
         ?>
         <div class="wrap">
             <h1>Base 24-25 (FTP)</h1>
@@ -314,12 +465,13 @@ class Dashboard_Higuera_Import {
 
             <div class="card" style="max-width:1000px;padding:16px;">
                 <h2>Estado del archivo FTP</h2>
-                <?php if (!file_exists($source)) : ?>
+                <?php if (!$source) : ?>
                     <p><strong>No existe la base FTP.</strong></p>
-                    <p>Sube el archivo por FTP a <code>/wp-content/uploads/dashboard-higuera/base-24-25.csv</code>.</p>
+                    <p>Sube el archivo por FTP a <code><?php echo esc_html($csvHint); ?></code> (o Excel en <code><?php echo esc_html($xlsxHint); ?></code>).</p>
                 <?php else : ?>
-                    <p><strong>Archivo:</strong> <code><?php echo esc_html($relativeHint); ?></code></p>
+                    <p><strong>Archivo fuente:</strong> <code><?php echo esc_html(str_replace(trailingslashit(ABSPATH), '', $source)); ?></code></p>
                     <ul>
+                        <li><strong>Formato:</strong> <?php echo esc_html(strtoupper(pathinfo($source, PATHINFO_EXTENSION))); ?></li>
                         <li><strong>Tamaño:</strong> <?php echo esc_html(size_format(filesize($source))); ?></li>
                         <li><strong>Modificado:</strong> <?php echo esc_html(date_i18n('Y-m-d H:i:s', filemtime($source))); ?></li>
                         <?php if (is_wp_error($analysis)) : ?>
@@ -349,8 +501,10 @@ class Dashboard_Higuera_Import {
                 </form>
 
                 <p class="description" style="margin-top:12px;">
-                    Al activar, se normaliza el CSV y se guarda en <code>wp-content/plugins/dashboard-la-higuera-plugin/data/temporada-2024-25.csv</code>
+                    Al activar, la base (CSV o XLSX) se normaliza a CSV UTF-8 con delimitador <code>;</code> y se guarda en
+                    <code>wp-content/plugins/dashboard-la-higuera-plugin/data/temporada-2024-25.csv</code>
                     con respaldo automático <code>.bak.TIMESTAMP</code>.
+                    Si la fuente es XLSX, también se genera <code>base-24-25.csv</code> en uploads.
                 </p>
             </div>
 
