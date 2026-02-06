@@ -60,11 +60,11 @@ class Dashboard_Higuera_Import {
         $csv = self::get_source_csv_path();
         $xlsx = self::get_source_xlsx_path();
 
-        if (file_exists($csv)) {
-            return $csv;
-        }
         if (file_exists($xlsx)) {
             return $xlsx;
+        }
+        if (file_exists($csv)) {
+            return $csv;
         }
 
         return null;

@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.8.1 - 2026-02-06
+
+### Fixed
+- Base 24-25 por FTP ahora prioriza siempre `base-24-25.xlsx` cuando existen ambos archivos (`.xlsx` y `.csv`).
+- Se alinea la detección de fuente para que Validar y Activar usen esa misma prioridad y eviten procesar el CSV por defecto cuando hay XLSX disponible.
+
 ## 1.8.0 - 2026-02-06
 
 ### Added
