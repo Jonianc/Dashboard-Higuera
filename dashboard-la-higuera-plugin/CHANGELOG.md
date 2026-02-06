@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.8.2 - 2026-02-06
+
+### Fixed
+- Validador de Base 24-25 (CSV/XLSX) ahora usa siempre 38 columnas del header como referencia, sin inferir por celdas no vacías ni recortar vacíos finales para clasificar filas.
+- Cada fila se normaliza a 38 columnas (relleno con `""` si faltan) y solo se marca como incompleta si está vacía o si faltan datos en columnas obligatorias (`TEMPORADA`, `FECHA`, `PREDIO`, `SECTOR`, `CUARTEL`, `FAENA`, `NIVEL 1`, `TOTAL CUARTEL`).
+- `HOROMETRO`, `REMANENTES` y `LAVADOS` quedan tratadas como opcionales (sin advertencia por vacíos).
+- La salida al activar mantiene CSV con 38 columnas, delimitador `;`, comillas y fecha normalizada a `YYYY-MM-DD`.
+
 ## 1.8.1 - 2026-02-06
 
 ### Fixed

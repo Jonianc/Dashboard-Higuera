@@ -10,6 +10,18 @@ if (!defined('WPINC')) {
 class Dashboard_Higuera_Import {
 
     const SUBMENU_SLUG = 'dlh-import-2425';
+    const EXPECTED_COLUMNS = 38;
+
+    private static $required_headers = array(
+        'TEMPORADA',
+        'FECHA',
+        'PREDIO',
+        'SECTOR',
+        'CUARTEL',
+        'FAENA',
+        'NIVEL 1',
+        'TOTAL CUARTEL',
+    );
 
     public static function init() {
         add_action('admin_menu', array(__CLASS__, 'add_submenu'));
@@ -311,6 +323,67 @@ class Dashboard_Higuera_Import {
         return $rows;
     }
 
+
+    private static function normalize_header_key($value) {
+        $value = strtoupper((string) $value);
+        if (function_exists('remove_accents')) {
+            $value = remove_accents($value);
+        }
+        $value = preg_replace('/\s+/', ' ', trim($value));
+        return $value;
+    }
+
+    private static function find_header_indexes($header, $requiredNames) {
+        $map = array();
+        foreach ($header as $idx => $name) {
+            $map[self::normalize_header_key($name)] = $idx;
+        }
+
+        $indexes = array();
+        foreach ($requiredNames as $name) {
+            $key = self::normalize_header_key($name);
+            $indexes[$name] = array_key_exists($key, $map) ? (int) $map[$key] : null;
+        }
+
+        return $indexes;
+    }
+
+    private static function normalize_date_value($value) {
+        $value = trim((string) $value);
+        if ($value === '') {
+            return '';
+        }
+
+        if (preg_match('/^\d{4}-\d{2}-\d{2}$/', $value)) {
+            return $value;
+        }
+
+        if (is_numeric($value)) {
+            $num = (float) $value;
+            if ($num > 0 && $num < 60000) {
+                $timestamp = ((int) round($num) - 25569) * DAY_IN_SECONDS;
+                if ($timestamp > 0) {
+                    return gmdate('Y-m-d', $timestamp);
+                }
+            }
+        }
+
+        $formats = array('d/m/Y', 'd-m-Y', 'Y/m/d', 'Y-m-d', 'd.m.Y');
+        foreach ($formats as $format) {
+            $dt = DateTime::createFromFormat($format, $value);
+            if ($dt instanceof DateTime) {
+                return $dt->format('Y-m-d');
+            }
+        }
+
+        $ts = strtotime($value);
+        if ($ts !== false) {
+            return gmdate('Y-m-d', $ts);
+        }
+
+        return $value;
+    }
+
     private static function analyze_source($path) {
         $ext = strtolower(pathinfo($path, PATHINFO_EXTENSION));
         if ($ext === 'xlsx') {
@@ -360,15 +433,7 @@ class Dashboard_Higuera_Import {
 
     private static function analyze_rows($rows, $path, $format, $delimiter, $encoding) {
         $rows = array_values(array_filter($rows, function ($row) {
-            if (!is_array($row)) {
-                return false;
-            }
-            foreach ($row as $value) {
-                if (trim((string) $value) !== '') {
-                    return true;
-                }
-            }
-            return false;
+            return is_array($row);
         }));
 
         if (count($rows) < 2) {
@@ -376,10 +441,15 @@ class Dashboard_Higuera_Import {
         }
 
         $header = array_map('strval', $rows[0]);
-        $colCount = count($header);
-        if ($colCount < 2) {
+        $colCount = self::EXPECTED_COLUMNS;
+        $header = array_slice(array_pad($header, $colCount, ''), 0, $colCount);
+
+        if (count(array_filter($header, function ($cell) { return trim((string) $cell) !== ''; })) < 2) {
             return new WP_Error('bad_header', 'No se pudo detectar un encabezado válido.');
         }
+
+        $requiredIndexes = self::find_header_indexes($header, self::$required_headers);
+        $fechaIndex = isset($requiredIndexes['FECHA']) ? $requiredIndexes['FECHA'] : null;
 
         $validRows = 0;
         $incomplete = 0;
@@ -389,16 +459,50 @@ class Dashboard_Higuera_Import {
 
         for ($i = 1; $i < count($rows); $i++) {
             $row = array_map('strval', $rows[$i]);
-            $count = count($row);
-            if ($count === $colCount) {
-                $validRows++;
-            } elseif ($count < $colCount) {
-                $incomplete++;
-                $warnings[] = 'Fila ' . ($i + 1) . ': incompleta (' . $count . '/' . $colCount . ').';
-            } else {
+            $rawCount = count($row);
+            if ($rawCount > $colCount) {
                 $excessive++;
-                $warnings[] = 'Fila ' . ($i + 1) . ': con columnas extra (' . $count . '/' . $colCount . ').';
+                $warnings[] = 'Fila ' . ($i + 1) . ': con columnas extra (' . $rawCount . '/' . $colCount . ').';
             }
+
+            $row = array_slice(array_pad($row, $colCount, ''), 0, $colCount);
+
+            if ($fechaIndex !== null) {
+                $row[$fechaIndex] = self::normalize_date_value($row[$fechaIndex]);
+            }
+
+            $isEmptyRow = true;
+            foreach ($row as $value) {
+                if (trim((string) $value) !== '') {
+                    $isEmptyRow = false;
+                    break;
+                }
+            }
+
+            if ($isEmptyRow) {
+                $incomplete++;
+                $warnings[] = 'Fila ' . ($i + 1) . ': incompleta (fila vacía).';
+                $dataRows[] = $row;
+                continue;
+            }
+
+            $missingRequired = array();
+            foreach ($requiredIndexes as $name => $index) {
+                if ($index === null) {
+                    continue;
+                }
+                if (trim((string) $row[$index]) === '') {
+                    $missingRequired[] = $name;
+                }
+            }
+
+            if (!empty($missingRequired)) {
+                $incomplete++;
+                $warnings[] = 'Fila ' . ($i + 1) . ': incompleta (faltan obligatorias: ' . implode(', ', $missingRequired) . ').';
+            } else {
+                $validRows++;
+            }
+
             $dataRows[] = $row;
         }
 
@@ -420,17 +524,22 @@ class Dashboard_Higuera_Import {
 
     private static function build_normalized_csv($analysis) {
         $header = $analysis['header'];
-        $cols = $analysis['header_columns'];
+        $cols = self::EXPECTED_COLUMNS;
+        $header = array_slice(array_pad($header, $cols, ''), 0, $cols);
+        $requiredIndexes = self::find_header_indexes($header, self::$required_headers);
+        $fechaIndex = isset($requiredIndexes['FECHA']) ? $requiredIndexes['FECHA'] : null;
 
         $fp = fopen('php://temp', 'w+');
         fputcsv($fp, $header, ';', '"');
 
         foreach ($analysis['records'] as $row) {
-            if (count($row) < $cols) {
-                $row = array_pad($row, $cols, '');
-            } elseif (count($row) > $cols) {
-                $row = array_slice($row, 0, $cols);
+            $row = array_map('strval', is_array($row) ? $row : array());
+            $row = array_slice(array_pad($row, $cols, ''), 0, $cols);
+
+            if ($fechaIndex !== null) {
+                $row[$fechaIndex] = self::normalize_date_value($row[$fechaIndex]);
             }
+
             fputcsv($fp, $row, ';', '"');
         }
 
