@@ -126,8 +126,8 @@ class Dashboard_Higuera_Standalone {
         $csv2425_url = rest_url('dashboard-higuera/v1/csv/2024-25');
 
         // Fuente de datos configurada
-        $data_source = get_option('dlh_data_source', 'csv');
-        $api_url     = get_option('dlh_api_url', 'https://app.agrosmart.cl/v1/api/reporte/base_consolidada.php');
+        $data_source = get_option('dlh_data_source', 'api_fallback_csv');
+        $api_url     = get_option('dlh_api_url', 'https://app.agrosmart.cl/v1/api/reporte/base_consolidada.php?token=02376e47a4771e34fcba564f88a9d4fbc42a0c40894ebd8e3ba0d60039bd4528');
 
         $charset = get_bloginfo('charset');
         $lang    = get_language_attributes();

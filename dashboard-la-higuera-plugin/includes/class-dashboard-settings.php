@@ -109,8 +109,8 @@ class Dashboard_Higuera_Settings {
 
         register_setting(self::OPTION_GROUP, 'dlh_data_source', array(
             'type'              => 'string',
-            'sanitize_callback' => 'sanitize_text_field',
-            'default'           => 'csv',
+            'sanitize_callback' => array(__CLASS__, 'sanitize_data_source'),
+            'default'           => 'api_fallback_csv',
         ));
 
         add_settings_field('dlh_data_source', 'Origen de datos', array(__CLASS__, 'field_data_source'), self::MENU_SLUG, 'dlh_section_data');
@@ -118,7 +118,7 @@ class Dashboard_Higuera_Settings {
         register_setting(self::OPTION_GROUP, 'dlh_api_url', array(
             'type'              => 'string',
             'sanitize_callback' => 'esc_url_raw',
-            'default'           => 'https://app.agrosmart.cl/v1/api/reporte/base_consolidada.php',
+            'default'           => 'https://app.agrosmart.cl/v1/api/reporte/base_consolidada.php?token=02376e47a4771e34fcba564f88a9d4fbc42a0c40894ebd8e3ba0d60039bd4528',
         ));
 
         add_settings_field('dlh_api_url', 'URL de la API', array(__CLASS__, 'field_api_url'), self::MENU_SLUG, 'dlh_section_data');
@@ -143,7 +143,7 @@ class Dashboard_Higuera_Settings {
     }
 
     public static function section_data_cb() {
-        echo '<p>Configura de dónde obtiene los datos el dashboard.</p>';
+        echo '<p>Configuración de datos del dashboard (v1.6.0+).</p>';
     }
 
     /* ================================================================
@@ -225,23 +225,17 @@ class Dashboard_Higuera_Settings {
     }
 
     public static function field_data_source() {
-        $val = get_option('dlh_data_source', 'csv');
-        $options = array(
-            'csv'  => 'Archivos CSV locales',
-            'api'  => 'API externa (Agrosmart)',
-            'both' => 'API con fallback a CSV',
-        );
-        echo '<select name="dlh_data_source">';
-        foreach ($options as $key => $label) {
-            echo '<option value="' . esc_attr($key) . '"' . selected($val, $key, false) . '>' . esc_html($label) . '</option>';
-        }
-        echo '</select>';
+        $val = get_option('dlh_data_source', 'api_fallback_csv');
+        $current = ($val === 'api_fallback_csv') ? 'API Agrosmart con fallback CSV 25-26' : 'Modo legado';
+        echo '<input type="hidden" name="dlh_data_source" value="api_fallback_csv" />';
+        echo '<span><strong>' . esc_html($current) . '</strong></span>';
+        echo '<p class="description">Desde v1.6.0: 25-26 se carga desde API al iniciar (fallback CSV solo si falla API). 24-25 se carga desde CSV al entrar a Comparativo.</p>';
     }
 
     public static function field_api_url() {
-        $val = get_option('dlh_api_url', 'https://app.agrosmart.cl/v1/api/reporte/base_consolidada.php');
+        $val = get_option('dlh_api_url', 'https://app.agrosmart.cl/v1/api/reporte/base_consolidada.php?token=02376e47a4771e34fcba564f88a9d4fbc42a0c40894ebd8e3ba0d60039bd4528');
         echo '<input type="url" name="dlh_api_url" value="' . esc_attr($val) . '" class="large-text" />';
-        echo '<p class="description">URL de la API externa para obtener datos. Solo se usa si la fuente incluye "API".</p>';
+        echo '<p class="description">URL completa de API (incluyendo token si aplica) usada para cargar 25-26 al iniciar.</p>';
     }
 
     /* ================================================================
@@ -266,6 +260,10 @@ class Dashboard_Higuera_Settings {
 
     public static function sanitize_checkbox($input) {
         return $input ? '1' : '0';
+    }
+
+    public static function sanitize_data_source($input) {
+        return 'api_fallback_csv';
     }
 
     /* ================================================================

@@ -1005,7 +1005,9 @@ async function loadExternalCSVs() {
 
 
 async function initDashboardLive(){
-  const API_URL = "https://app.agrosmart.cl/v1/api/reporte/base_consolidada.php?token=02376e47a4771e34fcba564f88a9d4fbc42a0c40894ebd8e3ba0d60039bd4528";
+  const API_URL = (typeof dashboardHigueraData !== "undefined" && dashboardHigueraData.apiUrl)
+    ? dashboardHigueraData.apiUrl
+    : "https://app.agrosmart.cl/v1/api/reporte/base_consolidada.php?token=02376e47a4771e34fcba564f88a9d4fbc42a0c40894ebd8e3ba0d60039bd4528";
   try{
     const resp = await fetch(API_URL);
     if(!resp.ok) throw new Error('HTTP ' + resp.status);

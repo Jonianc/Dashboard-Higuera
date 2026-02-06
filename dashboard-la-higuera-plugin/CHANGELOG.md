@@ -1,5 +1,15 @@
 # Changelog
 
+## 1.6.0 - 2026-02-06
+
+### Fixed
+- Se alineó el frontend standalone al nuevo flujo de datos: 25-26 desde API al iniciar (fallback CSV solo si falla API) y 24-25 desde CSV solo al entrar a Comparativo.
+- Se evitó que la precarga de CSV en frontend pueda pisar datos API en cualquier modo de ejecución.
+
+### Changed
+- Se ajustó el panel admin para reflejar el flujo actual (modo fijo API + fallback CSV), dejando `dlh_data_source` bloqueado a `api_fallback_csv`.
+- Se expuso/configuró `dlh_api_url` también en frontend shortcode mediante `wp_localize_script`, igualando comportamiento con standalone.
+
 ## 1.5.0 - 2026-02-06
 
 ### Changed
