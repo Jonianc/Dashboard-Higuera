@@ -120,23 +120,41 @@ class Dashboard_Higuera_Import {
             return new WP_Error('too_large', 'El archivo excede el límite de 10 MB.', array('status' => 400));
         }
 
-        // Leer contenido
-        $content = file_get_contents($file['tmp_name']);
-        if ($content === false || strlen(trim($content)) === 0) {
+        // Leer contenido (normalizar a UTF-8 para evitar CSV "roto" desde Excel)
+        $raw = file_get_contents($file['tmp_name']);
+        if ($raw === false || strlen(trim($raw)) === 0) {
             return new WP_Error('empty_file', 'El archivo está vacío.', array('status' => 400));
         }
 
-        // Detectar delimitador
-        $lines = preg_split('/\r\n|\r|\n/', $content);
-        $lines = array_filter($lines, function ($l) { return trim($l) !== ''; });
+        // Convertir UTF-16/UTF-8 con BOM a UTF-8 si es necesario
+        $content = $raw;
+        $bom2 = substr($content, 0, 2);
+        $bom3 = substr($content, 0, 3);
 
-        if (count($lines) < 2) {
+        if ($bom3 === "\xEF\xBB\xBF") {
+            $content = substr($content, 3); // quitar BOM UTF-8
+        } elseif ($bom2 === "\xFF\xFE" || $bom2 === "\xFE\xFF" || strpos($content, "\x00") !== false) {
+            // Probable UTF-16 (Excel suele exportar con NULs)
+            $enc = ($bom2 === "\xFE\xFF") ? 'UTF-16BE' : 'UTF-16LE';
+            $converted = @mb_convert_encoding($content, 'UTF-8', $enc);
+            if ($converted !== false && strlen(trim($converted)) > 0) {
+                $content = $converted;
+            }
+        }
+
+        // Normalizar saltos de línea
+        $content = str_replace(array("\r\n", "\r"), "\n", $content);
+
+        // Detectar delimitador en base a las primeras líneas (solo para decidir ; , o TAB)
+        $probe_lines = preg_split('/\n/', $content);
+        $probe_lines = array_values(array_filter($probe_lines, function ($l) { return trim($l) !== ''; }));
+
+        if (count($probe_lines) < 2) {
             return new WP_Error('too_few_rows', 'El archivo tiene menos de 2 filas.', array('status' => 400));
         }
 
-        // Parsear header
         $delimiters = array(';' => 0, ',' => 0, "\t" => 0);
-        $sample = array_slice($lines, 0, min(20, count($lines)));
+        $sample = array_slice($probe_lines, 0, min(20, count($probe_lines)));
         foreach ($sample as $line) {
             foreach ($delimiters as $d => &$count) {
                 $count += substr_count($line, $d);
@@ -146,12 +164,29 @@ class Dashboard_Higuera_Import {
         arsort($delimiters);
         $delim = array_key_first($delimiters);
 
-        $header_line = reset($lines);
-        $header_cols = str_getcsv($header_line, $delim);
+        // Parsear con fgetcsv para soportar saltos de línea dentro de campos con comillas
+        $fh = fopen('php://temp', 'r+');
+        if (!$fh) {
+            return new WP_Error('read_error', 'No se pudo leer el archivo.', array('status' => 500));
+        }
+        fwrite($fh, $content);
+        rewind($fh);
+
+        $header_cols = fgetcsv($fh, 0, $delim, '"');
+        if (empty($header_cols) || !is_array($header_cols)) {
+            fclose($fh);
+            return new WP_Error('invalid_header', 'No se pudo leer el encabezado del CSV.', array('status' => 400));
+        }
+
         $header_norm = array_map(function ($h) {
-            $s = mb_strtoupper(trim($h));
+            $s = mb_strtoupper(trim((string)$h));
             $s = preg_replace('/[^\w\s()áéíóúñÁÉÍÓÚÑ]/u', '', $s);
-            return normalizer_is_normalized($s) ? $s : $s; // keep as-is
+            if (function_exists('normalizer_is_normalized') && function_exists('normalizer_normalize')) {
+                if (!normalizer_is_normalized($s)) {
+                    $s = normalizer_normalize($s);
+                }
+            }
+            return $s;
         }, $header_cols);
 
         // Verificar columnas requeridas
@@ -171,6 +206,7 @@ class Dashboard_Higuera_Import {
         }
 
         if (!empty($missing)) {
+            fclose($fh);
             return new WP_Error(
                 'missing_columns',
                 'Faltan columnas requeridas: ' . implode(', ', $missing),
@@ -178,11 +214,7 @@ class Dashboard_Higuera_Import {
             );
         }
 
-        // Contar filas de datos
-        $data_lines = array_slice(array_values($lines), 1);
-        $row_count = count($data_lines);
-
-        // Estadísticas básicas
+        // Índices para estadísticas
         $idx_temp = null;
         $idx_fecha = null;
         $idx_total = null;
@@ -192,19 +224,81 @@ class Dashboard_Higuera_Import {
             if (strpos($h, 'TOTAL CUARTEL') !== false) $idx_total = $i;
         }
 
+        // Escribir CSV normalizado a un temporal (para evitar guardar filas partidas)
+        // Asegurar helpers de archivos disponibles (algunos hosting no cargan wp_tempnam)
+        if ( ! function_exists('wp_handle_upload') ) {
+            require_once ABSPATH . 'wp-admin/includes/file.php';
+        }
+
+        $tmp_out = null;
+
+        // 1) Preferir wp_tempnam si existe
+        if ( function_exists('wp_tempnam') ) {
+            $tmp_out = wp_tempnam('dlh_2425_');
+        }
+
+        // 2) Fallback universal si wp_tempnam no existe o falla
+        if ( ! $tmp_out ) {
+            $uploads = wp_upload_dir();
+            $tmp_dir = trailingslashit($uploads['basedir']) . 'dashboard-higuera-temp';
+            if ( ! file_exists($tmp_dir) ) {
+                wp_mkdir_p($tmp_dir);
+            }
+            $tmp_out = tempnam($tmp_dir, 'dlh_2425_');
+        }
+
+        if ( ! $tmp_out ) {
+            fclose($fh);
+            return new WP_Error('tmp_error', 'No se pudo crear archivo temporal.', array('status' => 500));
+        }
+
+        $out = fopen($tmp_out, 'w');
+        if (!$out) {
+            fclose($fh);
+            @unlink($tmp_out);
+            return new WP_Error('tmp_error', 'No se pudo abrir el archivo temporal.', array('status' => 500));
+        }
+
+        // Header tal cual, pero con control CSV consistente
+        fputcsv($out, $header_cols, $delim, '"');
+
         $total_sum = 0;
         $dates = array();
         $temporadas = array();
         $errors = array();
         $valid_rows = 0;
 
-        foreach ($data_lines as $line_num => $line) {
-            $cols = str_getcsv($line, $delim);
-            if (count($cols) < count($header_cols) * 0.5) {
-                $errors[] = 'Fila ' . ($line_num + 2) . ': muy pocas columnas (' . count($cols) . ')';
-                continue;
+        $row_num = 1; // header
+        while (($cols = fgetcsv($fh, 0, $delim, '"')) !== false) {
+            $row_num++;
+
+            // Saltar filas totalmente vacías
+            if (!is_array($cols)) { continue; }
+            $all_empty = true;
+            foreach ($cols as $c) {
+                if (trim((string)$c) !== '') { $all_empty = false; break; }
+            }
+            if ($all_empty) { continue; }
+
+            // Normalizar cantidad de columnas (no botar filas por "pocas columnas")
+            $expected = count($header_cols);
+            $got = count($cols);
+
+            if ($got < $expected) {
+                $errors[] = 'Fila ' . $row_num . ': columnas incompletas (' . $got . '/' . $expected . ') → se completó con vacíos';
+                $cols = array_pad($cols, $expected, '');
+            } elseif ($got > $expected) {
+                $errors[] = 'Fila ' . $row_num . ': columnas extra (' . $got . '/' . $expected . ') → se truncó al encabezado';
+                $cols = array_slice($cols, 0, $expected);
             }
 
+            // Limpiar saltos de línea dentro de celdas (evita "romper" el CSV al escribir)
+            foreach ($cols as $k => $v) {
+                $v = str_replace(array("\r\n", "\n", "\r"), ' ', (string)$v);
+                $cols[$k] = trim($v);
+            }
+
+            // Estadísticas
             if ($idx_temp !== null && isset($cols[$idx_temp])) {
                 $t = trim($cols[$idx_temp]);
                 if ($t) $temporadas[$t] = ($temporadas[$t] ?? 0) + 1;
@@ -222,10 +316,16 @@ class Dashboard_Higuera_Import {
                 $total_sum += floatval($v);
             }
 
+            fputcsv($out, $cols, $delim, '"');
             $valid_rows++;
         }
 
-        // Rango de fechas
+        fclose($fh);
+        fclose($out);
+
+        // Contar filas detectadas (solo informativo)
+        $row_count = $valid_rows;
+// Rango de fechas
         sort($dates);
         $date_from = !empty($dates) ? reset($dates) : '—';
         $date_to = !empty($dates) ? end($dates) : '—';
@@ -239,7 +339,8 @@ class Dashboard_Higuera_Import {
             copy($target_path, $backup_path);
         }
 
-        $written = file_put_contents($target_path, $content);
+        $written = copy($tmp_out, $target_path);
+        @unlink($tmp_out);
         if ($written === false) {
             return new WP_Error('write_error', 'No se pudo escribir el archivo. Verifica los permisos del directorio data/.', array('status' => 500));
         }
