@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.8.6 - 2026-02-07
+
+### Added
+- En la pestaña Resumen se muestra el bloque “Estado de datos” antes de la tabla con botón de Ocultar/Mostrar.
+
+### Fixed
+- El parser 25-26/24-25 ahora ignora filas marcadas como presupuesto cuando la base/API expone columna ORIGEN, para alinear los totales con “TOTAL COSTOS”.
+
 ## 1.8.4 - 2026-02-06
 
 ### Changed

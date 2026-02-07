@@ -79,6 +79,7 @@ function ingestCSV(raw){
   if(idx<0) throw new Error("No se encontró encabezado dentro de las primeras 300 filas.");
   const header = rows[idx];
   const idxOf = name => header.findIndex(h => normalizeHeader(h).startsWith(name));
+  const iORIG = idxOf("ORIGEN");
   const iFECHA = idxOf("FECHA");
   const iTEMP = idxOf("TEMPORADA");
   const iPRED = idxOf("PREDIO");
@@ -94,6 +95,8 @@ function ingestCSV(raw){
   let totalRows = 0;
   for(let r=idx+1;r<rows.length;r++){
     const row = rows[r]; if(!row || row.every(c=>!strip(c))) continue;
+    const ORIGEN = iORIG>=0 ? strip(row[iORIG]||"") : "";
+    if(ORIGEN && /PRESUP/i.test(ORIGEN)) continue;
     totalRows++;
     const FECHA = row[iFECHA]||"";
     const d = parseDateGuess(FECHA);
@@ -131,6 +134,7 @@ function ingestCSV2425(raw){
   if(idx<0) throw new Error("No se encontró encabezado dentro de las primeras 300 filas (24-25).");
   const header = rows[idx];
   const idxOf = name => header.findIndex(h => normalizeHeader(h).startsWith(name));
+  const iORIG = idxOf("ORIGEN");
   const iFECHA = idxOf("FECHA");
   const iTEMP = idxOf("TEMPORADA");
   const iPRED = idxOf("PREDIO");
@@ -146,6 +150,8 @@ function ingestCSV2425(raw){
   let totalRows = 0;
   for(let r=idx+1;r<rows.length;r++){
     const row = rows[r]; if(!row || row.every(c=>!strip(c))) continue;
+    const ORIGEN = iORIG>=0 ? strip(row[iORIG]||"") : "";
+    if(ORIGEN && /PRESUP/i.test(ORIGEN)) continue;
     totalRows++;
     const FECHA = row[iFECHA]||"";
     const d = parseDateGuess(FECHA);
@@ -180,6 +186,7 @@ let comp2425 = {rows:[], supMap:{}};
 let comp2425Status = 'idle';
 let comp2425ErrorReason = '';
 const HIDE_INV_STORAGE_KEY = 'dlh_hide_inv_2425';
+const RESUMEN_STATUS_STORAGE_KEY = 'dlh_resumen_status_hidden';
 let hideInv2425 = false;
 const debugEnabled = (typeof dashboardHigueraData !== 'undefined' && !!dashboardHigueraData.debug);
 
@@ -225,12 +232,8 @@ function formatComparativoMeses(){
   return meses.join(', ');
 }
 
-function updateComparativoStatus(){
-  const wrap = document.getElementById('comparativo-status');
-  if(!wrap) return;
-
-  const html = `
-    <div class="comp-status-title">Estado de datos</div>
+function buildStatusCardsHtml(){
+  return `
     <div class="comp-status-grid">
       <div class="comp-status-card">
         <h4>24-25</h4>
@@ -253,8 +256,18 @@ function updateComparativoStatus(){
       </div>
     </div>
   `;
+}
 
-  wrap.innerHTML = html;
+function updateComparativoStatus(){
+  const wrap = document.getElementById('comparativo-status');
+  const statusCards = buildStatusCardsHtml();
+  if(wrap){
+    wrap.innerHTML = `<div class="comp-status-title">Estado de datos</div>${statusCards}`;
+  }
+  const resumenWrap = document.querySelector('#resumen-status .comp-status-body');
+  if(resumenWrap){
+    resumenWrap.innerHTML = statusCards;
+  }
 }
 
 function buildUrlWithTs(baseUrl, tsValue){
@@ -1089,6 +1102,8 @@ function initDashboardFromRawCSV(raw){
 window.__initDashboardFromRawCSV = initDashboardFromRawCSV;
 
 const btnInv2425 = document.getElementById('btnToggleInv2425');
+const resumenStatus = document.getElementById('resumen-status');
+const resumenToggle = document.getElementById('btnToggleResumenStatus');
 
 if(btnInv2425){
   btnInv2425.textContent = hideInv2425
@@ -1111,6 +1126,33 @@ if(btnInv2425){
     }
     refreshAll();
   };
+}
+
+if(resumenStatus && resumenToggle){
+  let isHidden = false;
+  try{
+    isHidden = localStorage.getItem(RESUMEN_STATUS_STORAGE_KEY) === '1';
+  }catch(e){
+    isHidden = false;
+  }
+
+  const applyResumenToggle = (hidden)=>{
+    resumenStatus.classList.toggle('is-collapsed', hidden);
+    resumenToggle.textContent = hidden ? 'Mostrar' : 'Ocultar';
+    resumenToggle.setAttribute('aria-expanded', hidden ? 'false' : 'true');
+  };
+
+  applyResumenToggle(isHidden);
+
+  resumenToggle.addEventListener('click', ()=>{
+    isHidden = !isHidden;
+    try{
+      localStorage.setItem(RESUMEN_STATUS_STORAGE_KEY, isHidden ? '1' : '0');
+    }catch(e){
+      // Ignorar errores de almacenamiento
+    }
+    applyResumenToggle(isHidden);
+  });
 }
 
 document.querySelector('#gen').textContent = new Date().toISOString().slice(0,16).replace('T',' ');
@@ -1183,7 +1225,7 @@ function buildCSVFromApi(rows, opts){
     return "";
   }
 
-  const headerOut = ["TEMPORADA","FECHA","PREDIO","SECTOR","CUARTEL","FAENA","NIVEL 1","SUPERFICIE REAL (há)","TOTAL CUARTEL"];
+  const headerOut = ["TEMPORADA","FECHA","ORIGEN","PREDIO","SECTOR","CUARTEL","FAENA","NIVEL 1","SUPERFICIE REAL (há)","TOTAL CUARTEL"];
 
   const sample = rows[0] || {};
   const keys = Object.keys(sample);
@@ -1219,6 +1261,7 @@ function buildCSVFromApi(rows, opts){
   const map = {};
   map["TEMPORADA"]             = findKey("TEMPORADA");
   map["FECHA"]                 = findKey("FECHA");
+  map["ORIGEN"]                = findKey("ORIGEN");
   map["PREDIO"]                = findKey("PREDIO");
   map["SECTOR"]                = findKey("SECTOR");
   map["CUARTEL"]               = findKey("CUARTEL");
