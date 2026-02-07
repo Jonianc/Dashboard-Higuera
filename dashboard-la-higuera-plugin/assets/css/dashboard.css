@@ -94,3 +94,22 @@ tfoot td{font-weight:600;background:#111522;position:sticky;bottom:0}
   .cuartel-btn{font-size:10px}
   .pct{display:none}
 }
+
+/* Comparativo 24-25 vs 25-26 */
+#panel-comparativo .comp-toolbar{margin:8px 0;display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap}
+#panel-comparativo .comp-main:hover{background:rgba(96,165,250,.08)}
+#panel-comparativo .comp-main td:first-child{font-weight:600}
+#btnToggleInv2425.is-active{background:rgba(96,165,250,.18);border-color:var(--accent2);color:#cfe5ff}
+#btnToggleInv2425:focus-visible{outline:2px solid var(--accent2);outline-offset:2px}
+
+#comparativo-meses{min-width:220px}
+#comparativo-meses .mes-dropdown{min-width:220px}
+
+#panel-comparativo .comp-status{border:1px solid var(--border);border-radius:12px;padding:12px;background:#111522;margin:8px 0}
+#panel-comparativo .comp-status-title{font-weight:600;margin-bottom:8px}
+#panel-comparativo .comp-status-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:10px}
+#panel-comparativo .comp-status-card{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:10px;font-size:12px}
+#panel-comparativo .comp-status-card h4{margin:0 0 6px 0;font-size:12px;color:var(--accent2)}
+#panel-comparativo .comp-status-row{display:flex;justify-content:space-between;gap:8px;margin-bottom:4px}
+#panel-comparativo .comp-status-row span{color:var(--muted)}
+#panel-comparativo .comp-status-url{font-size:11px;color:var(--muted);word-break:break-all}

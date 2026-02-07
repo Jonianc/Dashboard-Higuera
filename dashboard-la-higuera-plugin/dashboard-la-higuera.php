@@ -3,7 +3,7 @@
  * Plugin Name: Dashboard La Higuera
  * Plugin URI: https://github.com/Jonianc/Dashboard-Higuera
  * Description: Dashboard interactivo para visualizar datos de costos y faenas de Agrícola La Higuera
- * Version: 1.2.0
+ * Version: 1.8.5
  * Author: Agrícola La Higuera S.A.
  * Author URI: https://lahiguera.cl
  * License: GPL v2 or later
@@ -18,7 +18,7 @@ if (!defined('WPINC')) {
 }
 
 // Definir constantes del plugin
-define('DASHBOARD_HIGUERA_VERSION', '1.2.0');
+define('DASHBOARD_HIGUERA_VERSION', '1.8.5');
 define('DASHBOARD_HIGUERA_PLUGIN_DIR', plugin_dir_path(__FILE__));
 define('DASHBOARD_HIGUERA_PLUGIN_URL', plugin_dir_url(__FILE__));
 
@@ -55,6 +55,9 @@ class Dashboard_La_Higuera {
      */
     private function load_dependencies() {
         require_once DASHBOARD_HIGUERA_PLUGIN_DIR . 'includes/class-dashboard-shortcode.php';
+        require_once DASHBOARD_HIGUERA_PLUGIN_DIR . 'includes/class-dashboard-standalone.php';
+        require_once DASHBOARD_HIGUERA_PLUGIN_DIR . 'includes/class-dashboard-settings.php';
+        require_once DASHBOARD_HIGUERA_PLUGIN_DIR . 'includes/class-dashboard-import.php';
     }
 
     /**
@@ -73,6 +76,18 @@ class Dashboard_La_Higuera {
 
         // Registrar endpoints REST para servir CSVs
         add_action('rest_api_init', array($this, 'register_rest_routes'));
+
+        // Frontend standalone (sin theme)
+        Dashboard_Higuera_Standalone::init();
+
+        // Panel de ajustes e importación en el admin
+        if (is_admin()) {
+            Dashboard_Higuera_Settings::init();
+            Dashboard_Higuera_Import::init();
+        }
+
+        // REST endpoint de importación (necesario fuera de is_admin para REST API)
+        Dashboard_Higuera_Import::register_rest_hooks();
     }
 
     /**
@@ -106,12 +121,26 @@ class Dashboard_La_Higuera {
                 true
             );
 
+            $last_2425_updated = get_option('last_2425_updated', '');
+            if (!$last_2425_updated) {
+                $uploads = wp_upload_dir();
+                $file_2425 = trailingslashit($uploads['basedir']) . 'dashboard-higuera/temporada-2024-25.csv';
+                if (file_exists($file_2425)) {
+                    $last_2425_updated = date_i18n('Y-m-d H:i:s', filemtime($file_2425));
+                }
+            }
+            $debug = defined('WP_DEBUG') && WP_DEBUG;
+
             // Pasar URLs de datos CSV a JavaScript usando REST API
             wp_localize_script('dashboard-higuera-js', 'dashboardHigueraData', array(
                 'csv2526Url' => rest_url('dashboard-higuera/v1/csv/2025-26'),
                 'csv2425Url' => rest_url('dashboard-higuera/v1/csv/2024-25'),
                 'pluginUrl' => DASHBOARD_HIGUERA_PLUGIN_URL,
-                'restNonce' => wp_create_nonce('wp_rest')
+                'restNonce' => wp_create_nonce('wp_rest'),
+                'dataSource' => get_option('dlh_data_source', 'api_fallback_csv'),
+                'apiUrl' => get_option('dlh_api_url', 'https://app.agrosmart.cl/v1/api/reporte/base_consolidada.php?token=02376e47a4771e34fcba564f88a9d4fbc42a0c40894ebd8e3ba0d60039bd4528'),
+                'last2425Updated' => $last_2425_updated,
+                'debug' => $debug,
             ));
         }
     }
@@ -178,34 +207,69 @@ class Dashboard_La_Higuera {
     public function serve_csv_2526() {
         $file = DASHBOARD_HIGUERA_PLUGIN_DIR . 'data/temporada-2025-26.csv';
 
-        if (!file_exists($file)) {
-            return new WP_Error('file_not_found', 'Archivo CSV no encontrado', array('status' => 404));
+        if (!file_exists($file) || !is_readable($file)) {
+            return new WP_Error('file_not_found', 'Archivo CSV no encontrado o no legible', array('status' => 404));
         }
 
+        // Servir CSV crudo (no JSON) para evitar que WP REST lo envuelva como string JSON.
         $content = file_get_contents($file);
+        if ($content === false || trim($content) === '') {
+            return new WP_Error('file_empty', 'Archivo CSV vacío o no se pudo leer', array('status' => 404));
+        }
 
-        return new WP_REST_Response($content, 200, array(
-            'Content-Type' => 'text/csv; charset=utf-8',
-            'Cache-Control' => 'public, max-age=3600'
-        ));
+        nocache_headers();
+        header('Content-Type: text/csv; charset=utf-8');
+        header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+        echo $content;
+        exit;
     }
 
     /**
      * Servir archivo CSV 2024-25
      */
     public function serve_csv_2425() {
-        $file = DASHBOARD_HIGUERA_PLUGIN_DIR . 'data/temporada-2024-25.csv';
+        $uploads = wp_upload_dir();
+        $file = trailingslashit($uploads['basedir']) . 'dashboard-higuera/temporada-2024-25.csv';
 
-        if (!file_exists($file)) {
-            return new WP_Error('file_not_found', 'Archivo CSV no encontrado', array('status' => 404));
+        if (!file_exists($file) || !is_readable($file)) {
+            return new WP_Error(
+                'file_not_found',
+                'Archivo CSV no encontrado o no legible',
+                array(
+                    'status' => 404,
+                    'path' => $file,
+                )
+            );
         }
 
-        $content = file_get_contents($file);
+        $size = filesize($file);
+        if ($size === false || $size < 50) {
+            return new WP_Error(
+                'file_too_small',
+                'Archivo CSV vacío o demasiado pequeño',
+                array(
+                    'status' => 404,
+                    'path' => $file,
+                    'size' => $size,
+                )
+            );
+        }
 
-        return new WP_REST_Response($content, 200, array(
-            'Content-Type' => 'text/csv; charset=utf-8',
-            'Cache-Control' => 'public, max-age=3600'
-        ));
+        // Servir CSV crudo (no JSON) para que el frontend lo pueda parsear directo.
+        $content = file_get_contents($file);
+        if ($content === false || trim($content) === '') {
+            return new WP_Error(
+                'read_failed',
+                'No se pudo leer el CSV 24-25 o está vacío',
+                array('status' => 404, 'path' => $file)
+            );
+        }
+
+        nocache_headers();
+        header('Content-Type: text/csv; charset=utf-8');
+        header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+        echo $content;
+        exit;
     }
 }
 
@@ -218,3 +282,13 @@ function dashboard_la_higuera_init() {
 
 // Iniciar el plugin
 dashboard_la_higuera_init();
+
+// Flush rewrite rules al activar el plugin
+register_activation_hook(__FILE__, function () {
+    // Cargar dependencias primero
+    require_once plugin_dir_path(__FILE__) . 'includes/class-dashboard-standalone.php';
+    Dashboard_Higuera_Standalone::flush_rules();
+});
+
+// Flush rewrite rules al desactivar el plugin
+register_deactivation_hook(__FILE__, 'flush_rewrite_rules');
