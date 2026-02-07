@@ -586,7 +586,7 @@ function buildDetalle(){
  let th=`<thead><tr><th>FAENA</th>`; for(const m of meses) th+=`<th>${m}</th>`; th+=`<th>TOTAL</th></tr></thead><tbody></tbody>`; table.innerHTML=th; const tb=table.querySelector('tbody');
     for(const f of faenas){
       let row=`<td>${f}</td>`; let tot=0; for(const m of meses){ const v=byFaMes[f][m]||0; tot+=v; const val=(state.detalle.metrica==="COSTO_HA")?(state.supMap[c]? v/state.supMap[c]:NaN):v; row+=`<td>${fmt(val)}</td>`; }
-      const totVal=(state.detalle.metrica==="COSTO_HA")?(state.supMap[c]? tot/state.supMap[c]:NaN):tot; const shown=(state.filtros.mes!=="Todos")?((state.detalle.metrica==="COSTO_HA")?(state.supMap[c]? (byFaMes[f][meses[0]]||0)/state.supMap[c]:NaN):(byFaMes[f][meses[0]]||0)):totVal; row+=`<td>${fmt(shown)}</td>`; const tr=document.createElement('tr'); tr.innerHTML=row; tb.appendChild(tr);
+      const totVal=(state.detalle.metrica==="COSTO_HA")?(state.supMap[c]? tot/state.supMap[c]:NaN):tot; row+=`<td>${fmt(totVal)}</td>`; const tr=document.createElement('tr'); tr.innerHTML=row; tb.appendChild(tr);
     }
     body.appendChild(table); box.appendChild(head); box.appendChild(body); cont.appendChild(box);
     head.onclick = ()=>{ const wasHidden = body.classList.contains('hidden'); body.classList.toggle('hidden'); head.querySelector('.acc-caret').textContent = wasHidden ? '▼' : '▶'; };

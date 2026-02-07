@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.8.9 - 2026-02-07
+
+### Fixed
+- En Detalle, el total por faena ahora suma todos los meses seleccionados en el filtro de meses.
+
 ## 1.8.8 - 2026-02-07
 
 ### Changed
