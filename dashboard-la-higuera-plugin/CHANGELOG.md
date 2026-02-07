@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.8.7 - 2026-02-07
+
+### Fixed
+- Estado de datos en Resumen ahora se refresca en cada actualización de filtros.
+- La carga desde API filtra por RAZON SOCIAL (Agrícola La Higuera) para alinear totales con “TOTAL COSTOS”.
+
 ## 1.8.6 - 2026-02-07
 
 ### Added

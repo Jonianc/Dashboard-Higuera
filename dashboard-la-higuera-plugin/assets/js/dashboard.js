@@ -934,6 +934,7 @@ return out;
 
 
 function refreshAll(){
+  updateComparativoStatus();
   populateCombos();
   buildResumen();
   buildCharts();
@@ -1189,7 +1190,11 @@ async function initDashboardLive(){
     if(!resp.ok) throw new Error('HTTP ' + resp.status);
     const json = await resp.json();
     const rows = Array.isArray(json) ? json : (Array.isArray(json.data) ? json.data : []);
-    const csv = buildCSVFromApi(rows, {temporada:"2025-2026", predioContains:"HIGUERA"});
+    const csv = buildCSVFromApi(rows, {
+      temporada:"2025-2026",
+      predioContains:"HIGUERA",
+      razonSocial:"AGRICOLA LA HIGUERA S.A."
+    });
     window.__lastCSV = csv;
     __initDashboardFromRawCSV(csv);
     const chip = document.getElementById('srcChip');
@@ -1220,6 +1225,8 @@ function buildCSVFromApi(rows, opts){
   opts = opts || {};
   const temporadaTarget = opts.temporada || null;
   const predioContains = opts.predioContains || null;
+  const razonSocialTarget = opts.razonSocial || null;
+  const razonSocialContains = opts.razonSocialContains || null;
 
   if(!rows || !rows.length){
     return "";
@@ -1262,6 +1269,7 @@ function buildCSVFromApi(rows, opts){
   map["TEMPORADA"]             = findKey("TEMPORADA");
   map["FECHA"]                 = findKey("FECHA");
   map["ORIGEN"]                = findKey("ORIGEN");
+  map["RAZON SOCIAL"]          = findKey("RAZON SOCIAL");
   map["PREDIO"]                = findKey("PREDIO");
   map["SECTOR"]                = findKey("SECTOR");
   map["CUARTEL"]               = findKey("CUARTEL");
@@ -1279,6 +1287,12 @@ function buildCSVFromApi(rows, opts){
       const predVal = map["PREDIO"] ? String(r[map["PREDIO"]] || "").toUpperCase() : "";
       if(temporadaTarget && tempVal !== temporadaTarget) continue;
       if(predioContains && !predVal.includes(predioContains.toUpperCase())) continue;
+    }
+    if(razonSocialTarget || razonSocialContains){
+      const rsVal = map["RAZON SOCIAL"] ? String(r[map["RAZON SOCIAL"]] || "") : "";
+      const rsNorm = norm(rsVal);
+      if(razonSocialTarget && rsNorm !== norm(razonSocialTarget)) continue;
+      if(razonSocialContains && !rsNorm.includes(norm(razonSocialContains))) continue;
     }
 
     const line = headerOut.map(h=>{
