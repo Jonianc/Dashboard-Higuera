@@ -73,7 +73,22 @@ if (!defined('ABSPATH')) {
       <div class="note">Comparativo de costos por cuartel entre las temporadas 24-25 y 25-26. Usa los filtros de arriba (Predio, Cultivo, Nivel 1, Faena, Métrica, Mes y Orden) para ajustar la vista.</div>
       <div id="comparativo-status" class="comp-status" aria-live="polite"></div>
       <div class="comp-toolbar">
-        <div id="comparativo-meses"></div>
+        <div class="comp-control">
+          <span class="comp-control-label">Meses comparativo</span>
+          <div id="comparativo-meses"></div>
+          <span class="comp-control-help">Filtro exclusivo del comparativo (no usa el Mes global).</span>
+        </div>
+        <div class="comp-control">
+          <label class="comp-control-label" for="comparativo-orden-by">Ordenar por</label>
+          <select id="comparativo-orden-by">
+            <option value="v24t">24-25 total</option>
+            <option value="v24m">24-25 meses comparables</option>
+            <option value="v25" selected>25-26 actual</option>
+            <option value="diff">Diferencia (Δ)</option>
+            <option value="pct">Diferencia %</option>
+          </select>
+          <span class="comp-control-help">Aplica el Orden global (Asc/Desc) de arriba.</span>
+        </div>
         <button id="btnToggleInv2425" class="pill" type="button">Ocultar INVERSIONES VARIAS</button>
       </div>
       <div class="table-wrap">
@@ -81,11 +96,11 @@ if (!defined('ABSPATH')) {
           <thead>
             <tr>
               <th>Cuartel</th>
-              <th>24-25 (temp.)</th>
-              <th>24-25 (mismos meses)</th>
-              <th>25-26</th>
-              <th>Diferencia</th>
-              <th>% Dif.</th>
+              <th>24-25 total<br><span class="col-subtitle">Temporada completa</span></th>
+              <th>24-25 meses comparables<br><span class="col-subtitle">Mismos meses 25-26</span></th>
+              <th>25-26 actual<br><span class="col-subtitle">Misma métrica</span></th>
+              <th>Δ absoluto<br><span class="col-subtitle">25-26 vs 24-25</span></th>
+              <th>Δ %<br><span class="col-subtitle">Variación</span></th>
             </tr>
           </thead>
           <tbody><tr class="comp-main" style="cursor: pointer;">

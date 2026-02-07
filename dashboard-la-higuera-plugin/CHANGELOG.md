@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.8.8 - 2026-02-07
+
+### Changed
+- Comparativo ahora permite ordenar por columna (24-25 total, 24-25 meses comparables, 25-26 actual, diferencia absoluta o %) usando el orden global Asc/Desc.
+- Encabezados del comparativo más explícitos con subtítulos para aclarar el alcance de cada columna.
+- Barra de controles del comparativo reorganizada con etiquetas y ayudas de contexto para meses, orden y el toggle de inversiones.
+
 ## 1.8.7 - 2026-02-07
 
 ### Fixed

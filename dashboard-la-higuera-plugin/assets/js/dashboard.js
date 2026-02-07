@@ -205,7 +205,7 @@ const state = {
   data: [], supMap: {},
   filtros: {predio:"Todos", sector:"Todos", nivel1:"Todos", faena:"Todas", metrica:"VALOR", mes:"Todos", orden:"Desc"},
   detalle: {nivel1:"Todos", metrica:"VALOR", orden:"Desc"},
-  comparativo: {meses:"Todos"}
+  comparativo: {meses:"Todos", ordenBy:"v25"}
 };
 
 const comparativoMeta = {
@@ -221,6 +221,14 @@ const comparativoMeta = {
   url2425: '—'
 };
 
+const comparativoOrdenLabels = {
+  v24t: '24-25 total',
+  v24m: '24-25 meses comparables',
+  v25: '25-26 actual',
+  diff: 'Diferencia (Δ)',
+  pct: 'Diferencia %'
+};
+
 function formatStatusValue(value){
   const str = String(value || '').trim();
   return str ? str : '—';
@@ -230,6 +238,13 @@ function formatComparativoMeses(){
   const meses = getComparativoMesesSeleccionados();
   if(!meses || !meses.length) return 'Todos';
   return meses.join(', ');
+}
+
+function formatComparativoOrden(){
+  const ordenBy = state.comparativo?.ordenBy || 'v25';
+  const ordenLabel = comparativoOrdenLabels[ordenBy] || '25-26 actual';
+  const dir = state.filtros?.orden === 'Asc' ? 'Ascendente' : 'Descendente';
+  return `${ordenLabel} (${dir})`;
 }
 
 function buildStatusCardsHtml(){
@@ -252,6 +267,7 @@ function buildStatusCardsHtml(){
       <div class="comp-status-card">
         <h4>Filtros activos</h4>
         <div class="comp-status-row"><span>Meses seleccionados</span><strong>${formatComparativoMeses()}</strong></div>
+        <div class="comp-status-row"><span>Orden comparativo</span><strong>${formatComparativoOrden()}</strong></div>
         <div class="comp-status-row"><span>Inversiones Varias</span><strong>${hideInv2425 ? 'Ocultas' : 'Mostradas'}</strong></div>
       </div>
     </div>
@@ -781,9 +797,18 @@ return out;
   }).filter(r => !(Number.isNaN(r.v24m) && Number.isNaN(r.v25)));
 
   const ord = filtros.orden==="Asc" ? "Asc" : "Desc";
+  const ordenBy = state.comparativo?.ordenBy || "v25";
+  const getOrdenValor = (row)=>{
+    const value = ordenBy === "v24t" ? row.v24t
+      : ordenBy === "v24m" ? row.v24m
+      : ordenBy === "diff" ? row.diff
+      : ordenBy === "pct" ? row.pct
+      : row.v25;
+    return Number.isFinite(value) ? value : 0;
+  };
   rowsComp.sort((a,b)=>{
-    const va = Number.isFinite(a.v25)?a.v25:0;
-    const vb = Number.isFinite(b.v25)?b.v25:0;
+    const va = getOrdenValor(a);
+    const vb = getOrdenValor(b);
     return ord==="Asc" ? va-vb : vb-va;
   });
 
@@ -858,9 +883,18 @@ return out;
     }).filter(r => !(Number.isNaN(r.v24) && Number.isNaN(r.v25)));
 
     const ord2 = ord;
+    const ordenByDetalle = state.comparativo?.ordenBy || "v25";
+    const getOrdenDetalle = (row)=>{
+      const value = ordenByDetalle === "v24t" ? row.v24
+        : ordenByDetalle === "v24m" ? row.v24
+        : ordenByDetalle === "diff" ? row.diff
+        : ordenByDetalle === "pct" ? row.pct
+        : row.v25;
+      return Number.isFinite(value) ? value : 0;
+    };
     rowsDetalle.sort((a,b)=>{
-      const va = Number.isFinite(a.v25)?a.v25:0;
-      const vb = Number.isFinite(b.v25)?b.v25:0;
+      const va = getOrdenDetalle(a);
+      const vb = getOrdenDetalle(b);
       return ord2==="Asc" ? va-vb : vb-va;
     });
 
@@ -1099,6 +1133,15 @@ function initDashboardFromRawCSV(raw){
   document.querySelector("#d_n1").onchange = e=>{ state.detalle.nivel1 = e.target.value; buildDetalle(); };
   document.querySelector("#d_metrica").onchange = e=>{ state.detalle.metrica=e.target.value; buildDetalle(); };
   document.querySelector("#d_orden").onchange = e=>{ state.detalle.orden=e.target.value; buildDetalle(); };
+
+  const compOrden = document.getElementById('comparativo-orden-by');
+  if(compOrden){
+    compOrden.value = state.comparativo?.ordenBy || 'v25';
+    compOrden.onchange = e=>{
+      state.comparativo.ordenBy = e.target.value || 'v25';
+      buildComparativo();
+    };
+  }
 }
 window.__initDashboardFromRawCSV = initDashboardFromRawCSV;
 
