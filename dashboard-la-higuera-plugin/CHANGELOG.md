@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.9.0 - 2026-02-07
+
+### Changed
+- Comparativo ahora usa exclusivamente el filtro global de Meses del header (se elimina el selector de meses propio de la sección).
+- Se ajusta la barra de controles del comparativo para reflejar que Meses/Orden se controlan desde el header.
+
 ## 1.8.9 - 2026-02-07
 
 ### Fixed

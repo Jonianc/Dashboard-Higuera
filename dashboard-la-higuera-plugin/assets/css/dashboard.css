@@ -107,8 +107,6 @@ tfoot td{font-weight:600;background:#111522;position:sticky;bottom:0}
 #btnToggleInv2425.is-active{background:rgba(96,165,250,.18);border-color:var(--accent2);color:#cfe5ff}
 #btnToggleInv2425:focus-visible{outline:2px solid var(--accent2);outline-offset:2px}
 
-#comparativo-meses{min-width:220px}
-#comparativo-meses .mes-dropdown{min-width:220px}
 
 #panel-comparativo .comp-status{border:1px solid var(--border);border-radius:12px;padding:12px;background:#111522;margin:8px 0}
 #panel-comparativo .comp-status-title{font-weight:600;margin-bottom:8px}

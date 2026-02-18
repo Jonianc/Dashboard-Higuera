@@ -205,7 +205,7 @@ const state = {
   data: [], supMap: {},
   filtros: {predio:"Todos", sector:"Todos", nivel1:"Todos", faena:"Todas", metrica:"VALOR", mes:"Todos", orden:"Desc"},
   detalle: {nivel1:"Todos", metrica:"VALOR", orden:"Desc"},
-  comparativo: {meses:"Todos", ordenBy:"v25"}
+  comparativo: {ordenBy:"v25"}
 };
 
 const comparativoMeta = {
@@ -235,9 +235,10 @@ function formatStatusValue(value){
 }
 
 function formatComparativoMeses(){
-  const meses = getComparativoMesesSeleccionados();
-  if(!meses || !meses.length) return 'Todos';
-  return meses.join(', ');
+  const fm = state.filtros?.mes;
+  if(fm==="Todos" || !fm) return 'Todos';
+  if(Array.isArray(fm)) return fm.length ? fm.join(', ') : 'Todos';
+  return String(fm);
 }
 
 function formatComparativoOrden(){
@@ -596,80 +597,6 @@ function buildDetalle(){
   if(col){ col.onclick = ()=> { Array.from(document.querySelectorAll('#detalle .acc-body')).forEach(b=>b.classList.add('hidden')); Array.from(document.querySelectorAll('#detalle .acc-head .acc-caret')).forEach(c=>c.textContent='▶'); } }
 }
 
-function getComparativoMesesSeleccionados(){
-  const fm = state.comparativo?.meses;
-  if(fm==="Todos" || !Array.isArray(fm) || !fm.length) return null;
-  return fm.slice();
-}
-
-function renderComparativoMesesControl(rows25, rows24){
-  const wrap = document.getElementById("comparativo-meses");
-  if(!wrap) return;
-
-  const available = Array.from(new Set([
-    ...rows25.map(r=>r.MES_STR).filter(Boolean),
-    ...rows24.map(r=>r.MES_STR).filter(Boolean)
-  ]));
-  sortMesLabels(available);
-
-  if(!available.length){
-    state.comparativo.meses = "Todos";
-    wrap.innerHTML = '<span class="small">Meses: sin datos</span>';
-    return;
-  }
-
-  const sel = getComparativoMesesSeleccionados();
-  const validSel = sel ? sel.filter(m=>available.includes(m)) : null;
-  if(sel && !validSel.length){
-    state.comparativo.meses = "Todos";
-  }
-
-  const selected = validSel && validSel.length ? validSel : available;
-  const selectedSet = new Set(selected);
-  const allChecked = selected.length===available.length;
-
-  const items = available.map(m=>`<label class="mes-dropdown-item"><input type="checkbox" data-comp-mes="${m}" ${selectedSet.has(m)?'checked':''}><span>${m}</span></label>`).join('');
-  const countText = allChecked ? 'Todos' : `${selectedSet.size} mes(es)`;
-
-  wrap.innerHTML = `<div class="mes-dropdown" id="comp_mes">    <button type="button" class="mes-dropdown-btn">      <span>Meses comparativo</span>      <span class="mes-count">${countText}</span>      <span class="arrow">▼</span>    </button>    <div class="mes-dropdown-panel">      <label class="mes-dropdown-item todos"><input type="checkbox" id="comp_mes_todos" ${allChecked?'checked':''}><span>Todos</span></label>      ${items}    </div>  </div>`;
-
-  const dropdown = wrap.querySelector('#comp_mes');
-  const btn = dropdown.querySelector('.mes-dropdown-btn');
-  btn.onclick = e=>{ e.stopPropagation(); dropdown.classList.toggle('open'); };
-
-  dropdown.addEventListener('change', e=>{
-    const t = e.target;
-    if(!t.matches('input[type="checkbox"]')) return;
-    const panel = dropdown.querySelector('.mes-dropdown-panel');
-    const allBox = panel.querySelector('#comp_mes_todos');
-    const mesBoxes = Array.from(panel.querySelectorAll('input[data-comp-mes]'));
-
-    if(t.id==='comp_mes_todos'){
-      mesBoxes.forEach(x=>x.checked=t.checked);
-      state.comparativo.meses = 'Todos';
-    }else{
-      const checked = mesBoxes.filter(x=>x.checked).map(x=>x.dataset.compMes);
-      if(!checked.length || checked.length===mesBoxes.length){
-        state.comparativo.meses = 'Todos';
-        allBox.checked = true;
-        if(!checked.length) mesBoxes.forEach(x=>x.checked=true);
-      }else{
-        state.comparativo.meses = checked;
-        allBox.checked = false;
-      }
-    }
-    buildComparativo();
-  });
-
-  if(!window.__dlhCompMesDocListener){
-    document.addEventListener('click', e=>{
-      const current = document.getElementById('comp_mes');
-      if(current && !current.contains(e.target)) current.classList.remove('open');
-    });
-    window.__dlhCompMesDocListener = true;
-  }
-}
-
 function buildComparativo(){
   const filtros = state.filtros;
   const tbody = document.querySelector('#tabla-comparativo tbody');
@@ -723,25 +650,15 @@ function buildComparativo(){
         out = out.filter(r => codeSet.has((r.MES_STR||"").slice(0,3)));
       }
     }
-return out;
+    return out;
   }
 
-  // Base comparativo (sin usar filtro global de meses)
-  let rows25 = applyFiltersComparativo(state.data, false);
-  let rows24Full = applyFiltersComparativo(comp2425.rows, false);
-  let rows24Match = applyFiltersComparativo(comp2425.rows, false);
+  // Comparativo usa el filtro global de meses del header
+  let rows25 = applyFiltersComparativo(state.data, true);
+  let rows24Full = applyFiltersComparativo(comp2425.rows, true);
+  let rows24Match = applyFiltersComparativo(comp2425.rows, true);
 
-  renderComparativoMesesControl(rows25, rows24Full);
-  const compMeses = getComparativoMesesSeleccionados();
-  if(compMeses){
-    const mesSet = new Set(compMeses);
-    rows25 = rows25.filter(r=>mesSet.has(r.MES_STR));
-    rows24Full = rows24Full.filter(r=>mesSet.has(r.MES_STR));
-    rows24Match = rows24Match.filter(r=>mesSet.has(r.MES_STR));
-  }
-
-  if(!compMeses){
-    // Meses que existen en 25-26 (JUN, JUL, ...)
+  if(filtros.mes==="Todos"){
     const meses25 = new Set(rows25.map(r => (r.MES_STR||"").slice(0,3)).filter(Boolean));
     if(meses25.size){
       rows24Match = rows24Match.filter(r => meses25.has((r.MES_STR||"").slice(0,3)));

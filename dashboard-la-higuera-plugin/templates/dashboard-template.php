@@ -74,11 +74,6 @@ if (!defined('ABSPATH')) {
       <div id="comparativo-status" class="comp-status" aria-live="polite"></div>
       <div class="comp-toolbar">
         <div class="comp-control">
-          <span class="comp-control-label">Meses comparativo</span>
-          <div id="comparativo-meses"></div>
-          <span class="comp-control-help">Filtro exclusivo del comparativo (no usa el Mes global).</span>
-        </div>
-        <div class="comp-control">
           <label class="comp-control-label" for="comparativo-orden-by">Ordenar por</label>
           <select id="comparativo-orden-by">
             <option value="v24t">24-25 total</option>
@@ -87,7 +82,7 @@ if (!defined('ABSPATH')) {
             <option value="diff">Diferencia (Δ)</option>
             <option value="pct">Diferencia %</option>
           </select>
-          <span class="comp-control-help">Aplica el Orden global (Asc/Desc) de arriba.</span>
+          <span class="comp-control-help">Usa el Orden (Asc/Desc) y Meses del header.</span>
         </div>
         <button id="btnToggleInv2425" class="pill" type="button">Ocultar INVERSIONES VARIAS</button>
       </div>
