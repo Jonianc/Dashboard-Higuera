@@ -1060,10 +1060,22 @@ async function loadCsv2526Fallback() {
 async function loadExternalCSVs() {
   return true;
 }
+function extractApiUrlFromPowerBIFormula(formula){
+  const raw = String(formula || '').trim();
+  if(!raw) return '';
+  const m = raw.match(/Web\.Contents\(\s*"([^"]+)"\s*\)/i);
+  if(m && m[1]) return m[1].trim();
+  return '';
+}
+
 async function initDashboardLive(){
-  const API_URL = (typeof dashboardHigueraData !== "undefined" && dashboardHigueraData.apiUrl)
+  const powerBIFormula = (typeof dashboardHigueraData !== "undefined" && dashboardHigueraData.apiPowerBIFormula)
+    ? dashboardHigueraData.apiPowerBIFormula
+    : '';
+  const formulaUrl = extractApiUrlFromPowerBIFormula(powerBIFormula);
+  const API_URL = formulaUrl || ((typeof dashboardHigueraData !== "undefined" && dashboardHigueraData.apiUrl)
     ? dashboardHigueraData.apiUrl
-    : "https://app.agrosmart.cl/v1/api/reporte/base_consolidada.php?token=02376e47a4771e34fcba564f88a9d4fbc42a0c40894ebd8e3ba0d60039bd4528";
+    : "https://app.agrosmart.cl/v1/api/reporte/base_consolidada.php?token=02376e47a4771e34fcba564f88a9d4fbc42a0c40894ebd8e3ba0d60039bd4528");
   try{
     const controller = (typeof AbortController !== 'undefined') ? new AbortController() : null;
     const timeoutId = setTimeout(()=>{ if(controller) controller.abort(); }, 15000);
@@ -1081,7 +1093,7 @@ async function initDashboardLive(){
     window.__lastCSV = csv;
     __initDashboardFromRawCSV(csv);
     const chip = document.getElementById('srcChip');
-    if(chip) chip.textContent = 'API Agrosmart (en vivo)';
+    if(chip) chip.textContent = formulaUrl ? 'API Agrosmart (Power BI URL)' : 'API Agrosmart (en vivo)';
   }catch(e){
     console.error('No se pudo cargar la API, intentando fallback CSV 25-26', e);
     try{

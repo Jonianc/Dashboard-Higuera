@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.9.3 - 2026-02-07
+
+### Added
+- Nuevo campo de ajustes “Fórmula Power BI (opcional)” para guardar expresiones como `=Json.Document(Web.Contents("..."))`.
+
+### Changed
+- Si la fórmula Power BI contiene `Web.Contents("URL")`, el dashboard extrae y prioriza esa URL para cargar 25-26 desde API.
+
 ## 1.9.2 - 2026-02-07
 
 ### Fixed

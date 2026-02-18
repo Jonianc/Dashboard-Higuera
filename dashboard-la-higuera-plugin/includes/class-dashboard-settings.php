@@ -122,6 +122,14 @@ class Dashboard_Higuera_Settings {
         ));
 
         add_settings_field('dlh_api_url', 'URL de la API', array(__CLASS__, 'field_api_url'), self::MENU_SLUG, 'dlh_section_data');
+
+        register_setting(self::OPTION_GROUP, 'dlh_api_powerbi_formula', array(
+            'type'              => 'string',
+            'sanitize_callback' => 'sanitize_textarea_field',
+            'default'           => '',
+        ));
+
+        add_settings_field('dlh_api_powerbi_formula', 'Fórmula Power BI (opcional)', array(__CLASS__, 'field_api_powerbi_formula'), self::MENU_SLUG, 'dlh_section_data');
     }
 
     /* ================================================================
@@ -236,6 +244,12 @@ class Dashboard_Higuera_Settings {
         $val = get_option('dlh_api_url', 'https://app.agrosmart.cl/v1/api/reporte/base_consolidada.php?token=02376e47a4771e34fcba564f88a9d4fbc42a0c40894ebd8e3ba0d60039bd4528');
         echo '<input type="url" name="dlh_api_url" value="' . esc_attr($val) . '" class="large-text" />';
         echo '<p class="description">URL completa de API (incluyendo token si aplica) usada para cargar 25-26 al iniciar.</p>';
+    }
+
+    public static function field_api_powerbi_formula() {
+        $val = get_option('dlh_api_powerbi_formula', '');
+        echo '<textarea name="dlh_api_powerbi_formula" rows="4" class="large-text code" placeholder="=Json.Document(Web.Contents(&quot;https://...&quot;))">' . esc_textarea($val) . '</textarea>';
+        echo '<p class="description">Pega la fórmula de Power BI. El dashboard intentará extraer automáticamente la URL dentro de <code>Web.Contents("...")</code> y priorizarla sobre la URL de API.</p>';
     }
 
     /* ================================================================
