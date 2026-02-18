@@ -116,6 +116,7 @@ tfoot td{font-weight:600;background:#111522;position:sticky;bottom:0}
 #panel-comparativo .comp-status-row{display:flex;justify-content:space-between;gap:8px;margin-bottom:4px}
 #panel-comparativo .comp-status-row span{color:var(--muted)}
 #panel-comparativo .comp-status-url{font-size:11px;color:var(--muted);word-break:break-all}
+#panel-comparativo .comp-status.is-collapsed .comp-status-body{display:none}
 
 #panel-resumen .comp-status{border:1px solid var(--border);border-radius:12px;padding:12px;background:#111522;margin:8px 0}
 #panel-resumen .comp-status-header{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:8px}

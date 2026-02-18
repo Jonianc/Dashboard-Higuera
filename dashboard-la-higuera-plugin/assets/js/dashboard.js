@@ -261,7 +261,7 @@ function updateComparativoStatus(){
   const wrap = document.getElementById('comparativo-status');
   const statusCards = buildStatusCardsHtml();
   if(wrap){
-    wrap.innerHTML = `<div class="comp-status-title">Estado de datos</div>${statusCards}`;
+    wrap.innerHTML = `<div class="comp-status-title">Estado de datos</div><div class="comp-status-body">${statusCards}</div>`;
   }
   const resumenWrap = document.querySelector('#resumen-status .comp-status-body');
   if(resumenWrap){
@@ -996,7 +996,7 @@ function initDashboardFromRawCSV(raw){
 window.__initDashboardFromRawCSV = initDashboardFromRawCSV;
 const btnInv2425 = document.getElementById('btnToggleInv2425');
 const resumenStatus = document.getElementById('resumen-status');
-const resumenToggle = document.getElementById('btnToggleResumenStatus');
+const dataStatusToggle = document.getElementById('btnToggleDataStatus');
 if(btnInv2425){
   btnInv2425.textContent = hideInv2425
     ? 'Mostrar INVERSIONES VARIAS'
@@ -1018,20 +1018,23 @@ if(btnInv2425){
     refreshAll();
   };
 }
-if(resumenStatus && resumenToggle){
-  let isHidden = false;
+if(resumenStatus && dataStatusToggle){
+  const comparativoStatus = document.getElementById('comparativo-status');
+  let isHidden = true;
   try{
-    isHidden = localStorage.getItem(RESUMEN_STATUS_STORAGE_KEY) === '1';
+    const stored = localStorage.getItem(RESUMEN_STATUS_STORAGE_KEY);
+    isHidden = stored === null ? true : stored === '1';
   }catch(e){
-    isHidden = false;
+    isHidden = true;
   }
   const applyResumenToggle = (hidden)=>{
     resumenStatus.classList.toggle('is-collapsed', hidden);
-    resumenToggle.textContent = hidden ? 'Mostrar' : 'Ocultar';
-    resumenToggle.setAttribute('aria-expanded', hidden ? 'false' : 'true');
+    if(comparativoStatus) comparativoStatus.classList.toggle('is-collapsed', hidden);
+    dataStatusToggle.textContent = hidden ? 'Mostrar estado' : 'Ocultar estado';
+    dataStatusToggle.setAttribute('aria-expanded', hidden ? 'false' : 'true');
   };
   applyResumenToggle(isHidden);
-  resumenToggle.addEventListener('click', ()=>{
+  dataStatusToggle.addEventListener('click', ()=>{
     isHidden = !isHidden;
     try{
       localStorage.setItem(RESUMEN_STATUS_STORAGE_KEY, isHidden ? '1' : '0');
