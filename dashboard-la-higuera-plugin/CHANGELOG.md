@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.9.7 - 2026-02-07
+
+### Changed
+- El botón Mostrar/Ocultar INVERSIONES VARIAS se mueve a los filtros globales para mantener el flujo de uso actual.
+
 ## 1.9.6 - 2026-02-07
 
 ### Changed

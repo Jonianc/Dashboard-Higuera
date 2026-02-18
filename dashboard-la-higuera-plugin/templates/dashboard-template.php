@@ -43,6 +43,7 @@ if (!defined('ABSPATH')) {
   <div class="field"><label>Métrica</label><select id="f_metrica"><option value="VALOR">Gasto total</option><option value="COSTO_HA">Costo por hectárea</option></select></div>
   <div class="field"><label>Meses</label><div id="f_mes" class="mes-dropdown"><button type="button" class="mes-dropdown-btn"><span class="mes-label">Todos</span><span class="arrow">▼</span></button><div class="mes-dropdown-panel"><div class="mes-dropdown-item todos"><input type="checkbox" id="mes_todos" checked><label for="mes_todos">Seleccionar todos</label></div></div></div></div>
   <div class="field"><label>Orden</label><select id="f_orden"><option value="Desc">Descendente</option><option value="Asc">Ascendente</option></select></div>
+  <div class="field"><label>Inversiones</label><button id="btnToggleInv2425" class="pill" type="button">Ocultar INVERSIONES VARIAS</button></div>
 </div>
 
     <div class="tabs">
@@ -84,7 +85,6 @@ if (!defined('ABSPATH')) {
           </select>
           <span class="comp-control-help">Usa el Orden (Asc/Desc) y Meses del header.</span>
         </div>
-        <button id="btnToggleInv2425" class="pill" type="button">Ocultar INVERSIONES VARIAS</button>
       </div>
       <div class="table-wrap">
         <table id="tabla-comparativo">
