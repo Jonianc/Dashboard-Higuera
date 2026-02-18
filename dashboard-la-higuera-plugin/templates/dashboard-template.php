@@ -284,18 +284,20 @@ if (!defined('ABSPATH')) {
             const loadingEl = document.getElementById('dashboard-higuera-loading');
             const contentEl = document.getElementById('dashboard-higuera-content');
             
-            // Mostrar contenido lo antes posible para evitar espera larga del loader
-            if (contentEl) contentEl.style.display = 'block';
-            if (loadingEl) loadingEl.style.display = 'none';
-
-            // Cargar datos en vivo en segundo plano
+            // Cargar CSVs externos
             if (typeof loadExternalCSVs === 'function') {
                 await loadExternalCSVs();
             }
+            
+            // Inicializar dashboard
             if (typeof initDashboardLive === 'function') {
                 await initDashboardLive();
             }
             
+            // Ocultar loading, mostrar contenido
+            if (loadingEl) loadingEl.style.display = 'none';
+            if (contentEl) contentEl.style.display = 'block';
+
             // Actualizar timestamp
             const genEl = document.getElementById('gen');
             if (genEl) {

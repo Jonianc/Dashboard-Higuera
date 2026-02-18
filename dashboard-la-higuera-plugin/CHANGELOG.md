@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.9.6 - 2026-02-07
+
+### Changed
+- Se revierte el ajuste de carga inicial del template: el contenido vuelve a mostrarse solo después de completar la inicialización (loader “Cargando Dashboard...” hasta terminar).
+
 ## 1.9.5 - 2026-02-07
 
 ### Added
