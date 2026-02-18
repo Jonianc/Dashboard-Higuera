@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.9.4 - 2026-02-07
+
+### Added
+- En Ajustes se agrega selector “Fuente API 25-26” para elegir explícitamente entre “Usar URL de la API” y “Usar Fórmula Power BI”.
+
+### Changed
+- La carga 25-26 ahora respeta la fuente elegida en ajustes (no prioriza fórmula automáticamente si está en modo URL).
+
 ## 1.9.3 - 2026-02-07
 
 ### Added

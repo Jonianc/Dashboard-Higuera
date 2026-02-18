@@ -123,6 +123,14 @@ class Dashboard_Higuera_Settings {
 
         add_settings_field('dlh_api_url', 'URL de la API', array(__CLASS__, 'field_api_url'), self::MENU_SLUG, 'dlh_section_data');
 
+        register_setting(self::OPTION_GROUP, 'dlh_api_source_mode', array(
+            'type'              => 'string',
+            'sanitize_callback' => array(__CLASS__, 'sanitize_api_source_mode'),
+            'default'           => 'url',
+        ));
+
+        add_settings_field('dlh_api_source_mode', 'Fuente API 25-26', array(__CLASS__, 'field_api_source_mode'), self::MENU_SLUG, 'dlh_section_data');
+
         register_setting(self::OPTION_GROUP, 'dlh_api_powerbi_formula', array(
             'type'              => 'string',
             'sanitize_callback' => 'sanitize_textarea_field',
@@ -246,10 +254,19 @@ class Dashboard_Higuera_Settings {
         echo '<p class="description">URL completa de API (incluyendo token si aplica) usada para cargar 25-26 al iniciar.</p>';
     }
 
+    public static function field_api_source_mode() {
+        $val = get_option('dlh_api_source_mode', 'url');
+        echo '<select name="dlh_api_source_mode">';
+        echo '<option value="url"' . selected($val, 'url', false) . '>Usar URL de la API</option>';
+        echo '<option value="powerbi"' . selected($val, 'powerbi', false) . '>Usar Fórmula Power BI</option>';
+        echo '</select>';
+        echo '<p class="description">Define qué entrada usar para cargar datos 25-26: URL de API o fórmula Power BI.</p>';
+    }
+
     public static function field_api_powerbi_formula() {
         $val = get_option('dlh_api_powerbi_formula', '');
         echo '<textarea name="dlh_api_powerbi_formula" rows="4" class="large-text code" placeholder="=Json.Document(Web.Contents(&quot;https://...&quot;))">' . esc_textarea($val) . '</textarea>';
-        echo '<p class="description">Pega la fórmula de Power BI. El dashboard intentará extraer automáticamente la URL dentro de <code>Web.Contents("...")</code> y priorizarla sobre la URL de API.</p>';
+        echo '<p class="description">Pega la fórmula de Power BI. Si en "Fuente API 25-26" eliges "Usar Fórmula Power BI", se extraerá la URL dentro de <code>Web.Contents("...")</code>.</p>';
     }
 
     /* ================================================================
@@ -278,6 +295,10 @@ class Dashboard_Higuera_Settings {
 
     public static function sanitize_data_source($input) {
         return 'api_fallback_csv';
+    }
+
+    public static function sanitize_api_source_mode($input) {
+        return ($input === 'powerbi') ? 'powerbi' : 'url';
     }
 
     /* ================================================================
