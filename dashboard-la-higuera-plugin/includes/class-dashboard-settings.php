@@ -21,7 +21,44 @@ class Dashboard_Higuera_Settings {
     public static function init() {
         add_action('admin_menu', array(__CLASS__, 'add_menu'));
         add_action('admin_init', array(__CLASS__, 'register_settings'));
+        add_action('admin_enqueue_scripts', array(__CLASS__, 'enqueue_assets'));
         add_action('wp_ajax_dlh_test_api_sources', array(__CLASS__, 'ajax_test_api_sources'));
+    }
+
+    /**
+     * Cargar CSS/JS de ajustes solo en la pantalla del plugin
+     */
+    public static function enqueue_assets($hook) {
+        if ($hook !== 'toplevel_page_' . self::MENU_SLUG) {
+            return;
+        }
+
+        wp_enqueue_style(
+            'dlh-admin-settings-css',
+            DASHBOARD_HIGUERA_PLUGIN_URL . 'assets/css/admin-settings.css',
+            array(),
+            DASHBOARD_HIGUERA_VERSION
+        );
+
+        wp_enqueue_script(
+            'dlh-admin-settings-js',
+            DASHBOARD_HIGUERA_PLUGIN_URL . 'assets/js/admin-settings.js',
+            array(),
+            DASHBOARD_HIGUERA_VERSION,
+            true
+        );
+
+        wp_localize_script('dlh-admin-settings-js', 'dlhSettings', array(
+            'ajaxUrl' => admin_url('admin-ajax.php'),
+            'nonce' => wp_create_nonce('dlh_test_api_sources'),
+            'labels' => array(
+                'running' => 'Probando fuentes API…',
+                'runTest' => 'Test de API (velocidad)',
+                'errorExec' => 'Error ejecutando test.',
+                'errorNetwork' => 'Error de red al ejecutar test.',
+                'best' => 'Más rápida',
+            ),
+        ));
     }
 
     /**
@@ -203,33 +240,6 @@ class Dashboard_Higuera_Settings {
         // Hidden field que se llenará via JS
         echo '<input type="hidden" name="dlh_roles" id="dlh_roles_hidden" value="' . esc_attr($val) . '">';
         echo '<p class="description">Solo aplica si el tipo de acceso es "Solo ciertos roles".</p>';
-        // JS para sincronizar checkboxes al hidden field
-        ?>
-        <script>
-        (function(){
-            function syncRoles(){
-                var checks = document.querySelectorAll('input[name="dlh_roles_arr[]"]:checked');
-                var vals = [];
-                checks.forEach(function(c){ vals.push(c.value); });
-                document.getElementById('dlh_roles_hidden').value = vals.join(',');
-            }
-            document.querySelectorAll('input[name="dlh_roles_arr[]"]').forEach(function(c){
-                c.addEventListener('change', syncRoles);
-            });
-
-            // Mostrar/ocultar roles según el tipo de acceso
-            var sel = document.getElementById('dlh_access');
-            var wrap = document.getElementById('dlh_roles_wrap');
-            function toggleRoles(){
-                var show = sel.value === 'role';
-                wrap.style.display = show ? '' : 'none';
-                wrap.parentElement.previousElementSibling.style.display = show ? '' : 'none';
-            }
-            sel.addEventListener('change', toggleRoles);
-            toggleRoles();
-        })();
-        </script>
-        <?php
     }
 
     public static function field_load_assets() {
@@ -251,13 +261,16 @@ class Dashboard_Higuera_Settings {
 
     public static function field_api_url() {
         $val = get_option('dlh_api_url', 'https://app.agrosmart.cl/v1/api/reporte/base_consolidada.php?token=02376e47a4771e34fcba564f88a9d4fbc42a0c40894ebd8e3ba0d60039bd4528');
-        echo '<input type="url" name="dlh_api_url" value="' . esc_attr($val) . '" class="large-text" />';
+        echo '<div id="dlh-api-url-group">';
+        echo '<input type="url" name="dlh_api_url" id="dlh_api_url" value="' . esc_attr($val) . '" class="large-text" />';
+        echo '<p class="description dlh-field-feedback" id="dlh-api-url-feedback" aria-live="polite"></p>';
+        echo '</div>';
         echo '<p class="description">URL completa de API (incluyendo token si aplica) usada para cargar 25-26 al iniciar.</p>';
     }
 
     public static function field_api_source_mode() {
         $val = get_option('dlh_api_source_mode', 'url');
-        echo '<select name="dlh_api_source_mode">';
+        echo '<select name="dlh_api_source_mode" id="dlh_api_source_mode">';
         echo '<option value="url"' . selected($val, 'url', false) . '>Usar URL de la API</option>';
         echo '<option value="powerbi"' . selected($val, 'powerbi', false) . '>Usar Fórmula Power BI</option>';
         echo '</select>';
@@ -266,54 +279,13 @@ class Dashboard_Higuera_Settings {
 
     public static function field_api_powerbi_formula() {
         $val = get_option('dlh_api_powerbi_formula', '');
-        echo '<textarea name="dlh_api_powerbi_formula" rows="4" class="large-text code" placeholder="=Json.Document(Web.Contents(&quot;https://...&quot;))">' . esc_textarea($val) . '</textarea>';
+        echo '<div id="dlh-powerbi-group">';
+        echo '<textarea name="dlh_api_powerbi_formula" id="dlh_api_powerbi_formula" rows="4" class="large-text code" placeholder="=Json.Document(Web.Contents(&quot;https://...&quot;))">' . esc_textarea($val) . '</textarea>';
+        echo '<p class="description dlh-field-feedback" id="dlh-powerbi-feedback" aria-live="polite"></p>';
+        echo '</div>';
         echo '<p class="description">Pega la fórmula de Power BI. Si en "Fuente API 25-26" eliges "Usar Fórmula Power BI", se extraerá la URL dentro de <code>Web.Contents("...")</code>.</p>';
         echo '<p><button type="button" class="button" id="dlh-test-api-sources">Test de API (velocidad)</button></p>';
-        echo '<div id="dlh-test-api-results" style="max-width:900px;background:#fff;border:1px solid #dcdcde;padding:10px;border-radius:6px;display:none"></div>';
-        $nonce = wp_create_nonce('dlh_test_api_sources');
-        echo '<script>(function(){
-'
-            . 'var btn=document.getElementById("dlh-test-api-sources");
-'
-            . 'var out=document.getElementById("dlh-test-api-results");
-'
-            . 'if(!btn||!out||typeof ajaxurl==="undefined") return;
-'
-            . 'btn.addEventListener("click", function(){
-'
-            . '  out.style.display="block"; out.innerHTML="Probando fuentes API..."; btn.disabled=true;
-'
-            . '  var fd=new FormData(); fd.append("action","dlh_test_api_sources"); fd.append("nonce","' . esc_js($nonce) . '");
-'
-            . '  fetch(ajaxurl,{method:"POST",body:fd,credentials:"same-origin"})
-'
-            . '    .then(function(r){return r.json();})
-'
-            . '    .then(function(data){
-'
-            . '      if(!data||!data.success){ out.innerHTML="Error ejecutando test."; return; }
-'
-            . '      var html="<strong>Resultado test API</strong><ul style=\"margin-top:8px\">";
-'
-            . '      data.data.results.forEach(function(item){
-'
-            . '        html += "<li><b>"+item.label+"</b>: "+(item.ok?"OK":"FAIL")+" · "+item.ms+" ms · filas: "+item.rows+"<br><code>"+item.url+"</code></li>";
-'
-            . '      });
-'
-            . '      if(data.data.fastest){ html += "</ul><p><b>Más rápida:</b> "+data.data.fastest.label+" ("+data.data.fastest.ms+" ms)</p>"; } else { html += "</ul><p>No se pudo determinar fuente más rápida.</p>"; }
-'
-            . '      out.innerHTML = html;
-'
-            . '    })
-'
-            . '    .catch(function(){ out.innerHTML="Error de red al ejecutar test."; })
-'
-            . '    .finally(function(){ btn.disabled=false; });
-'
-            . '});
-'
-            . '})();</script>';
+        echo '<div id="dlh-test-api-results" class="dlh-test-results" role="status" aria-live="polite"></div>';
     }
 
     /* ================================================================

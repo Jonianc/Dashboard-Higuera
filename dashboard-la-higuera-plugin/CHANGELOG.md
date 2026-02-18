@@ -1,5 +1,15 @@
 # Changelog
 
+## 1.9.8 - 2026-02-18
+
+### Added
+- Nuevo `admin-settings.js` para mejorar UX en Ajustes: sincroniza roles, muestra/oculta campos de fuente API y valida en vivo URL/fórmula Power BI.
+- Nuevo `admin-settings.css` con estilos para feedback de validación y resultados del Test de API.
+
+### Changed
+- Se elimina JavaScript inline en la página de Ajustes y se mueve a archivos de assets dedicados para mejor mantenibilidad.
+- El bloque de Test de API ahora entrega resultados con badges de estado, tiempos y fuente más rápida en formato visual más claro.
+
 ## 1.9.7 - 2026-02-07
 
 ### Changed
