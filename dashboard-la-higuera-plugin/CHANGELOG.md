@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.9.2 - 2026-02-07
+
+### Fixed
+- Se robusteció el mapeo de columnas 25-26 desde API (alias por campo + validación de columnas mínimas) para evitar cruces incorrectos de datos cuando cambian encabezados.
+- Si el mapeo API queda incompleto o la API demora, el dashboard cae a fallback CSV 25-26 de forma controlada.
+- Se optimizó la carga inicial: el contenido se muestra de inmediato y la actualización en vivo corre en segundo plano para evitar una espera larga en “Cargando Dashboard...”.
+
 ## 1.9.1 - 2026-02-07
 
 ### Fixed

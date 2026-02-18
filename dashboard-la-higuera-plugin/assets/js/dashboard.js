@@ -1,11 +1,9 @@
-
 const $ = s=>document.querySelector(s);
 const $$ = s=>Array.from(document.querySelectorAll(s));
 const fmt = n => (n===null || n===undefined || Number.isNaN(n)) ? "—" : Math.round(n).toLocaleString('es-CL');
 const pctFmt = x => (x===null||x===undefined||Number.isNaN(x)) ? "—" : Math.round(x*100).toLocaleString('es-CL') + '%';
 const strip = s => String(s||'').trim();
 const isInversionFaena = v => strip(v||'').toUpperCase()==='INVERSIONES VARIAS';
-
 function splitLines(text){ return text.replace(/\r\n/g,'\n').replace(/\r/g,'\n').split('\n'); }
 function detectDelimiter(text){
   const sample = splitLines(text).slice(0,50);
@@ -61,7 +59,6 @@ function sortMesLabels(meses){
     return ia-ib;
   });
 }
-
 function canonicalSeason(value){
   const raw = strip(value||"")
     .replace(/–/g,'-')
@@ -71,7 +68,6 @@ function canonicalSeason(value){
   if(!m) return raw;
   return `${m[1]}-${m[2]}`;
 }
-
 function ingestCSV(raw){
   const delim = detectDelimiter(raw);
   const rows = parseCSV(raw, delim);
@@ -89,7 +85,6 @@ function ingestCSV(raw){
   const iN1   = idxOf("NIVEL 1");
   const iSUP  = header.findIndex(h=>normalizeHeader(h).startsWith("SUPERFICIE REAL"));
   const iTOT  = idxOf("TOTAL CUARTEL");
-
   const data = [];
   const supLast = {};
   let totalRows = 0;
@@ -126,7 +121,6 @@ function ingestCSV(raw){
   }
   return {rows:data, supMap:supLast, totalRows};
 }
-
 function ingestCSV2425(raw){
   const delim = detectDelimiter(raw);
   const rows = parseCSV(raw, delim);
@@ -144,7 +138,6 @@ function ingestCSV2425(raw){
   const iN1   = idxOf("NIVEL 1");
   const iSUP  = header.findIndex(h=>normalizeHeader(h).startsWith("SUPERFICIE REAL"));
   const iTOT  = idxOf("TOTAL CUARTEL");
-
   const data = [];
   const supLast = {};
   let totalRows = 0;
@@ -181,7 +174,6 @@ function ingestCSV2425(raw){
   }
   return {rows:data, supMap:supLast, totalRows};
 }
-
 let comp2425 = {rows:[], supMap:{}};
 let comp2425Status = 'idle';
 let comp2425ErrorReason = '';
@@ -189,25 +181,21 @@ const HIDE_INV_STORAGE_KEY = 'dlh_hide_inv_2425';
 const RESUMEN_STATUS_STORAGE_KEY = 'dlh_resumen_status_hidden';
 let hideInv2425 = false;
 const debugEnabled = (typeof dashboardHigueraData !== 'undefined' && !!dashboardHigueraData.debug);
-
 try {
   hideInv2425 = localStorage.getItem(HIDE_INV_STORAGE_KEY) === '1';
 } catch (e) {
   hideInv2425 = false;
 }
-
 function predioClas(row){
   const esInd = strip(row.PREDIO).toUpperCase()==="COSTOS INDIRECTOS" || strip(row.CUARTEL).toUpperCase()==="COSTOS INDIRECTOS";
   return esInd? "Indirectos":"Productivo";
 }
-
 const state = {
   data: [], supMap: {},
   filtros: {predio:"Todos", sector:"Todos", nivel1:"Todos", faena:"Todas", metrica:"VALOR", mes:"Todos", orden:"Desc"},
   detalle: {nivel1:"Todos", metrica:"VALOR", orden:"Desc"},
   comparativo: {ordenBy:"v25"}
 };
-
 const comparativoMeta = {
   source2425: 'REST csv 2024-25',
   source2526: 'API',
@@ -220,7 +208,6 @@ const comparativoMeta = {
   last2526Updated: '—',
   url2425: '—'
 };
-
 const comparativoOrdenLabels = {
   v24t: '24-25 total',
   v24m: '24-25 meses comparables',
@@ -228,26 +215,22 @@ const comparativoOrdenLabels = {
   diff: 'Diferencia (Δ)',
   pct: 'Diferencia %'
 };
-
 function formatStatusValue(value){
   const str = String(value || '').trim();
   return str ? str : '—';
 }
-
 function formatComparativoMeses(){
   const fm = state.filtros?.mes;
   if(fm==="Todos" || !fm) return 'Todos';
   if(Array.isArray(fm)) return fm.length ? fm.join(', ') : 'Todos';
   return String(fm);
 }
-
 function formatComparativoOrden(){
   const ordenBy = state.comparativo?.ordenBy || 'v25';
   const ordenLabel = comparativoOrdenLabels[ordenBy] || '25-26 actual';
   const dir = state.filtros?.orden === 'Asc' ? 'Ascendente' : 'Descendente';
   return `${ordenLabel} (${dir})`;
 }
-
 function buildStatusCardsHtml(){
   return `
     <div class="comp-status-grid">
@@ -274,7 +257,6 @@ function buildStatusCardsHtml(){
     </div>
   `;
 }
-
 function updateComparativoStatus(){
   const wrap = document.getElementById('comparativo-status');
   const statusCards = buildStatusCardsHtml();
@@ -286,7 +268,6 @@ function updateComparativoStatus(){
     resumenWrap.innerHTML = statusCards;
   }
 }
-
 function buildUrlWithTs(baseUrl, tsValue){
   const ts = String(tsValue || '').trim();
   const finalTs = ts ? ts : String(Date.now());
@@ -381,7 +362,6 @@ function populateCombos(){
   }else{
     labelBtn.innerHTML = `${selArr.length} meses <span class="mes-count">${selArr.length}</span>`;
   }
-
 }
 function buildResumen(){
   const rows = applyFilters();
@@ -395,7 +375,6 @@ function buildResumen(){
   }else{
     meses = [state.filtros.mes];
   }
-
   const orderMes = (a,b)=>{ const [ma,ya]=a.split('-'); const [mb,yb]=b.split('-'); const ia = MES_ABR.indexOf(ma); const ib = MES_ABR.indexOf(mb); const ya2 = parseInt(ya,10); const yb2 = parseInt(yb,10); if(ya2!==yb2) return ya2-yb2; return ia-ib; };
   meses.sort(orderMes);
   const supMap = state.supMap;
@@ -478,7 +457,6 @@ function buildResumen(){
         const totShown = (!Array.isArray(state.filtros.mes) && state.filtros.mes!=="Todos")
           ? ((state.filtros.metrica==="COSTO_HA")?(state.supMap[c]? (byN1M[n][mesesMini[0]]||0)/state.supMap[c]:NaN):(byN1M[n][mesesMini[0]]||0))
           : tMetric;
-
         tds+=`<td>${fmt(totShown)}</td>`; const tr=document.createElement('tr'); tr.innerHTML=tds; tb2.appendChild(tr);
       }
       wrap.innerHTML = ""; wrap.appendChild(tbl2); trd.classList.remove('hidden');
@@ -596,7 +574,6 @@ function buildDetalle(){
   if(exp){ exp.onclick = ()=> { Array.from(document.querySelectorAll('#detalle .acc-body')).forEach(b=>b.classList.remove('hidden')); Array.from(document.querySelectorAll('#detalle .acc-head .acc-caret')).forEach(c=>c.textContent='▼'); } }
   if(col){ col.onclick = ()=> { Array.from(document.querySelectorAll('#detalle .acc-body')).forEach(b=>b.classList.add('hidden')); Array.from(document.querySelectorAll('#detalle .acc-head .acc-caret')).forEach(c=>c.textContent='▶'); } }
 }
-
 function buildComparativo(){
   const filtros = state.filtros;
   const tbody = document.querySelector('#tabla-comparativo tbody');
@@ -608,21 +585,18 @@ function buildComparativo(){
     tfoot.innerHTML = "";
     return;
   }
-
   if(comp2425Status==='idle' || comp2425Status==='loading'){
     tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;color:var(--muted)">Cargando temporada 24-25…</td></tr>`;
     tfoot.innerHTML = "";
     ensureComparativo2425Data().then(()=> buildComparativo());
     return;
   }
-
   if(!comp2425 || !comp2425.rows || !comp2425.rows.length){
     const reason = comp2425ErrorReason || 'Sin datos temporada 24-25 para comparar.';
     tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;color:var(--muted)">${reason}</td></tr>`;
     tfoot.innerHTML = "";
     return;
   }
-
   function applyFiltersComparativo(rows, incluirMes){
     let out = rows.slice();
     if(filtros.predio!=="Todos"){
@@ -652,19 +626,16 @@ function buildComparativo(){
     }
     return out;
   }
-
   // Comparativo usa el filtro global de meses del header
   let rows25 = applyFiltersComparativo(state.data, true);
   let rows24Full = applyFiltersComparativo(comp2425.rows, false);
   let rows24Match = applyFiltersComparativo(comp2425.rows, true);
-
   if(filtros.mes==="Todos"){
     const meses25 = new Set(rows25.map(r => (r.MES_STR||"").slice(0,3)).filter(Boolean));
     if(meses25.size){
       rows24Match = rows24Match.filter(r => meses25.has((r.MES_STR||"").slice(0,3)));
     }
   }
-
   function agruparPorCuartel(rows){
     const agg = {};
     for(const r of rows){
@@ -674,27 +645,21 @@ function buildComparativo(){
     }
     return agg;
   }
-
   const agg25       = agruparPorCuartel(rows25);
   const agg24Full   = agruparPorCuartel(rows24Full);
   const agg24Match  = agruparPorCuartel(rows24Match);
-
   const cuSet = new Set([...Object.keys(agg25), ...Object.keys(agg24Full), ...Object.keys(agg24Match)]);
   const cuarteles = Array.from(cuSet).filter(Boolean);
-
   const metrica = (filtros.metrica==="COSTO_HA") ? "COSTO_HA" : "VALOR";
   const sup25 = state.supMap || {};
   const sup24 = comp2425.supMap || {};
-
   const rowsComp = cuarteles.map(c => {
     const tot25      = agg25[c]      || 0;
     const tot24Full  = agg24Full[c]  || 0;
     const tot24Match = agg24Match[c] || 0;
-
     let v25      = tot25;
     let v24Full  = tot24Full;
     let v24Match = tot24Match;
-
     if(metrica==="COSTO_HA"){
       const s25 = sup25[c];
       const s24 = sup24[c];
@@ -702,17 +667,13 @@ function buildComparativo(){
       v24Full  = s24 ? tot24Full/s24 : NaN;
       v24Match = s24 ? tot24Match/s24 : NaN;
     }
-
     const vv25      = Number.isFinite(v25) ? v25 : NaN;
     const vv24Full  = Number.isFinite(v24Full) ? v24Full : NaN;
     const vv24Match = Number.isFinite(v24Match) ? v24Match : NaN;
-
     const diff = (Number.isFinite(vv25)?vv25:0) - (Number.isFinite(vv24Match)?vv24Match:0);
     const pct  = (Number.isFinite(vv24Match) && Math.abs(vv24Match)>0) ? (vv25/vv24Match - 1) : NaN;
-
     return {CUARTEL:c, v24m:vv24Match, v24t:vv24Full, v25:vv25, diff, pct};
   }).filter(r => !(Number.isNaN(r.v24m) && Number.isNaN(r.v25)));
-
   const ord = filtros.orden==="Asc" ? "Asc" : "Desc";
   const ordenBy = state.comparativo?.ordenBy || "v25";
   const getOrdenValor = (row)=>{
@@ -728,13 +689,11 @@ function buildComparativo(){
     const vb = getOrdenValor(b);
     return ord==="Asc" ? va-vb : vb-va;
   });
-
   if(!rowsComp.length){
     tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;color:var(--muted)">Sin resultados para los filtros seleccionados en Comparativo.</td></tr>`;
     tfoot.innerHTML = "";
     return;
   }
-
   let bodyHTML = "";
   for(const r of rowsComp){
     const cu = r.CUARTEL;
@@ -749,7 +708,6 @@ function buildComparativo(){
     <tr class="hidden mini comp-mini-row"><td colspan="6"><div class="mini-wrap"></div></td></tr>`;
   }
   tbody.innerHTML = bodyHTML;
-
   // Constructor de detalle por Nivel 1 dentro de la propia tabla
   function renderComparativoMini(cu, miniRow){
     const wrap = miniRow.querySelector('.mini-wrap');
@@ -761,7 +719,6 @@ function buildComparativo(){
       wrap.innerHTML = "";
       return;
     }
-
     const agg25N1      = {};
     const agg24MatchN1 = {};
     for(const r of rows25Cu){
@@ -772,17 +729,14 @@ function buildComparativo(){
       const n = strip(r.NIVEL_1 || "Sin clasificar");
       agg24MatchN1[n] = (agg24MatchN1[n]||0) + (r.VALOR||0);
     }
-
     const niveles = Array.from(new Set([...Object.keys(agg25N1), ...Object.keys(agg24MatchN1)])).filter(Boolean);
     if(!niveles.length){
       wrap.innerHTML = "";
       return;
     }
-
     const met = metrica;
     const s25 = sup25[cuNorm];
     const s24 = sup24[cuNorm];
-
     const rowsDetalle = niveles.map(n1=>{
       const tot25      = agg25N1[n1]      || 0;
       const tot24Match = agg24MatchN1[n1] || 0;
@@ -798,7 +752,6 @@ function buildComparativo(){
       const pct  = (Number.isFinite(vv24Match) && Math.abs(vv24Match)>0) ? (vv25/vv24Match - 1) : NaN;
       return {NIVEL_1:n1, v24:vv24Match, v25:vv25, diff, pct};
     }).filter(r => !(Number.isNaN(r.v24) && Number.isNaN(r.v25)));
-
     const ord2 = ord;
     const ordenByDetalle = state.comparativo?.ordenBy || "v25";
     const getOrdenDetalle = (row)=>{
@@ -814,12 +767,10 @@ function buildComparativo(){
       const vb = getOrdenDetalle(b);
       return ord2==="Asc" ? va-vb : vb-va;
     });
-
     const sum24 = rowsDetalle.reduce((a,r)=>a+(Number.isFinite(r.v24)?r.v24:0),0);
     const sum25 = rowsDetalle.reduce((a,r)=>a+(Number.isFinite(r.v25)?r.v25:0),0);
     const diffTot = sum25 - sum24;
     const pctTot = (Number.isFinite(sum24) && Math.abs(sum24)>0) ? (sum25/sum24 - 1) : NaN;
-
     let inner = '<table><thead><tr><th>Nivel 1</th><th>24-25 (mismos meses)</th><th>25-26</th><th>Diferencia</th><th>% Dif.</th></tr></thead><tbody>';
     for(const r of rowsDetalle){
       inner += `<tr>
@@ -837,10 +788,8 @@ function buildComparativo(){
       <td>${fmt(diffTot)}</td>
       <td>${pctFmt(pctTot)}</td>
     </tr></tfoot></table>`;
-
     wrap.innerHTML = inner;
   }
-
   // Click en fila principal para mostrar detalle bajo el cuartel
   Array.from(tbody.querySelectorAll('tr.comp-main')).forEach(tr=>{
     const first = tr.firstElementChild;
@@ -866,13 +815,11 @@ function buildComparativo(){
       mini.classList.remove('hidden');
     };
   });
-
   const sum24m = rowsComp.reduce((a,r)=>a+(Number.isFinite(r.v24m)?r.v24m:0),0);
   const sum24t = rowsComp.reduce((a,r)=>a+(Number.isFinite(r.v24t)?r.v24t:0),0);
   const sum25  = rowsComp.reduce((a,r)=>a+(Number.isFinite(r.v25)?r.v25:0),0);
   const diffTot = sum25 - sum24m;
   const pctTot  = (Number.isFinite(sum24m) && Math.abs(sum24m)>0) ? (sum25/sum24m - 1) : NaN;
-
   tfoot.innerHTML = `<tr>
     <td>Total</td>
     <td>${fmt(sum24t)}</td>
@@ -882,8 +829,6 @@ function buildComparativo(){
     <td>${pctFmt(pctTot)}</td>
   </tr>`;
 }
-
-
 function refreshAll(){
   updateComparativoStatus();
   populateCombos();
@@ -893,16 +838,13 @@ function refreshAll(){
   const activeTab = document.querySelector('.tab.active');
   if(activeTab && activeTab.dataset.tab==='comparativo') buildComparativo();
 }
-
 async function ensureComparativo2425Data(){
   if(comp2425Status==='ready' && comp2425.rows.length) return true;
   if(comp2425Status==='loading') return false;
-
   comp2425Status = 'loading';
   comp2425ErrorReason = '';
   const candidates = [];
   if(EMBED_CSV_2425 && EMBED_CSV_2425.trim()) candidates.push(EMBED_CSV_2425);
-
   const csv2425Url = (typeof dashboardHigueraData !== 'undefined' && dashboardHigueraData.csv2425Url)
     ? dashboardHigueraData.csv2425Url
     : 'data/temporada-2024-25.csv';
@@ -913,7 +855,6 @@ async function ensureComparativo2425Data(){
   comparativoMeta.last2425Updated = last2425Updated || comparativoMeta.last2425Updated;
   comparativoMeta.url2425 = csv2425UrlWithTs;
   updateComparativoStatus();
-
   if(!candidates.length){
     try{
       const resp = await fetch(csv2425UrlWithTs);
@@ -943,11 +884,9 @@ async function ensureComparativo2425Data(){
       comp2425ErrorReason = 'No se pudo descargar el CSV 24-25.';
     }
   }
-
   if(!candidates.length && !comp2425ErrorReason){
     comp2425ErrorReason = 'CSV 24-25 no disponible.';
   }
-
   for(const raw of candidates){
     try{
       const parsed = ingestCSV2425(raw);
@@ -971,13 +910,11 @@ async function ensureComparativo2425Data(){
       comp2425ErrorReason = 'CSV 24-25 inválido o con formato no reconocido.';
     }
   }
-
   comp2425 = {rows:[], supMap:{}};
   if(!comp2425ErrorReason) comp2425ErrorReason = 'CSV 24-25 vacío o sin filas válidas.';
   comp2425Status = 'error';
   return false;
 }
-
 function initDashboardFromRawCSV(raw){
   const ing = ingestCSV(raw); state.data = ing.rows; state.supMap = ing.supMap;
   comparativoMeta.rows2526Read = ing.totalRows || 0;
@@ -985,10 +922,8 @@ function initDashboardFromRawCSV(raw){
   comparativoMeta.rows2425Read = 0;
   comparativoMeta.rows2425Valid = 0;
   updateComparativoStatus();
-
   comp2425Status = 'idle';
   comp2425ErrorReason = '';
-
   document.querySelector("#f_predio").innerHTML = `<option>Todos</option><option>Solo Productivo</option><option>Solo Costos Indirectos</option>`;
   document.querySelector("#f_metrica").innerHTML = `<option value="VALOR">Gasto total</option><option value="COSTO_HA">Costo por hectárea</option>`;
   document.querySelector("#f_orden").innerHTML = `<option value="Desc">Descendente</option><option value="Asc">Ascendente</option>`;
@@ -1045,12 +980,10 @@ function initDashboardFromRawCSV(raw){
     }
     refreshAll();
   });
-
   document.querySelector("#f_orden").onchange = e=>{ state.filtros.orden=e.target.value==="Asc"?"Asc":"Desc"; refreshAll(); };
   document.querySelector("#d_n1").onchange = e=>{ state.detalle.nivel1 = e.target.value; buildDetalle(); };
   document.querySelector("#d_metrica").onchange = e=>{ state.detalle.metrica=e.target.value; buildDetalle(); };
   document.querySelector("#d_orden").onchange = e=>{ state.detalle.orden=e.target.value; buildDetalle(); };
-
   const compOrden = document.getElementById('comparativo-orden-by');
   if(compOrden){
     compOrden.value = state.comparativo?.ordenBy || 'v25';
@@ -1061,18 +994,15 @@ function initDashboardFromRawCSV(raw){
   }
 }
 window.__initDashboardFromRawCSV = initDashboardFromRawCSV;
-
 const btnInv2425 = document.getElementById('btnToggleInv2425');
 const resumenStatus = document.getElementById('resumen-status');
 const resumenToggle = document.getElementById('btnToggleResumenStatus');
-
 if(btnInv2425){
   btnInv2425.textContent = hideInv2425
     ? 'Mostrar INVERSIONES VARIAS'
     : 'Ocultar INVERSIONES VARIAS';
   btnInv2425.setAttribute('aria-pressed', hideInv2425 ? 'true' : 'false');
   btnInv2425.classList.toggle('is-active', hideInv2425);
-
   btnInv2425.onclick = ()=>{
     hideInv2425 = !hideInv2425;
     btnInv2425.textContent = hideInv2425
@@ -1088,7 +1018,6 @@ if(btnInv2425){
     refreshAll();
   };
 }
-
 if(resumenStatus && resumenToggle){
   let isHidden = false;
   try{
@@ -1096,15 +1025,12 @@ if(resumenStatus && resumenToggle){
   }catch(e){
     isHidden = false;
   }
-
   const applyResumenToggle = (hidden)=>{
     resumenStatus.classList.toggle('is-collapsed', hidden);
     resumenToggle.textContent = hidden ? 'Mostrar' : 'Ocultar';
     resumenToggle.setAttribute('aria-expanded', hidden ? 'false' : 'true');
   };
-
   applyResumenToggle(isHidden);
-
   resumenToggle.addEventListener('click', ()=>{
     isHidden = !isHidden;
     try{
@@ -1115,18 +1041,14 @@ if(resumenStatus && resumenToggle){
     applyResumenToggle(isHidden);
   });
 }
-
 document.querySelector('#gen').textContent = new Date().toISOString().slice(0,16).replace('T',' ');
-
 // CSV data will be loaded from external files
 let EMBED_CSV = '';
 let EMBED_CSV_2425 = '';
-
 async function loadCsv2526Fallback() {
   const csv2526Url = (typeof dashboardHigueraData !== 'undefined' && dashboardHigueraData.csv2526Url)
     ? dashboardHigueraData.csv2526Url
     : 'data/temporada-2025-26.csv';
-
   const resp = await fetch(csv2526Url);
   if(!resp.ok) throw new Error('No se pudo cargar fallback CSV 25-26');
   const raw = await resp.text();
@@ -1134,19 +1056,19 @@ async function loadCsv2526Fallback() {
   EMBED_CSV = raw;
   return raw;
 }
-
 // Compatibilidad con template actual (no precargar CSV automáticamente)
 async function loadExternalCSVs() {
   return true;
 }
-
-
 async function initDashboardLive(){
   const API_URL = (typeof dashboardHigueraData !== "undefined" && dashboardHigueraData.apiUrl)
     ? dashboardHigueraData.apiUrl
     : "https://app.agrosmart.cl/v1/api/reporte/base_consolidada.php?token=02376e47a4771e34fcba564f88a9d4fbc42a0c40894ebd8e3ba0d60039bd4528";
   try{
-    const resp = await fetch(API_URL);
+    const controller = (typeof AbortController !== 'undefined') ? new AbortController() : null;
+    const timeoutId = setTimeout(()=>{ if(controller) controller.abort(); }, 15000);
+    const resp = await fetch(API_URL, controller ? {signal: controller.signal} : undefined);
+    clearTimeout(timeoutId);
     if(!resp.ok) throw new Error('HTTP ' + resp.status);
     const json = await resp.json();
     const rows = Array.isArray(json) ? json : (Array.isArray(json.data) ? json.data : []);
@@ -1155,6 +1077,7 @@ async function initDashboardLive(){
       predioContains:"HIGUERA",
       razonSocial:"AGRICOLA LA HIGUERA S.A."
     });
+    if(!csv || !csv.trim()) throw new Error('API sin filas mapeables para 25-26');
     window.__lastCSV = csv;
     __initDashboardFromRawCSV(csv);
     const chip = document.getElementById('srcChip');
@@ -1175,28 +1098,19 @@ async function initDashboardLive(){
     }
   }
 }
-
 // Iniciar el dashboard en vivo al cargar la página
 // En WordPress, esto se maneja desde el template del shortcode
 // initDashboardLive();
-
-
 function buildCSVFromApi(rows, opts){
   opts = opts || {};
   const temporadaTarget = opts.temporada || null;
   const predioContains = opts.predioContains || null;
   const razonSocialTarget = opts.razonSocial || null;
   const razonSocialContains = opts.razonSocialContains || null;
-
   if(!rows || !rows.length){
     return "";
   }
-
   const headerOut = ["TEMPORADA","FECHA","ORIGEN","PREDIO","SECTOR","CUARTEL","FAENA","NIVEL 1","SUPERFICIE REAL (há)","TOTAL CUARTEL"];
-
-  const sample = rows[0] || {};
-  const keys = Object.keys(sample);
-
   function norm(s){
     return String(s || "")
       .toUpperCase()
@@ -1205,43 +1119,50 @@ function buildCSVFromApi(rows, opts){
       .replace(/\s+/g," ")
       .trim();
   }
-
-  const normKeys = {};
-  for(const k of keys){
-    normKeys[k] = norm(k);
-  }
-
-  function findKey(label){
-    const target = norm(label).replace("(HA)","HA");
-    // exact
-    for(const k of keys){
-      if(normKeys[k] === target) return k;
+  const keySet = new Set();
+  for(const row of rows){
+    if(row && typeof row === 'object'){
+      for(const k of Object.keys(row)) keySet.add(k);
     }
-    // contiene / contenido
-    for(const k of keys){
-      const nk = normKeys[k];
-      if(nk.includes(target) || target.includes(nk)) return k;
+  }
+  const keys = Array.from(keySet);
+  const normKeys = {};
+  for(const k of keys) normKeys[k] = norm(k);
+  function findKeyByAliases(aliases){
+    const aliasNorm = aliases.map(a=>norm(a));
+    for(const a of aliasNorm){
+      for(const k of keys){ if(normKeys[k]===a) return k; }
+    }
+    for(const a of aliasNorm){
+      for(const k of keys){
+        const nk = normKeys[k];
+        if(nk.includes(a) || a.includes(nk)) return k;
+      }
     }
     return null;
   }
-
-  const map = {};
-  map["TEMPORADA"]             = findKey("TEMPORADA");
-  map["FECHA"]                 = findKey("FECHA");
-  map["ORIGEN"]                = findKey("ORIGEN");
-  map["RAZON SOCIAL"]          = findKey("RAZON SOCIAL");
-  map["PREDIO"]                = findKey("PREDIO");
-  map["SECTOR"]                = findKey("SECTOR");
-  map["CUARTEL"]               = findKey("CUARTEL");
-  map["FAENA"]                 = findKey("FAENA");
-  map["NIVEL 1"]               = findKey("NIVEL 1");
-  map["SUPERFICIE REAL (há)"]  = findKey("SUPERFICIE REAL");
-  map["TOTAL CUARTEL"]         = findKey("TOTAL CUARTEL");
-
-  const linesOut = [];
-  linesOut.push(headerOut.join(";"));
-
+  const map = {
+    "TEMPORADA": findKeyByAliases(["TEMPORADA", "TEMP"]),
+    "FECHA": findKeyByAliases(["FECHA", "FECHA DOCUMENTO", "FEC"]),
+    "ORIGEN": findKeyByAliases(["ORIGEN", "TIPO ORIGEN"]),
+    "RAZON SOCIAL": findKeyByAliases(["RAZON SOCIAL", "RAZON_SOCIAL", "EMPRESA", "CLIENTE"]),
+    "PREDIO": findKeyByAliases(["PREDIO", "CAMPO"]),
+    "SECTOR": findKeyByAliases(["SECTOR", "CULTIVO"]),
+    "CUARTEL": findKeyByAliases(["CUARTEL", "LOTE"]),
+    "FAENA": findKeyByAliases(["FAENA", "LABOR"]),
+    "NIVEL 1": findKeyByAliases(["NIVEL 1", "NIVEL_1", "NIVEL1"]),
+    "SUPERFICIE REAL (há)": findKeyByAliases(["SUPERFICIE REAL (HA)", "SUPERFICIE REAL", "SUPERFICIE", "HAS", "HECTAREAS"]),
+    "TOTAL CUARTEL": findKeyByAliases(["TOTAL CUARTEL", "TOTAL", "MONTO", "VALOR"])
+  };
+  const required = ["FECHA", "PREDIO", "SECTOR", "CUARTEL", "FAENA", "NIVEL 1", "TOTAL CUARTEL"];
+  const missing = required.filter(k=>!map[k]);
+  if(missing.length){
+    console.warn('buildCSVFromApi: columnas no detectadas', missing, 'keys:', keys);
+    throw new Error('Mapeo incompleto API: ' + missing.join(', '));
+  }
+  const linesOut = [headerOut.join(';')];
   for(const r of rows){
+    if(!r || typeof r !== 'object') continue;
     if(temporadaTarget || predioContains){
       const tempVal = map["TEMPORADA"] ? String(r[map["TEMPORADA"]] || "").trim() : "";
       const predVal = map["PREDIO"] ? String(r[map["PREDIO"]] || "").toUpperCase() : "";
@@ -1254,19 +1175,16 @@ function buildCSVFromApi(rows, opts){
       if(razonSocialTarget && rsNorm !== norm(razonSocialTarget)) continue;
       if(razonSocialContains && !rsNorm.includes(norm(razonSocialContains))) continue;
     }
-
     const line = headerOut.map(h=>{
       const key = map[h];
       const v = key ? (r[key] != null ? r[key] : "") : "";
       const s = String(v).replace(/"/g,'""');
       return '"' + s + '"';
-    }).join(";");
+    }).join(';');
     linesOut.push(line);
   }
-
   return linesOut.join("\n");
 }
-
 function showTab(id){ 
   $$('.tab').forEach(t=>t.classList.toggle('active', t.dataset.tab===id)); 
   $('#panel-resumen').classList.toggle('hidden', id!=='resumen');
@@ -1276,7 +1194,6 @@ function showTab(id){
   $('#panel-detalle').classList.toggle('hidden', id!=='detalle');
   const nota = $('#nota-resumen');
   if(nota) nota.classList.toggle('hidden', id!=='resumen');
-
   if(id==='comparativo') buildComparativo();
 }
 $$('.tab').forEach(t=> t.onclick = ()=> showTab(t.dataset.tab));
