@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.9.1 - 2026-02-07
+
+### Fixed
+- En Comparativo, la columna 24-25 total (Temporada completa) vuelve a calcularse sin filtro de meses para reflejar toda la temporada 24-25, incluso cuando en el header se selecciona un subconjunto de meses.
+
 ## 1.9.0 - 2026-02-07
 
 ### Changed

@@ -655,7 +655,7 @@ function buildComparativo(){
 
   // Comparativo usa el filtro global de meses del header
   let rows25 = applyFiltersComparativo(state.data, true);
-  let rows24Full = applyFiltersComparativo(comp2425.rows, true);
+  let rows24Full = applyFiltersComparativo(comp2425.rows, false);
   let rows24Match = applyFiltersComparativo(comp2425.rows, true);
 
   if(filtros.mes==="Todos"){
