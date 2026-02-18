@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.9.5 - 2026-02-07
+
+### Added
+- En Ajustes se agrega botón “Test de API (velocidad)” para medir URL API y, si aplica, URL extraída desde Fórmula Power BI.
+
+### Changed
+- El test muestra estado, tiempo (ms), filas detectadas y recomendación de fuente más rápida sin cambiar automáticamente la configuración.
+
 ## 1.9.4 - 2026-02-07
 
 ### Added

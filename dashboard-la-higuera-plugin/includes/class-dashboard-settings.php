@@ -21,6 +21,7 @@ class Dashboard_Higuera_Settings {
     public static function init() {
         add_action('admin_menu', array(__CLASS__, 'add_menu'));
         add_action('admin_init', array(__CLASS__, 'register_settings'));
+        add_action('wp_ajax_dlh_test_api_sources', array(__CLASS__, 'ajax_test_api_sources'));
     }
 
     /**
@@ -267,6 +268,52 @@ class Dashboard_Higuera_Settings {
         $val = get_option('dlh_api_powerbi_formula', '');
         echo '<textarea name="dlh_api_powerbi_formula" rows="4" class="large-text code" placeholder="=Json.Document(Web.Contents(&quot;https://...&quot;))">' . esc_textarea($val) . '</textarea>';
         echo '<p class="description">Pega la fórmula de Power BI. Si en "Fuente API 25-26" eliges "Usar Fórmula Power BI", se extraerá la URL dentro de <code>Web.Contents("...")</code>.</p>';
+        echo '<p><button type="button" class="button" id="dlh-test-api-sources">Test de API (velocidad)</button></p>';
+        echo '<div id="dlh-test-api-results" style="max-width:900px;background:#fff;border:1px solid #dcdcde;padding:10px;border-radius:6px;display:none"></div>';
+        $nonce = wp_create_nonce('dlh_test_api_sources');
+        echo '<script>(function(){
+'
+            . 'var btn=document.getElementById("dlh-test-api-sources");
+'
+            . 'var out=document.getElementById("dlh-test-api-results");
+'
+            . 'if(!btn||!out||typeof ajaxurl==="undefined") return;
+'
+            . 'btn.addEventListener("click", function(){
+'
+            . '  out.style.display="block"; out.innerHTML="Probando fuentes API..."; btn.disabled=true;
+'
+            . '  var fd=new FormData(); fd.append("action","dlh_test_api_sources"); fd.append("nonce","' . esc_js($nonce) . '");
+'
+            . '  fetch(ajaxurl,{method:"POST",body:fd,credentials:"same-origin"})
+'
+            . '    .then(function(r){return r.json();})
+'
+            . '    .then(function(data){
+'
+            . '      if(!data||!data.success){ out.innerHTML="Error ejecutando test."; return; }
+'
+            . '      var html="<strong>Resultado test API</strong><ul style=\"margin-top:8px\">";
+'
+            . '      data.data.results.forEach(function(item){
+'
+            . '        html += "<li><b>"+item.label+"</b>: "+(item.ok?"OK":"FAIL")+" · "+item.ms+" ms · filas: "+item.rows+"<br><code>"+item.url+"</code></li>";
+'
+            . '      });
+'
+            . '      if(data.data.fastest){ html += "</ul><p><b>Más rápida:</b> "+data.data.fastest.label+" ("+data.data.fastest.ms+" ms)</p>"; } else { html += "</ul><p>No se pudo determinar fuente más rápida.</p>"; }
+'
+            . '      out.innerHTML = html;
+'
+            . '    })
+'
+            . '    .catch(function(){ out.innerHTML="Error de red al ejecutar test."; })
+'
+            . '    .finally(function(){ btn.disabled=false; });
+'
+            . '});
+'
+            . '})();</script>';
     }
 
     /* ================================================================
@@ -299,6 +346,79 @@ class Dashboard_Higuera_Settings {
 
     public static function sanitize_api_source_mode($input) {
         return ($input === 'powerbi') ? 'powerbi' : 'url';
+    }
+
+    private static function extract_url_from_powerbi_formula($formula) {
+        $raw = trim((string) $formula);
+        if ($raw === '') {
+            return '';
+        }
+        if (preg_match('/Web\.Contents\(\s*"([^"]+)"\s*\)/i', $raw, $m)) {
+            return trim($m[1]);
+        }
+        return '';
+    }
+
+    private static function test_api_endpoint($label, $url) {
+        $url = trim((string) $url);
+        if ($url === '') {
+            return array('label' => $label, 'url' => '', 'ok' => false, 'ms' => 0, 'rows' => 0);
+        }
+
+        $start = microtime(true);
+        $resp = wp_remote_get($url, array('timeout' => 15));
+        $ms = (int) round((microtime(true) - $start) * 1000);
+
+        if (is_wp_error($resp)) {
+            return array('label' => $label, 'url' => $url, 'ok' => false, 'ms' => $ms, 'rows' => 0);
+        }
+
+        $code = wp_remote_retrieve_response_code($resp);
+        $body = wp_remote_retrieve_body($resp);
+        $json = json_decode($body, true);
+
+        $rows = 0;
+        if (is_array($json)) {
+            if (isset($json['data']) && is_array($json['data'])) {
+                $rows = count($json['data']);
+            } else {
+                $rows = count($json);
+            }
+        }
+
+        return array(
+            'label' => $label,
+            'url' => $url,
+            'ok' => ($code >= 200 && $code < 300),
+            'ms' => $ms,
+            'rows' => $rows,
+        );
+    }
+
+    public static function ajax_test_api_sources() {
+        if (!current_user_can('manage_options')) {
+            wp_send_json_error(array('message' => 'Sin permisos.'), 403);
+        }
+        check_ajax_referer('dlh_test_api_sources', 'nonce');
+
+        $api_url = get_option('dlh_api_url', '');
+        $formula = get_option('dlh_api_powerbi_formula', '');
+        $formula_url = self::extract_url_from_powerbi_formula($formula);
+
+        $results = array();
+        $results[] = self::test_api_endpoint('URL API', $api_url);
+        if ($formula_url !== '') {
+            $results[] = self::test_api_endpoint('Fórmula Power BI', $formula_url);
+        }
+
+        $ok = array_values(array_filter($results, function($r){ return !empty($r['ok']); }));
+        usort($ok, function($a,$b){ return $a['ms'] <=> $b['ms']; });
+        $fastest = !empty($ok) ? $ok[0] : null;
+
+        wp_send_json_success(array(
+            'results' => $results,
+            'fastest' => $fastest,
+        ));
     }
 
     /* ================================================================
