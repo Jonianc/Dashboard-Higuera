@@ -1,5 +1,15 @@
 # Changelog
 
+## 1.9.9 - 2026-02-19
+
+### Added
+- Nuevo portal de acceso con contraseña configurable desde Ajustes, aplicado solo a la URL standalone del dashboard.
+- Opciones en Ajustes para activar portal, definir contraseña, título y mensaje de acceso.
+
+### Changed
+- Se agrega cierre de acceso (logout del portal) en standalone para volver a bloquear la vista.
+- El panel de Ajustes oculta/muestra los campos del portal según si está habilitado.
+
 ## 1.9.8 - 2026-02-18
 
 ### Added

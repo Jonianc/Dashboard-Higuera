@@ -76,6 +76,21 @@
     powerbiGroup.style.display = usePowerBi ? '' : 'none';
   }
 
+
+  function togglePasswordPortalFields(){
+    var enabled = document.querySelector('input[name="dlh_password_portal_enabled"]');
+    var rowPassword = byId('dlh_password_portal_password') ? byId('dlh_password_portal_password').closest('tr') : null;
+    var rowTitle = document.querySelector('input[name="dlh_password_portal_title"]');
+    rowTitle = rowTitle ? rowTitle.closest('tr') : null;
+    var rowMessage = document.querySelector('input[name="dlh_password_portal_message"]');
+    rowMessage = rowMessage ? rowMessage.closest('tr') : null;
+    if(!enabled){ return; }
+    var show = enabled.checked;
+    [rowPassword,rowTitle,rowMessage].forEach(function(row){
+      if(row){ row.style.display = show ? '' : 'none'; }
+    });
+  }
+
   function escapeHtml(value){
     return String(value == null ? '' : value)
       .replace(/&/g, '&amp;')
@@ -170,10 +185,14 @@
     var powerBiInput = byId('dlh_api_powerbi_formula');
     if(powerBiInput){ powerBiInput.addEventListener('input', validatePowerBiFormula); }
 
+    var portalEnabled = document.querySelector('input[name="dlh_password_portal_enabled"]');
+    if(portalEnabled){ portalEnabled.addEventListener('change', togglePasswordPortalFields); }
+
     toggleRoles();
     toggleApiSourceFields();
     validateApiUrl();
     validatePowerBiFormula();
+    togglePasswordPortalFields();
     bindApiTest();
   });
 })();

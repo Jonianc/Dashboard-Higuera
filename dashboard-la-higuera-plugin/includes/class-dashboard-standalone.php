@@ -62,6 +62,9 @@ class Dashboard_Higuera_Standalone {
             );
         }
 
+        // Procesar portal con contraseña (solo standalone)
+        self::handle_password_portal();
+
         // Verificar si los assets están habilitados
         $load_assets = get_option('dlh_load_assets', '1');
         if (!$load_assets) {
@@ -109,6 +112,152 @@ class Dashboard_Higuera_Standalone {
         }
 
         return true;
+    }
+
+
+    private static function handle_password_portal() {
+        if (!self::is_password_portal_enabled()) {
+            return;
+        }
+
+        if (isset($_GET['dlh_portal_logout'])) {
+            self::clear_password_portal_cookie();
+            wp_safe_redirect(home_url('/' . self::get_slug() . '/'));
+            exit;
+        }
+
+        if (self::has_password_portal_cookie()) {
+            return;
+        }
+
+        $error = '';
+        if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['dlh_portal_submit'])) {
+            check_admin_referer('dlh_portal_access', 'dlh_portal_nonce');
+            $password = isset($_POST['dlh_portal_password']) ? (string) wp_unslash($_POST['dlh_portal_password']) : '';
+            if (self::verify_password_portal($password)) {
+                self::set_password_portal_cookie();
+                wp_safe_redirect(home_url('/' . self::get_slug() . '/'));
+                exit;
+            }
+            $error = 'Contraseña incorrecta. Intenta nuevamente.';
+        }
+
+        self::output_password_portal($error);
+        exit;
+    }
+
+    private static function is_password_portal_enabled() {
+        $enabled = get_option('dlh_password_portal_enabled', '0') === '1';
+        $hash = trim((string) get_option('dlh_password_portal_password', ''));
+        return $enabled && $hash !== '';
+    }
+
+    private static function verify_password_portal($password) {
+        $hash = (string) get_option('dlh_password_portal_password', '');
+        if ($hash === '') {
+            return false;
+        }
+        return wp_check_password((string) $password, $hash);
+    }
+
+    private static function get_password_portal_cookie_name() {
+        return 'dlh_portal_access';
+    }
+
+    private static function has_password_portal_cookie() {
+        $name = self::get_password_portal_cookie_name();
+        if (empty($_COOKIE[$name])) {
+            return false;
+        }
+
+        $value = (string) wp_unslash($_COOKIE[$name]);
+        $parts = explode('|', $value);
+        if (count($parts) !== 2) {
+            return false;
+        }
+
+        $expires = (int) $parts[0];
+        $token = (string) $parts[1];
+        if ($expires < time()) {
+            return false;
+        }
+
+        $hash = (string) get_option('dlh_password_portal_password', '');
+        if ($hash === '') {
+            return false;
+        }
+
+        $expected = hash_hmac('sha256', $expires . '|' . $hash, wp_salt('auth'));
+        return hash_equals($expected, $token);
+    }
+
+    private static function set_password_portal_cookie() {
+        $expires = time() + (8 * HOUR_IN_SECONDS);
+        $hash = (string) get_option('dlh_password_portal_password', '');
+        $token = hash_hmac('sha256', $expires . '|' . $hash, wp_salt('auth'));
+        $value = $expires . '|' . $token;
+
+        setcookie(
+            self::get_password_portal_cookie_name(),
+            $value,
+            $expires,
+            COOKIEPATH ? COOKIEPATH : '/',
+            COOKIE_DOMAIN,
+            is_ssl(),
+            true
+        );
+    }
+
+    private static function clear_password_portal_cookie() {
+        setcookie(
+            self::get_password_portal_cookie_name(),
+            '',
+            time() - HOUR_IN_SECONDS,
+            COOKIEPATH ? COOKIEPATH : '/',
+            COOKIE_DOMAIN,
+            is_ssl(),
+            true
+        );
+    }
+
+    private static function output_password_portal($error = '') {
+        $charset = get_bloginfo('charset');
+        $lang = get_language_attributes();
+        $title = get_option('dlh_password_portal_title', 'Acceso al Dashboard');
+        $message = get_option('dlh_password_portal_message', 'Ingresa la contraseña para continuar.');
+        ?>
+<!DOCTYPE html>
+<html <?php echo $lang; ?>>
+<head>
+    <meta charset="<?php echo esc_attr($charset); ?>">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="robots" content="noindex, nofollow">
+    <title><?php echo esc_html($title); ?></title>
+    <style>
+        body{margin:0;min-height:100vh;display:flex;align-items:center;justify-content:center;background:#0f1115;color:#e6e9f2;font-family:Inter,system-ui,-apple-system,sans-serif;padding:20px}
+        .dlh-portal{width:100%;max-width:420px;background:#151822;border:1px solid #232738;border-radius:14px;padding:24px}
+        .dlh-portal h1{margin:0 0 8px;font-size:22px}
+        .dlh-portal p{margin:0 0 16px;color:#a7b0c5}
+        .dlh-portal input{width:100%;padding:10px 12px;border-radius:8px;border:1px solid #2a3044;background:#0f1320;color:#fff}
+        .dlh-portal button{margin-top:12px;width:100%;padding:10px 12px;border:0;border-radius:8px;background:#4f8cff;color:#fff;font-weight:600;cursor:pointer}
+        .dlh-portal .error{margin-top:12px;color:#ff8a8a;font-size:14px}
+    </style>
+</head>
+<body>
+    <form method="post" class="dlh-portal">
+        <h1><?php echo esc_html($title); ?></h1>
+        <p><?php echo esc_html($message); ?></p>
+        <label for="dlh_portal_password">Contraseña</label>
+        <input type="password" id="dlh_portal_password" name="dlh_portal_password" required autocomplete="current-password">
+        <?php wp_nonce_field('dlh_portal_access', 'dlh_portal_nonce'); ?>
+        <button type="submit" name="dlh_portal_submit" value="1">Ingresar</button>
+        <?php if (!empty($error)) : ?>
+            <div class="error"><?php echo esc_html($error); ?></div>
+        <?php endif; ?>
+    </form>
+</body>
+</html>
+<?php
     }
 
     /**
@@ -197,6 +346,11 @@ class Dashboard_Higuera_Standalone {
     </style>
 </head>
 <body>
+    <?php if (self::is_password_portal_enabled()) : ?>
+        <div style="position:fixed;top:12px;right:12px;z-index:9999;">
+            <a href="<?php echo esc_url(add_query_arg('dlh_portal_logout', '1', home_url('/' . self::get_slug() . '/'))); ?>" style="display:inline-block;padding:8px 12px;border-radius:8px;background:#1e2433;color:#fff;border:1px solid #2f3b55;text-decoration:none;font-size:13px;">Cerrar acceso</a>
+        </div>
+    <?php endif; ?>
     <?php echo $dashboard_html; ?>
     <script>
         var dashboardHigueraData = {

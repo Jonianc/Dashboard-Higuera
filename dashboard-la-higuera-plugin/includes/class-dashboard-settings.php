@@ -121,6 +121,39 @@ class Dashboard_Higuera_Settings {
 
         add_settings_field('dlh_roles', 'Roles permitidos', array(__CLASS__, 'field_roles'), self::MENU_SLUG, 'dlh_section_access');
 
+
+        register_setting(self::OPTION_GROUP, 'dlh_password_portal_enabled', array(
+            'type'              => 'string',
+            'sanitize_callback' => array(__CLASS__, 'sanitize_checkbox'),
+            'default'           => '0',
+        ));
+
+        add_settings_field('dlh_password_portal_enabled', 'Portal con contraseña (standalone)', array(__CLASS__, 'field_password_portal_enabled'), self::MENU_SLUG, 'dlh_section_access');
+
+        register_setting(self::OPTION_GROUP, 'dlh_password_portal_password', array(
+            'type'              => 'string',
+            'sanitize_callback' => array(__CLASS__, 'sanitize_portal_password'),
+            'default'           => '',
+        ));
+
+        add_settings_field('dlh_password_portal_password', 'Contraseña del portal', array(__CLASS__, 'field_password_portal_password'), self::MENU_SLUG, 'dlh_section_access');
+
+        register_setting(self::OPTION_GROUP, 'dlh_password_portal_title', array(
+            'type'              => 'string',
+            'sanitize_callback' => 'sanitize_text_field',
+            'default'           => 'Acceso al Dashboard',
+        ));
+
+        add_settings_field('dlh_password_portal_title', 'Título portal', array(__CLASS__, 'field_password_portal_title'), self::MENU_SLUG, 'dlh_section_access');
+
+        register_setting(self::OPTION_GROUP, 'dlh_password_portal_message', array(
+            'type'              => 'string',
+            'sanitize_callback' => 'sanitize_text_field',
+            'default'           => 'Ingresa la contraseña para continuar.',
+        ));
+
+        add_settings_field('dlh_password_portal_message', 'Mensaje portal', array(__CLASS__, 'field_password_portal_message'), self::MENU_SLUG, 'dlh_section_access');
+
         // --- Sección: Assets ---
         add_settings_section(
             'dlh_section_assets',
@@ -189,7 +222,7 @@ class Dashboard_Higuera_Settings {
     }
 
     public static function section_access_cb() {
-        echo '<p>Controla quién puede ver el dashboard en la URL standalone.</p>';
+        echo '<p>Controla quién puede ver el dashboard en la URL standalone y, opcionalmente, agrega una capa de contraseña.</p>';
     }
 
     public static function section_assets_cb() {
@@ -240,6 +273,31 @@ class Dashboard_Higuera_Settings {
         // Hidden field que se llenará via JS
         echo '<input type="hidden" name="dlh_roles" id="dlh_roles_hidden" value="' . esc_attr($val) . '">';
         echo '<p class="description">Solo aplica si el tipo de acceso es "Solo ciertos roles".</p>';
+    }
+
+
+    public static function field_password_portal_enabled() {
+        $val = get_option('dlh_password_portal_enabled', '0');
+        echo '<label>';
+        echo '<input type="checkbox" name="dlh_password_portal_enabled" value="1" ' . checked($val, '1', false) . '>';
+        echo ' Activar portal de contraseña solo para URL standalone';
+        echo '</label>';
+        echo '<p class="description">Si está activo, se solicitará contraseña antes de mostrar el dashboard standalone.</p>';
+    }
+
+    public static function field_password_portal_password() {
+        echo '<input type="password" name="dlh_password_portal_password" id="dlh_password_portal_password" value="" class="regular-text" autocomplete="new-password" />';
+        echo '<p class="description">Deja este campo vacío para mantener la contraseña actual. Escribe una nueva para reemplazarla.</p>';
+    }
+
+    public static function field_password_portal_title() {
+        $val = get_option('dlh_password_portal_title', 'Acceso al Dashboard');
+        echo '<input type="text" name="dlh_password_portal_title" value="' . esc_attr($val) . '" class="regular-text" />';
+    }
+
+    public static function field_password_portal_message() {
+        $val = get_option('dlh_password_portal_message', 'Ingresa la contraseña para continuar.');
+        echo '<input type="text" name="dlh_password_portal_message" value="' . esc_attr($val) . '" class="large-text" />';
     }
 
     public static function field_load_assets() {
@@ -310,6 +368,18 @@ class Dashboard_Higuera_Settings {
 
     public static function sanitize_checkbox($input) {
         return $input ? '1' : '0';
+    }
+
+
+    public static function sanitize_portal_password($input) {
+        $raw = trim((string) $input);
+        $current = get_option('dlh_password_portal_password', '');
+
+        if ($raw === '') {
+            return $current;
+        }
+
+        return wp_hash_password($raw);
     }
 
     public static function sanitize_data_source($input) {
