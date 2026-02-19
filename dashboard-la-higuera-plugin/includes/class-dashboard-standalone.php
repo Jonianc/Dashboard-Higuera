@@ -131,7 +131,7 @@ class Dashboard_Higuera_Standalone {
         }
 
         $error = '';
-        if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['dlh_portal_submit'])) {
+        if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['dlh_portal_nonce'])) {
             check_admin_referer('dlh_portal_access', 'dlh_portal_nonce');
             $password = isset($_POST['dlh_portal_password']) ? (string) wp_unslash($_POST['dlh_portal_password']) : '';
             if (self::verify_password_portal($password)) {
@@ -236,17 +236,17 @@ class Dashboard_Higuera_Standalone {
     <style>
         :root{color-scheme:dark}
         body{margin:0;min-height:100vh;display:flex;align-items:center;justify-content:center;background:radial-gradient(circle at top,#1a2031 0%,#0f1115 55%);color:#e6e9f2;font-family:Inter,system-ui,-apple-system,sans-serif;padding:20px}
-        .dlh-portal{width:100%;max-width:460px;background:rgba(21,24,34,.92);backdrop-filter:blur(6px);border:1px solid #2a3147;border-radius:16px;padding:26px;box-shadow:0 12px 40px rgba(0,0,0,.35)}
+        .dlh-portal{width:100%;max-width:440px;background:rgba(21,24,34,.94);backdrop-filter:blur(6px);border:1px solid #2a3147;border-radius:16px;padding:28px;box-shadow:0 12px 40px rgba(0,0,0,.35)}
         .dlh-portal h1{margin:0 0 8px;font-size:24px;line-height:1.25}
-        .dlh-portal p{margin:0 0 16px;color:#b2bbd1;line-height:1.5}
+        .dlh-portal p{margin:0 0 18px;color:#b2bbd1;line-height:1.5}
         .dlh-portal label{display:block;margin-bottom:8px;color:#d7def1;font-size:14px;font-weight:600}
-        .dlh-portal input{width:100%;padding:11px 12px;border-radius:10px;border:1px solid #354262;background:#0f1320;color:#fff;outline:0;transition:border-color .2s,box-shadow .2s}
+        .dlh-portal input{width:100%;height:48px;padding:0 14px;border-radius:10px;border:1px solid #354262;background:#0f1320;color:#fff;outline:0;transition:border-color .2s,box-shadow .2s}
         .dlh-portal input:focus{border-color:#6ea8ff;box-shadow:0 0 0 3px rgba(78,140,255,.25)}
-        .dlh-portal button{margin-top:14px;width:100%;padding:11px 12px;border:0;border-radius:10px;background:linear-gradient(180deg,#6ea8ff,#4f8cff);color:#fff;font-weight:700;cursor:pointer;transition:transform .06s ease,opacity .2s}
+        .dlh-portal button{margin-top:14px;width:100%;height:48px;padding:0 14px;border:0;border-radius:10px;background:linear-gradient(180deg,#6ea8ff,#4f8cff);color:#fff;font-weight:700;cursor:pointer;transition:transform .06s ease,opacity .2s}
         .dlh-portal button:hover{opacity:.95}
         .dlh-portal button:active{transform:translateY(1px)}
         .dlh-portal button[disabled]{opacity:.7;cursor:wait}
-        .dlh-portal .meta{margin-top:10px;font-size:12px;color:#8f9bb8}
+        .dlh-portal .meta{margin-top:12px;font-size:12px;color:#8f9bb8;line-height:1.45}
         .dlh-portal .error{margin-top:12px;padding:10px 12px;border:1px solid #7d3340;background:#2a1720;color:#ffb3be;border-radius:10px;font-size:14px}
     </style>
 </head>
@@ -257,7 +257,8 @@ class Dashboard_Higuera_Standalone {
         <label for="dlh_portal_password">Contraseña</label>
         <input type="password" id="dlh_portal_password" name="dlh_portal_password" required autocomplete="current-password" autofocus>
         <?php wp_nonce_field('dlh_portal_access', 'dlh_portal_nonce'); ?>
-        <button type="submit" name="dlh_portal_submit" value="1" id="dlh-portal-submit">Ingresar al dashboard</button>
+        <input type="hidden" name="dlh_portal_submit" value="1">
+        <button type="submit" id="dlh-portal-submit">Ingresar al dashboard</button>
         <div class="meta">La sesión de acceso expira automáticamente después de 8 horas.</div>
         <?php if (!empty($error)) : ?>
             <div class="error" role="alert" aria-live="polite"><?php echo esc_html($error); ?></div>
@@ -269,6 +270,10 @@ class Dashboard_Higuera_Standalone {
       var btn=document.getElementById('dlh-portal-submit');
       if(!form||!btn){return;}
       form.addEventListener('submit',function(){
+        if(form.classList.contains('is-submitting')){
+          return;
+        }
+        form.classList.add('is-submitting');
         btn.disabled=true;
         btn.textContent='Validando...';
       });

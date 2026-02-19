@@ -1,5 +1,15 @@
 # Changelog
 
+## 1.9.11 - 2026-02-19
+
+### Fixed
+- Se corrige el ingreso del portal: ya no depende del `name` del botón submit (que podía perderse al deshabilitarse en estado `Validando...`).
+- El formulario vuelve a procesar correctamente la contraseña usando el nonce del portal y un campo hidden de acción.
+
+### Improved
+- Ajustes visuales del portal standalone para un layout más parejo: ancho/padding refinados y altura consistente entre input y botón.
+- Se mejora el feedback de envío para evitar doble submit sin bloquear el flujo de autenticación.
+
 ## 1.9.10 - 2026-02-19
 
 ### Improved
