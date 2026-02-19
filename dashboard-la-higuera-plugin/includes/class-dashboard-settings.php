@@ -286,8 +286,10 @@ class Dashboard_Higuera_Settings {
     }
 
     public static function field_password_portal_password() {
+        $has_password = trim((string) get_option('dlh_password_portal_password', '')) !== '';
         echo '<input type="password" name="dlh_password_portal_password" id="dlh_password_portal_password" value="" class="regular-text" autocomplete="new-password" />';
         echo '<p class="description">Deja este campo vacío para mantener la contraseña actual. Escribe una nueva para reemplazarla.</p>';
+        echo '<p class="description"><strong>Estado actual:</strong> ' . ($has_password ? 'Contraseña configurada' : 'Sin contraseña configurada') . '. Recomendado: mínimo 10 caracteres.</p>';
     }
 
     public static function field_password_portal_title() {

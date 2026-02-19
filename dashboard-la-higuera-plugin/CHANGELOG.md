@@ -1,5 +1,16 @@
 # Changelog
 
+## 1.9.10 - 2026-02-19
+
+### Improved
+- Portal standalone de contraseña con UI/UX renovada: layout más claro, mejor contraste, foco visible y botón principal más legible.
+- Se agrega estado de envío en el formulario (`Validando...`) para evitar doble submit y mejorar feedback de interacción.
+- Mensaje informativo de duración de sesión (8 horas) y alerta de error accesible (`role="alert"`, `aria-live`).
+- Botón de `Cerrar acceso` en standalone ahora usa estilos consistentes (sin inline styles) para mejor mantenibilidad visual.
+
+### Changed
+- En Ajustes, el campo de contraseña del portal ahora muestra estado actual (configurada/no configurada) y recomendación de longitud mínima.
+
 ## 1.9.9 - 2026-02-19
 
 ### Added

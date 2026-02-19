@@ -234,27 +234,46 @@ class Dashboard_Higuera_Standalone {
     <meta name="robots" content="noindex, nofollow">
     <title><?php echo esc_html($title); ?></title>
     <style>
-        body{margin:0;min-height:100vh;display:flex;align-items:center;justify-content:center;background:#0f1115;color:#e6e9f2;font-family:Inter,system-ui,-apple-system,sans-serif;padding:20px}
-        .dlh-portal{width:100%;max-width:420px;background:#151822;border:1px solid #232738;border-radius:14px;padding:24px}
-        .dlh-portal h1{margin:0 0 8px;font-size:22px}
-        .dlh-portal p{margin:0 0 16px;color:#a7b0c5}
-        .dlh-portal input{width:100%;padding:10px 12px;border-radius:8px;border:1px solid #2a3044;background:#0f1320;color:#fff}
-        .dlh-portal button{margin-top:12px;width:100%;padding:10px 12px;border:0;border-radius:8px;background:#4f8cff;color:#fff;font-weight:600;cursor:pointer}
-        .dlh-portal .error{margin-top:12px;color:#ff8a8a;font-size:14px}
+        :root{color-scheme:dark}
+        body{margin:0;min-height:100vh;display:flex;align-items:center;justify-content:center;background:radial-gradient(circle at top,#1a2031 0%,#0f1115 55%);color:#e6e9f2;font-family:Inter,system-ui,-apple-system,sans-serif;padding:20px}
+        .dlh-portal{width:100%;max-width:460px;background:rgba(21,24,34,.92);backdrop-filter:blur(6px);border:1px solid #2a3147;border-radius:16px;padding:26px;box-shadow:0 12px 40px rgba(0,0,0,.35)}
+        .dlh-portal h1{margin:0 0 8px;font-size:24px;line-height:1.25}
+        .dlh-portal p{margin:0 0 16px;color:#b2bbd1;line-height:1.5}
+        .dlh-portal label{display:block;margin-bottom:8px;color:#d7def1;font-size:14px;font-weight:600}
+        .dlh-portal input{width:100%;padding:11px 12px;border-radius:10px;border:1px solid #354262;background:#0f1320;color:#fff;outline:0;transition:border-color .2s,box-shadow .2s}
+        .dlh-portal input:focus{border-color:#6ea8ff;box-shadow:0 0 0 3px rgba(78,140,255,.25)}
+        .dlh-portal button{margin-top:14px;width:100%;padding:11px 12px;border:0;border-radius:10px;background:linear-gradient(180deg,#6ea8ff,#4f8cff);color:#fff;font-weight:700;cursor:pointer;transition:transform .06s ease,opacity .2s}
+        .dlh-portal button:hover{opacity:.95}
+        .dlh-portal button:active{transform:translateY(1px)}
+        .dlh-portal button[disabled]{opacity:.7;cursor:wait}
+        .dlh-portal .meta{margin-top:10px;font-size:12px;color:#8f9bb8}
+        .dlh-portal .error{margin-top:12px;padding:10px 12px;border:1px solid #7d3340;background:#2a1720;color:#ffb3be;border-radius:10px;font-size:14px}
     </style>
 </head>
 <body>
-    <form method="post" class="dlh-portal">
+    <form method="post" class="dlh-portal" id="dlh-portal-form" novalidate>
         <h1><?php echo esc_html($title); ?></h1>
         <p><?php echo esc_html($message); ?></p>
         <label for="dlh_portal_password">Contraseña</label>
-        <input type="password" id="dlh_portal_password" name="dlh_portal_password" required autocomplete="current-password">
+        <input type="password" id="dlh_portal_password" name="dlh_portal_password" required autocomplete="current-password" autofocus>
         <?php wp_nonce_field('dlh_portal_access', 'dlh_portal_nonce'); ?>
-        <button type="submit" name="dlh_portal_submit" value="1">Ingresar</button>
+        <button type="submit" name="dlh_portal_submit" value="1" id="dlh-portal-submit">Ingresar al dashboard</button>
+        <div class="meta">La sesión de acceso expira automáticamente después de 8 horas.</div>
         <?php if (!empty($error)) : ?>
-            <div class="error"><?php echo esc_html($error); ?></div>
+            <div class="error" role="alert" aria-live="polite"><?php echo esc_html($error); ?></div>
         <?php endif; ?>
     </form>
+    <script>
+    (function(){
+      var form=document.getElementById('dlh-portal-form');
+      var btn=document.getElementById('dlh-portal-submit');
+      if(!form||!btn){return;}
+      form.addEventListener('submit',function(){
+        btn.disabled=true;
+        btn.textContent='Validando...';
+      });
+    })();
+    </script>
 </body>
 </html>
 <?php
@@ -343,12 +362,32 @@ class Dashboard_Higuera_Standalone {
             50%  { transform: translateX(200%); }
             100% { transform: translateX(-100%); }
         }
+        .dlh-portal-bar {
+            position: fixed;
+            top: 12px;
+            right: 12px;
+            z-index: 9999;
+        }
+        .dlh-portal-logout {
+            display: inline-block;
+            padding: 8px 12px;
+            border-radius: 8px;
+            background: #1e2433;
+            color: #ffffff;
+            border: 1px solid #2f3b55;
+            text-decoration: none;
+            font-size: 13px;
+            font-weight: 600;
+        }
+        .dlh-portal-logout:hover {
+            background: #252f45;
+        }
     </style>
 </head>
 <body>
     <?php if (self::is_password_portal_enabled()) : ?>
-        <div style="position:fixed;top:12px;right:12px;z-index:9999;">
-            <a href="<?php echo esc_url(add_query_arg('dlh_portal_logout', '1', home_url('/' . self::get_slug() . '/'))); ?>" style="display:inline-block;padding:8px 12px;border-radius:8px;background:#1e2433;color:#fff;border:1px solid #2f3b55;text-decoration:none;font-size:13px;">Cerrar acceso</a>
+        <div class="dlh-portal-bar">
+            <a href="<?php echo esc_url(add_query_arg('dlh_portal_logout', '1', home_url('/' . self::get_slug() . '/'))); ?>" class="dlh-portal-logout">Cerrar acceso</a>
         </div>
     <?php endif; ?>
     <?php echo $dashboard_html; ?>
