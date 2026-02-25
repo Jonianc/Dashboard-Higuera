@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.9.14 - 2026-02-25
+
+### Changed
+- Se refactoriza `dashboard-template.php` para eliminar el snapshot HTML masivo (tablas/opciones precargadas) y dejar solo el skeleton base renderizado por JavaScript en tiempo real.
+- Se mantiene la misma estructura funcional (filtros, tabs, comparativo, detalle, gráficos), reduciendo drásticamente peso y deuda de mantenimiento del template.
+
 ## 1.9.13 - 2026-02-25
 
 ### Security
