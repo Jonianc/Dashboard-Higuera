@@ -13,6 +13,41 @@ if (!defined('WPINC')) {
 class Dashboard_Higuera_Standalone {
 
     /**
+     * Validar acceso según ajustes configurados (public/logged_in/role).
+     *
+     * @return bool
+     */
+    public static function user_has_access_by_settings() {
+        $access = get_option('dlh_access', 'public');
+
+        if ($access === 'public') {
+            return true;
+        }
+
+        if (!is_user_logged_in()) {
+            return false;
+        }
+
+        if ($access === 'logged_in') {
+            return true;
+        }
+
+        if ($access === 'role') {
+            $allowed_roles = get_option('dlh_roles', 'administrator');
+            $roles = array_map('trim', explode(',', $allowed_roles));
+            $user = wp_get_current_user();
+            foreach ($roles as $role) {
+                if (in_array($role, $user->roles, true)) {
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        return true;
+    }
+
+    /**
      * Inicializar hooks
      */
     public static function init() {
@@ -84,34 +119,7 @@ class Dashboard_Higuera_Standalone {
      * Verificar si el usuario actual tiene acceso
      */
     private static function check_access() {
-        $access = get_option('dlh_access', 'public');
-
-        if ($access === 'public') {
-            return true;
-        }
-
-        if (!is_user_logged_in()) {
-            return false;
-        }
-
-        if ($access === 'logged_in') {
-            return true;
-        }
-
-        // Acceso por rol
-        if ($access === 'role') {
-            $allowed_roles = get_option('dlh_roles', 'administrator');
-            $roles = array_map('trim', explode(',', $allowed_roles));
-            $user = wp_get_current_user();
-            foreach ($roles as $role) {
-                if (in_array($role, $user->roles, true)) {
-                    return true;
-                }
-            }
-            return false;
-        }
-
-        return true;
+        return self::user_has_access_by_settings();
     }
 
 

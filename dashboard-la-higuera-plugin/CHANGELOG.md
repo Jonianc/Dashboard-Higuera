@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.9.12 - 2026-02-25
+
+### Security
+- Se endurecen los endpoints REST de CSV (`/dashboard-higuera/v1/csv/2025-26` y `/dashboard-higuera/v1/csv/2024-25`): ya no son públicos por defecto y ahora respetan el control de acceso configurado del plugin (`public`, `logged_in`, `role`).
+
+### Changed
+- Se centraliza la verificación de acceso en una función reutilizable para mantener consistencia entre standalone y REST.
+
 ## 1.9.11 - 2026-02-19
 
 ### Fixed

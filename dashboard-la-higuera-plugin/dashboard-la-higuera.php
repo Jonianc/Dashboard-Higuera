@@ -3,7 +3,7 @@
  * Plugin Name: Dashboard La Higuera
  * Plugin URI: https://github.com/Jonianc/Dashboard-Higuera
  * Description: Dashboard interactivo para visualizar datos de costos y faenas de Agrícola La Higuera
- * Version: 1.9.11
+ * Version: 1.9.12
  * Author: Agrícola La Higuera S.A.
  * Author URI: https://lahiguera.cl
  * License: GPL v2 or later
@@ -18,7 +18,7 @@ if (!defined('WPINC')) {
 }
 
 // Definir constantes del plugin
-define('DASHBOARD_HIGUERA_VERSION', '1.9.11');
+define('DASHBOARD_HIGUERA_VERSION', '1.9.12');
 define('DASHBOARD_HIGUERA_PLUGIN_DIR', plugin_dir_path(__FILE__));
 define('DASHBOARD_HIGUERA_PLUGIN_URL', plugin_dir_url(__FILE__));
 
@@ -192,15 +192,33 @@ class Dashboard_La_Higuera {
         register_rest_route('dashboard-higuera/v1', '/csv/2025-26', array(
             'methods' => 'GET',
             'callback' => array($this, 'serve_csv_2526'),
-            'permission_callback' => '__return_true'
+            'permission_callback' => array($this, 'rest_can_access_csv')
         ));
 
         // Ruta para CSV 2024-25
         register_rest_route('dashboard-higuera/v1', '/csv/2024-25', array(
             'methods' => 'GET',
             'callback' => array($this, 'serve_csv_2425'),
-            'permission_callback' => '__return_true'
+            'permission_callback' => array($this, 'rest_can_access_csv')
         ));
+    }
+
+    /**
+     * Permisos para endpoints REST de CSV.
+     * Respeta el mismo control de acceso configurado para standalone.
+     *
+     * @return bool|WP_Error
+     */
+    public function rest_can_access_csv() {
+        if (Dashboard_Higuera_Standalone::user_has_access_by_settings()) {
+            return true;
+        }
+
+        return new WP_Error(
+            'rest_forbidden',
+            'No tienes permisos para acceder a estos datos.',
+            array('status' => is_user_logged_in() ? 403 : 401)
+        );
     }
 
     /**
