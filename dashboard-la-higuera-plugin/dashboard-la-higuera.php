@@ -237,15 +237,106 @@ class Dashboard_La_Higuera {
      * @return bool|WP_Error
      */
     public function rest_can_access_csv() {
-        if (Dashboard_Higuera_Standalone::user_has_access_by_settings()) {
+        if ($this->user_has_csv_access_for_rest_request()) {
             return true;
         }
 
         return new WP_Error(
             'rest_forbidden',
             'No tienes permisos para acceder a estos datos.',
-            array('status' => is_user_logged_in() ? 403 : 401)
+            array('status' => $this->is_logged_in_for_csv_access() ? 403 : 401)
         );
+    }
+
+    /**
+     * Determinar acceso a CSV para requests REST.
+     *
+     * En REST, WordPress requiere nonce para autenticar cookies de sesión.
+     * Para peticiones GET del dashboard (lectura), aceptamos también la cookie
+     * de login estándar para mantener compatibilidad con fetch() sin nonce.
+     *
+     * @return bool
+     */
+    private function user_has_csv_access_for_rest_request() {
+        $access = get_option('dlh_access', 'public');
+
+        if ($access === 'public') {
+            return true;
+        }
+
+        if (!$this->is_logged_in_for_csv_access()) {
+            return false;
+        }
+
+        if ($access === 'logged_in') {
+            return true;
+        }
+
+        if ($access === 'role') {
+            $allowed_roles = get_option('dlh_roles', 'administrator');
+            $roles = array_filter(array_map('trim', explode(',', (string) $allowed_roles)));
+            $user = $this->get_user_for_csv_access();
+            if (!$user instanceof WP_User || empty($user->roles)) {
+                return false;
+            }
+
+            foreach ($roles as $role) {
+                if (in_array($role, $user->roles, true)) {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        return true;
+    }
+
+    /**
+     * Verificar autenticación para acceso CSV en contexto REST.
+     *
+     * @return bool
+     */
+    private function is_logged_in_for_csv_access() {
+        if (is_user_logged_in()) {
+            return true;
+        }
+
+        return $this->get_logged_in_user_id_from_cookie() > 0;
+    }
+
+    /**
+     * Resolver usuario para validación de roles en acceso CSV.
+     *
+     * @return WP_User|null
+     */
+    private function get_user_for_csv_access() {
+        $user = wp_get_current_user();
+        if ($user instanceof WP_User && $user->exists()) {
+            return $user;
+        }
+
+        $cookie_user_id = $this->get_logged_in_user_id_from_cookie();
+        if ($cookie_user_id <= 0) {
+            return null;
+        }
+
+        $cookie_user = get_userdata($cookie_user_id);
+        return ($cookie_user instanceof WP_User) ? $cookie_user : null;
+    }
+
+    /**
+     * Obtener user ID desde cookie auth de WordPress sin requerir nonce REST.
+     *
+     * @return int
+     */
+    private function get_logged_in_user_id_from_cookie() {
+        if (!function_exists('wp_validate_auth_cookie')) {
+            return 0;
+        }
+
+        $user_id = wp_validate_auth_cookie('', 'logged_in');
+        return is_numeric($user_id) ? (int) $user_id : 0;
     }
 
     /**
