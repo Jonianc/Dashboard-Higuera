@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.9.15 - 2026-02-25
+
+### Added
+- Nueva ruta REST `dashboard-higuera/v1/api/2025-26` que consulta la API 25-26 desde servidor con caché en `transients` para reducir latencia y carga repetida en frontend.
+
+### Changed
+- El frontend (shortcode y standalone) ahora prioriza `apiProxyUrl` para cargar 25-26 vía servidor cacheado, manteniendo fallback CSV cuando la API no está disponible.
+- Se agrega filtro `dlh_api_cache_ttl` (default 300s, mínimo 30s) para ajustar el tiempo de caché de la API 25-26.
+
 ## 1.9.14 - 2026-02-25
 
 ### Changed

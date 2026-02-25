@@ -414,6 +414,7 @@ class Dashboard_Higuera_Standalone {
             apiUrl:     <?php echo wp_json_encode($api_url); ?>,
             apiSourceMode: <?php echo wp_json_encode($api_source_mode); ?>,
             apiPowerBIFormula: <?php echo wp_json_encode($api_powerbi_formula); ?>,
+            apiProxyUrl: <?php echo wp_json_encode(rest_url('dashboard-higuera/v1/api/2025-26')); ?>,
             last2425Updated: <?php echo wp_json_encode($last_2425_updated); ?>,
             debug: <?php echo wp_json_encode($debug); ?>
         };

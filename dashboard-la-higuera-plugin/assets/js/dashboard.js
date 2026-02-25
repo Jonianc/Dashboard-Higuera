@@ -1083,13 +1083,17 @@ async function initDashboardLive(){
     ? dashboardHigueraData.apiUrl
     : '';
   const API_URL = (apiSourceMode === 'powerbi' && formulaUrl) ? formulaUrl : configuredApiUrl;
+  const apiProxyUrl = (typeof dashboardHigueraData !== "undefined" && dashboardHigueraData.apiProxyUrl)
+    ? dashboardHigueraData.apiProxyUrl
+    : '';
   try{
-    if(!API_URL){
+    const requestUrl = apiProxyUrl || API_URL;
+    if(!requestUrl){
       throw new Error('URL de API no configurada');
     }
     const controller = (typeof AbortController !== 'undefined') ? new AbortController() : null;
     const timeoutId = setTimeout(()=>{ if(controller) controller.abort(); }, 15000);
-    const resp = await fetch(API_URL, controller ? {signal: controller.signal} : undefined);
+    const resp = await fetch(requestUrl, controller ? {signal: controller.signal} : undefined);
     clearTimeout(timeoutId);
     if(!resp.ok) throw new Error('HTTP ' + resp.status);
     const json = await resp.json();

@@ -3,7 +3,7 @@
  * Plugin Name: Dashboard La Higuera
  * Plugin URI: https://github.com/Jonianc/Dashboard-Higuera
  * Description: Dashboard interactivo para visualizar datos de costos y faenas de Agrícola La Higuera
- * Version: 1.9.14
+ * Version: 1.9.15
  * Author: Agrícola La Higuera S.A.
  * Author URI: https://lahiguera.cl
  * License: GPL v2 or later
@@ -18,7 +18,7 @@ if (!defined('WPINC')) {
 }
 
 // Definir constantes del plugin
-define('DASHBOARD_HIGUERA_VERSION', '1.9.14');
+define('DASHBOARD_HIGUERA_VERSION', '1.9.15');
 define('DASHBOARD_HIGUERA_PLUGIN_DIR', plugin_dir_path(__FILE__));
 define('DASHBOARD_HIGUERA_PLUGIN_URL', plugin_dir_url(__FILE__));
 
@@ -160,6 +160,7 @@ class Dashboard_La_Higuera {
                 'apiUrl' => self::get_configured_api_url(),
                 'apiSourceMode' => get_option('dlh_api_source_mode', 'url'),
                 'apiPowerBIFormula' => get_option('dlh_api_powerbi_formula', ''),
+                'apiProxyUrl' => rest_url('dashboard-higuera/v1/api/2025-26'),
                 'last2425Updated' => $last_2425_updated,
                 'debug' => $debug,
             ));
@@ -220,6 +221,13 @@ class Dashboard_La_Higuera {
             'callback' => array($this, 'serve_csv_2425'),
             'permission_callback' => array($this, 'rest_can_access_csv')
         ));
+
+        // Ruta API 25-26 con caché server-side
+        register_rest_route('dashboard-higuera/v1', '/api/2025-26', array(
+            'methods' => 'GET',
+            'callback' => array($this, 'serve_api_2526_cached'),
+            'permission_callback' => array($this, 'rest_can_access_csv')
+        ));
     }
 
     /**
@@ -238,6 +246,67 @@ class Dashboard_La_Higuera {
             'No tienes permisos para acceder a estos datos.',
             array('status' => is_user_logged_in() ? 403 : 401)
         );
+    }
+
+    /**
+     * Resolver URL fuente para API 25-26 según ajustes.
+     *
+     * @return string
+     */
+    private function resolve_api_source_url() {
+        $mode = get_option('dlh_api_source_mode', 'url');
+
+        if ($mode === 'powerbi') {
+            $formula = (string) get_option('dlh_api_powerbi_formula', '');
+            if (preg_match('/Web\.Contents\(\s*"([^"]+)"\s*\)/i', trim($formula), $m)) {
+                return esc_url_raw(trim($m[1]));
+            }
+        }
+
+        return self::get_configured_api_url();
+    }
+
+    /**
+     * Servir API 25-26 con caché en transients para reducir latencia.
+     *
+     * @return array|WP_Error
+     */
+    public function serve_api_2526_cached() {
+        $source_url = $this->resolve_api_source_url();
+        if (trim((string) $source_url) === '') {
+            return new WP_Error('api_not_configured', 'URL de API no configurada', array('status' => 503));
+        }
+
+        $cache_key = 'dlh_api_2526_' . md5($source_url);
+        $cached = get_transient($cache_key);
+        if (is_array($cached)) {
+            return $cached;
+        }
+
+        $response = wp_remote_get($source_url, array('timeout' => 15));
+        if (is_wp_error($response)) {
+            return new WP_Error('api_request_failed', 'No se pudo consultar la API 25-26', array('status' => 502));
+        }
+
+        $code = wp_remote_retrieve_response_code($response);
+        $body = wp_remote_retrieve_body($response);
+        if ($code < 200 || $code >= 300 || trim((string) $body) === '') {
+            return new WP_Error('api_invalid_response', 'Respuesta inválida desde API 25-26', array('status' => 502));
+        }
+
+        $decoded = json_decode($body, true);
+        if (!is_array($decoded)) {
+            return new WP_Error('api_invalid_json', 'La API 25-26 no devolvió JSON válido', array('status' => 502));
+        }
+
+        $ttl = (int) apply_filters('dlh_api_cache_ttl', 300);
+        if ($ttl < 30) {
+            $ttl = 30;
+        }
+
+        set_transient($cache_key, $decoded, $ttl);
+
+        return $decoded;
     }
 
     /**
