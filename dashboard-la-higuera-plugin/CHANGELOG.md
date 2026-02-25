@@ -1,5 +1,15 @@
 # Changelog
 
+## 1.9.13 - 2026-02-25
+
+### Security
+- Se elimina el token/API hardcodeado de los valores por defecto del plugin para evitar exposición de secretos en código fuente.
+- La URL de API ahora puede definirse de forma segura mediante la constante `DLH_API_URL` (prioritaria) o mediante la opción guardada en Ajustes.
+
+### Changed
+- Se unifica la lectura de URL API en `Dashboard_La_Higuera::get_configured_api_url()` y se reutiliza en shortcode, standalone y panel de ajustes.
+- Si no existe URL API configurada, el frontend evita usar una URL hardcodeada y cae al flujo de fallback CSV 25-26.
+
 ## 1.9.12 - 2026-02-25
 
 ### Security

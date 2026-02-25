@@ -3,7 +3,7 @@
  * Plugin Name: Dashboard La Higuera
  * Plugin URI: https://github.com/Jonianc/Dashboard-Higuera
  * Description: Dashboard interactivo para visualizar datos de costos y faenas de Agrícola La Higuera
- * Version: 1.9.12
+ * Version: 1.9.13
  * Author: Agrícola La Higuera S.A.
  * Author URI: https://lahiguera.cl
  * License: GPL v2 or later
@@ -18,7 +18,7 @@ if (!defined('WPINC')) {
 }
 
 // Definir constantes del plugin
-define('DASHBOARD_HIGUERA_VERSION', '1.9.12');
+define('DASHBOARD_HIGUERA_VERSION', '1.9.13');
 define('DASHBOARD_HIGUERA_PLUGIN_DIR', plugin_dir_path(__FILE__));
 define('DASHBOARD_HIGUERA_PLUGIN_URL', plugin_dir_url(__FILE__));
 
@@ -91,6 +91,25 @@ class Dashboard_La_Higuera {
     }
 
     /**
+     * Obtener URL de API configurada sin exponer secretos por defecto.
+     * Prioridad: constante DLH_API_URL > opción dlh_api_url > vacío.
+     *
+     * @return string
+     */
+    public static function get_configured_api_url() {
+        if (defined('DLH_API_URL') && is_string(DLH_API_URL) && trim(DLH_API_URL) !== '') {
+            return esc_url_raw(trim(DLH_API_URL));
+        }
+
+        $stored = (string) get_option('dlh_api_url', '');
+        if (trim($stored) === '') {
+            return '';
+        }
+
+        return esc_url_raw(trim($stored));
+    }
+
+    /**
      * Registrar shortcode
      */
     public function register_shortcode() {
@@ -138,7 +157,7 @@ class Dashboard_La_Higuera {
                 'pluginUrl' => DASHBOARD_HIGUERA_PLUGIN_URL,
                 'restNonce' => wp_create_nonce('wp_rest'),
                 'dataSource' => get_option('dlh_data_source', 'api_fallback_csv'),
-                'apiUrl' => get_option('dlh_api_url', 'https://app.agrosmart.cl/v1/api/reporte/base_consolidada.php?token=02376e47a4771e34fcba564f88a9d4fbc42a0c40894ebd8e3ba0d60039bd4528'),
+                'apiUrl' => self::get_configured_api_url(),
                 'apiSourceMode' => get_option('dlh_api_source_mode', 'url'),
                 'apiPowerBIFormula' => get_option('dlh_api_powerbi_formula', ''),
                 'last2425Updated' => $last_2425_updated,

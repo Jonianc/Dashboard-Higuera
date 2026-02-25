@@ -308,7 +308,7 @@ class Dashboard_Higuera_Standalone {
 
         // Fuente de datos configurada
         $data_source = get_option('dlh_data_source', 'api_fallback_csv');
-        $api_url     = get_option('dlh_api_url', 'https://app.agrosmart.cl/v1/api/reporte/base_consolidada.php?token=02376e47a4771e34fcba564f88a9d4fbc42a0c40894ebd8e3ba0d60039bd4528');
+        $api_url     = Dashboard_La_Higuera::get_configured_api_url();
         $api_source_mode = get_option('dlh_api_source_mode', 'url');
         $api_powerbi_formula = get_option('dlh_api_powerbi_formula', '');
         $last_2425_updated = get_option('last_2425_updated', '');

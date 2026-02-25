@@ -189,7 +189,7 @@ class Dashboard_Higuera_Settings {
         register_setting(self::OPTION_GROUP, 'dlh_api_url', array(
             'type'              => 'string',
             'sanitize_callback' => 'esc_url_raw',
-            'default'           => 'https://app.agrosmart.cl/v1/api/reporte/base_consolidada.php?token=02376e47a4771e34fcba564f88a9d4fbc42a0c40894ebd8e3ba0d60039bd4528',
+            'default'           => '',
         ));
 
         add_settings_field('dlh_api_url', 'URL de la API', array(__CLASS__, 'field_api_url'), self::MENU_SLUG, 'dlh_section_data');
@@ -320,12 +320,15 @@ class Dashboard_Higuera_Settings {
     }
 
     public static function field_api_url() {
-        $val = get_option('dlh_api_url', 'https://app.agrosmart.cl/v1/api/reporte/base_consolidada.php?token=02376e47a4771e34fcba564f88a9d4fbc42a0c40894ebd8e3ba0d60039bd4528');
+        $val = Dashboard_La_Higuera::get_configured_api_url();
         echo '<div id="dlh-api-url-group">';
         echo '<input type="url" name="dlh_api_url" id="dlh_api_url" value="' . esc_attr($val) . '" class="large-text" />';
         echo '<p class="description dlh-field-feedback" id="dlh-api-url-feedback" aria-live="polite"></p>';
         echo '</div>';
         echo '<p class="description">URL completa de API (incluyendo token si aplica) usada para cargar 25-26 al iniciar.</p>';
+        if (defined('DLH_API_URL') && trim((string) DLH_API_URL) !== '') {
+            echo '<p class="description"><strong>Fuente activa:</strong> constante <code>DLH_API_URL</code> (tiene prioridad sobre esta opción).</p>';
+        }
     }
 
     public static function field_api_source_mode() {

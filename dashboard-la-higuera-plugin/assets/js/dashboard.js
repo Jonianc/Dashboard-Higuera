@@ -1081,9 +1081,12 @@ async function initDashboardLive(){
   const formulaUrl = extractApiUrlFromPowerBIFormula(powerBIFormula);
   const configuredApiUrl = (typeof dashboardHigueraData !== "undefined" && dashboardHigueraData.apiUrl)
     ? dashboardHigueraData.apiUrl
-    : "https://app.agrosmart.cl/v1/api/reporte/base_consolidada.php?token=02376e47a4771e34fcba564f88a9d4fbc42a0c40894ebd8e3ba0d60039bd4528";
+    : '';
   const API_URL = (apiSourceMode === 'powerbi' && formulaUrl) ? formulaUrl : configuredApiUrl;
   try{
+    if(!API_URL){
+      throw new Error('URL de API no configurada');
+    }
     const controller = (typeof AbortController !== 'undefined') ? new AbortController() : null;
     const timeoutId = setTimeout(()=>{ if(controller) controller.abort(); }, 15000);
     const resp = await fetch(API_URL, controller ? {signal: controller.signal} : undefined);
