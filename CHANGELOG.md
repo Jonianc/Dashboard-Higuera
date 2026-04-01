@@ -1,3 +1,8 @@
+## 1.10.0 - 2026-04-01
+- UI/UX: se añade una capa visual estilo tablero ejecutivo (fondo claro, tarjetas más limpias, bordes suaves y jerarquía tipográfica más marcada) para aproximar la referencia solicitada.
+- UI/UX: la grilla de KPI pasa a distribución auto-fit para mejorar lectura y balance en desktop sin alterar cálculos ni filtros.
+- UI/UX: se refinan tabs, paneles y tabla de Resumen con estética más sobria y homogénea, manteniendo comportamiento existente.
+
 ## 1.9.42 - 2026-04-01
 - UI/A11y: tabs principales ahora son navegables por teclado (Enter/Espacio/Flechas) y sincronizan `aria-selected` + `tabindex` para foco correcto.
 - UI/A11y: se agregan relaciones accesibles `aria-controls`/`aria-labelledby` entre tabs y paneles, sin cambiar lógica de vistas.

@@ -10,7 +10,7 @@ if (!defined('ABSPATH')) {
 }
 ?>
 
-<div id="dashboard-higuera-wrapper" class="dashboard-higuera-container" data-theme="light">
+<div id="dashboard-higuera-wrapper" class="dashboard-higuera-container dlh-ui-reference" data-theme="light">
     <div id="dashboard-higuera-loading" class="dlh-loading">
         <div class="dlh-loading-card">
             <div class="dlh-loading-title">Cargando Dashboard...</div>
