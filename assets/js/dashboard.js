@@ -1476,13 +1476,16 @@ function initDashboardFromRawCSV(raw){
   // Toggle dropdown
   mesBtn.addEventListener('click', e=>{
     e.stopPropagation();
-    mesDropdown.classList.toggle('open');
+    const willOpen = !mesDropdown.classList.contains('open');
+    mesDropdown.classList.toggle('open', willOpen);
+    mesBtn.setAttribute('aria-expanded', willOpen ? 'true' : 'false');
   });
   
   // Cerrar al hacer click fuera
   document.addEventListener('click', e=>{
     if(!mesDropdown.contains(e.target)){
       mesDropdown.classList.remove('open');
+      mesBtn.setAttribute('aria-expanded', 'false');
     }
   });
   
@@ -1874,6 +1877,7 @@ function showTab(id){
     const active = t.dataset.tab===id;
     t.classList.toggle('active', active);
     t.setAttribute('aria-selected', active ? 'true' : 'false');
+    t.setAttribute('tabindex', active ? '0' : '-1');
   });
   $('#panel-resumen').classList.toggle('hidden', id!=='resumen');
   $('#panel-graficos').classList.toggle('hidden', id!=='graficos');
@@ -1885,7 +1889,25 @@ function showTab(id){
   setDenseMode(id);
   if(id==='comparativo') buildComparativo();
 }
-$$('.tab').forEach(t=> t.onclick = ()=> showTab(t.dataset.tab));
+$$('.tab').forEach((t, idx, tabs)=>{
+  t.onclick = ()=> showTab(t.dataset.tab);
+  t.addEventListener('keydown', (e)=>{
+    if(e.key === 'Enter' || e.key === ' '){
+      e.preventDefault();
+      showTab(t.dataset.tab);
+      return;
+    }
+    if(e.key === 'ArrowRight' || e.key === 'ArrowLeft'){
+      e.preventDefault();
+      const delta = e.key === 'ArrowRight' ? 1 : -1;
+      const next = tabs[(idx + delta + tabs.length) % tabs.length];
+      if(next){
+        next.focus();
+        showTab(next.dataset.tab);
+      }
+    }
+  });
+});
 document.addEventListener('click', (e)=>{
   const chipBtn = e.target.closest('.filter-chip[data-chip-key]');
   if(chipBtn){

@@ -1,3 +1,8 @@
+## 1.9.42 - 2026-04-01
+- UI/A11y: tabs principales ahora son navegables por teclado (Enter/Espacio/Flechas) y sincronizan `aria-selected` + `tabindex` para foco correcto.
+- UI/A11y: se agregan relaciones accesibles `aria-controls`/`aria-labelledby` entre tabs y paneles, sin cambiar lógica de vistas.
+- UI/A11y: dropdown de Meses expone estado con `aria-expanded` y foco visible reforzado en tabs/chips.
+
 ## 1.9.41 - 2026-03-31
 - UI/UX: refinados los KPI principales con estilo más compacto, jerarquía visual superior y metadatos contextuales por tarjeta.
 - UI/UX: mejorada la tabla Resumen con cabecera propia, badges de contexto, ranking visual por cuartel y mayor énfasis en la columna Total.

@@ -72,7 +72,7 @@ if (!defined('ABSPATH')) {
                             <div class="field field-meses field-meses--premium">
                                 <label for="f_mes">Meses</label>
                                 <div id="f_mes" class="mes-dropdown">
-                                    <button type="button" class="mes-dropdown-btn"><span class="mes-label">Todos</span><span class="arrow">▼</span></button>
+                                    <button type="button" class="mes-dropdown-btn" aria-haspopup="true" aria-expanded="false"><span class="mes-label">Todos</span><span class="arrow">▼</span></button>
                                     <div class="mes-dropdown-panel">
                                         <div class="mes-dropdown-item todos"><input type="checkbox" id="mes_todos" checked><label for="mes_todos">Seleccionar todos</label></div>
                                     </div>
@@ -113,14 +113,14 @@ if (!defined('ABSPATH')) {
                         <p>Cambia entre resumen operativo, comparativo histórico, gráficos y detalle sin perder filtros.</p>
                     </div>
                     <div class="tabs tabs--elevated" role="tablist" aria-label="Vistas del dashboard">
-                    <div class="tab active" data-tab="resumen" role="tab" aria-selected="true">Resumen</div>
-                    <div class="tab" data-tab="comparativo" role="tab" aria-selected="false">Comparativo 24-25 vs 25-26</div>
-                    <div class="tab" data-tab="graficos" role="tab" aria-selected="false">Gráficos</div>
-                    <div class="tab" data-tab="detalle" role="tab" aria-selected="false">Detalle</div>
+                    <div id="tab-resumen" class="tab active" data-tab="resumen" role="tab" tabindex="0" aria-selected="true" aria-controls="panel-resumen">Resumen</div>
+                    <div id="tab-comparativo" class="tab" data-tab="comparativo" role="tab" tabindex="-1" aria-selected="false" aria-controls="panel-comparativo">Comparativo 24-25 vs 25-26</div>
+                    <div id="tab-graficos" class="tab" data-tab="graficos" role="tab" tabindex="-1" aria-selected="false" aria-controls="panel-graficos">Gráficos</div>
+                    <div id="tab-detalle" class="tab" data-tab="detalle" role="tab" tabindex="-1" aria-selected="false" aria-controls="panel-detalle">Detalle</div>
                 </div>
                 </section>
 
-                <div id="panel-resumen" class="card panel-card panel-resumen">
+                <div id="panel-resumen" class="card panel-card panel-resumen" role="tabpanel" aria-labelledby="tab-resumen">
                     <div class="panel-section-head panel-section-head--resumen">
                         <div>
                             <span class="dashboard-command-kicker">Vista principal</span>
@@ -171,7 +171,7 @@ if (!defined('ABSPATH')) {
                     </div>
                 </div>
 
-                <div id="panel-comparativo" class="card panel-card hidden">
+                <div id="panel-comparativo" class="card panel-card hidden" role="tabpanel" aria-labelledby="tab-comparativo">
                     <div class="panel-section-head">
                         <div>
                             <span class="dashboard-command-kicker">Comparativo</span>
@@ -212,7 +212,7 @@ if (!defined('ABSPATH')) {
                     </div>
                 </div>
 
-                <div id="panel-graficos" class="card panel-card hidden">
+                <div id="panel-graficos" class="card panel-card hidden" role="tabpanel" aria-labelledby="tab-graficos">
                     <div class="panel-section-head">
                         <div>
                             <span class="dashboard-command-kicker">Visualización</span>
@@ -247,7 +247,7 @@ if (!defined('ABSPATH')) {
                     </div>
                 </div>
 
-                <div id="panel-detalle" class="card panel-card hidden">
+                <div id="panel-detalle" class="card panel-card hidden" role="tabpanel" aria-labelledby="tab-detalle">
                     <div class="panel-section-head">
                         <div>
                             <span class="dashboard-command-kicker">Desglose</span>
