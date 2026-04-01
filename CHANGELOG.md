@@ -1,3 +1,8 @@
+## 1.11.0 - 2026-04-01
+- UI/UX: la vista principal de Resumen pasa a layout de una sola columna para priorizar lectura lineal y reducir competencia visual lateral.
+- UI/UX: el panel complementario de Rentabilidad deja de usar comportamiento sticky dentro de Resumen para mantener flujo vertical consistente.
+- Compatibilidad: no se modifican cálculos, filtros ni lógica de datos.
+
 ## 1.10.0 - 2026-04-01
 - UI/UX: se añade una capa visual estilo tablero ejecutivo (fondo claro, tarjetas más limpias, bordes suaves y jerarquía tipográfica más marcada) para aproximar la referencia solicitada.
 - UI/UX: la grilla de KPI pasa a distribución auto-fit para mejorar lectura y balance en desktop sin alterar cálculos ni filtros.
