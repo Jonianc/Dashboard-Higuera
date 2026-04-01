@@ -1,3 +1,8 @@
+## 1.12.0 - 2026-04-01
+- UI/UX: el bloque de “Filtros unificados y navegación principal” adopta estilo visual tipo quick-filters (píldoras) como en Rentabilidad.
+- UI/UX: selects, búsqueda, dropdown de meses y acciones de toolbar se unifican en forma/altura/borde para una lectura más consistente.
+- Compatibilidad: cambio solo de estilo, sin modificar lógica de filtros ni cálculos.
+
 ## 1.11.0 - 2026-04-01
 - UI/UX: la vista principal de Resumen pasa a layout de una sola columna para priorizar lectura lineal y reducir competencia visual lateral.
 - UI/UX: el panel complementario de Rentabilidad deja de usar comportamiento sticky dentro de Resumen para mantener flujo vertical consistente.
