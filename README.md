@@ -103,6 +103,21 @@ dashboard-la-higuera/
     └── temporada-2024-25.csv          # Datos temporada anterior
 ```
 
+## 🔐 Configuración segura de API (recomendado)
+
+Desde v1.9.13 el plugin no incluye una URL con token por defecto.
+
+Opciones para configurar la API 25-26:
+
+1. **Ajustes del plugin** (Admin → Dashboard → URL de la API).
+2. **Constante en `wp-config.php`** (tiene prioridad):
+
+```php
+define('DLH_API_URL', 'https://tu-api.ejemplo.com/reporte?...');
+```
+
+Si no hay URL API configurada, el dashboard intentará usar el fallback CSV para 25-26.
+
 ## 🔧 Actualización de Datos
 
 Para actualizar los datos del dashboard:

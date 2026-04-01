@@ -1,16 +1,38 @@
-
 const $ = s=>document.querySelector(s);
 const $$ = s=>Array.from(document.querySelectorAll(s));
 const fmt = n => (n===null || n===undefined || Number.isNaN(n)) ? "—" : Math.round(n).toLocaleString('es-CL');
 const pctFmt = x => (x===null||x===undefined||Number.isNaN(x)) ? "—" : Math.round(x*100).toLocaleString('es-CL') + '%';
 const strip = s => String(s||'').trim();
 const isInversionFaena = v => strip(v||'').toUpperCase()==='INVERSIONES VARIAS';
-
 function splitLines(text){ return text.replace(/\r\n/g,'\n').replace(/\r/g,'\n').split('\n'); }
 function detectDelimiter(text){
-  const sample = splitLines(text).slice(0,50);
-  const c = ch => sample.reduce((a,l)=>a+(l.split(ch).length-1),0);
-  return [{d:';',n:c(';')},{d:',',n:c(',')},{d:'\t',n:c('\t')},{d:'|',n:c('|')}].sort((a,b)=>b.n-a.n)[0].d;
+  const sample = splitLines(text).slice(0,20).filter(l=>strip(l));
+  const countOutsideQuotes = (line, delim) => {
+    let q = false, total = 0;
+    for(let i=0;i<line.length;i++){
+      const ch = line[i];
+      if(ch === '"'){
+        if(q && line[i+1] === '"'){ i++; continue; }
+        q = !q;
+        continue;
+      }
+      if(!q && ch === delim) total++;
+    }
+    return total;
+  };
+  const candidates = [';', ',', '	', '|'].map(d=>{
+    const counts = sample.map(line => countOutsideQuotes(line, d));
+    const positives = counts.filter(n => n > 0);
+    const score = positives.reduce((a,n)=>a+n,0);
+    const consistency = positives.length ? Math.min(...positives) : 0;
+    return {d, score, consistency, hits: positives.length};
+  });
+  candidates.sort((a,b)=>{
+    if(b.hits !== a.hits) return b.hits - a.hits;
+    if(b.consistency !== a.consistency) return b.consistency - a.consistency;
+    return b.score - a.score;
+  });
+  return candidates[0] ? candidates[0].d : ';';
 }
 function parseCSV(text, delim){
   const lines = splitLines(text);
@@ -61,7 +83,6 @@ function sortMesLabels(meses){
     return ia-ib;
   });
 }
-
 function canonicalSeason(value){
   const raw = strip(value||"")
     .replace(/–/g,'-')
@@ -71,7 +92,6 @@ function canonicalSeason(value){
   if(!m) return raw;
   return `${m[1]}-${m[2]}`;
 }
-
 function ingestCSV(raw){
   const delim = detectDelimiter(raw);
   const rows = parseCSV(raw, delim);
@@ -79,6 +99,7 @@ function ingestCSV(raw){
   if(idx<0) throw new Error("No se encontró encabezado dentro de las primeras 300 filas.");
   const header = rows[idx];
   const idxOf = name => header.findIndex(h => normalizeHeader(h).startsWith(name));
+  const iORIG = idxOf("ORIGEN");
   const iFECHA = idxOf("FECHA");
   const iTEMP = idxOf("TEMPORADA");
   const iPRED = idxOf("PREDIO");
@@ -88,12 +109,13 @@ function ingestCSV(raw){
   const iN1   = idxOf("NIVEL 1");
   const iSUP  = header.findIndex(h=>normalizeHeader(h).startsWith("SUPERFICIE REAL"));
   const iTOT  = idxOf("TOTAL CUARTEL");
-
   const data = [];
   const supLast = {};
   let totalRows = 0;
   for(let r=idx+1;r<rows.length;r++){
     const row = rows[r]; if(!row || row.every(c=>!strip(c))) continue;
+    const ORIGEN = iORIG>=0 ? strip(row[iORIG]||"") : "";
+    if(ORIGEN && /PRESUP/i.test(ORIGEN)) continue;
     totalRows++;
     const FECHA = row[iFECHA]||"";
     const d = parseDateGuess(FECHA);
@@ -123,7 +145,6 @@ function ingestCSV(raw){
   }
   return {rows:data, supMap:supLast, totalRows};
 }
-
 function ingestCSV2425(raw){
   const delim = detectDelimiter(raw);
   const rows = parseCSV(raw, delim);
@@ -131,6 +152,7 @@ function ingestCSV2425(raw){
   if(idx<0) throw new Error("No se encontró encabezado dentro de las primeras 300 filas (24-25).");
   const header = rows[idx];
   const idxOf = name => header.findIndex(h => normalizeHeader(h).startsWith(name));
+  const iORIG = idxOf("ORIGEN");
   const iFECHA = idxOf("FECHA");
   const iTEMP = idxOf("TEMPORADA");
   const iPRED = idxOf("PREDIO");
@@ -140,12 +162,13 @@ function ingestCSV2425(raw){
   const iN1   = idxOf("NIVEL 1");
   const iSUP  = header.findIndex(h=>normalizeHeader(h).startsWith("SUPERFICIE REAL"));
   const iTOT  = idxOf("TOTAL CUARTEL");
-
   const data = [];
   const supLast = {};
   let totalRows = 0;
   for(let r=idx+1;r<rows.length;r++){
     const row = rows[r]; if(!row || row.every(c=>!strip(c))) continue;
+    const ORIGEN = iORIG>=0 ? strip(row[iORIG]||"") : "";
+    if(ORIGEN && /PRESUP/i.test(ORIGEN)) continue;
     totalRows++;
     const FECHA = row[iFECHA]||"";
     const d = parseDateGuess(FECHA);
@@ -175,32 +198,47 @@ function ingestCSV2425(raw){
   }
   return {rows:data, supMap:supLast, totalRows};
 }
-
 let comp2425 = {rows:[], supMap:{}};
 let comp2425Status = 'idle';
 let comp2425ErrorReason = '';
+let rentabilidadData = [];
+let rentabilidadStatus = 'idle';
+let rentabilidadErrorReason = '';
+const rentabilidadState = { cuartel: 'Todos', sortBy: 'resultado', sortDir: 'desc' };
+const RENT_CARD_DEFAULTS = {
+  total_ingresos: {label:'Total ingresos', enabled:1, order:10},
+  total_costos: {label:'Total costos acumulados', enabled:1, order:20},
+  resultado: {label:'Resultado', enabled:1, order:30},
+  kilos_reales: {label:'Kilos reales', enabled:1, order:40},
+  ingreso_hectarea: {label:'Ingreso por hectárea', enabled:1, order:50},
+  costo_hectarea: {label:'Costo total por hectárea', enabled:1, order:60},
+  ingresos_kilo: {label:'Ingresos por kilo', enabled:1, order:70},
+  costo_kilo: {label:'Costo por kilo', enabled:1, order:80}
+};
 const HIDE_INV_STORAGE_KEY = 'dlh_hide_inv_2425';
+const RESUMEN_STATUS_STORAGE_KEY = 'dlh_resumen_status_hidden';
+const THEME_STORAGE_KEY = 'dlh_theme';
+const SIDEBAR_COLLAPSED_STORAGE_KEY = 'dlh_sidebar_collapsed';
+const FILTER_ACCORDIONS_STORAGE_KEY = 'dlh_filter_accordions';
 let hideInv2425 = false;
-const debugEnabled = (typeof dashboardHigueraData !== 'undefined' && !!dashboardHigueraData.debug);
+let faenaOptionsCache = [];
 
+const debugEnabled = (typeof dashboardHigueraData !== 'undefined' && !!dashboardHigueraData.debug);
 try {
   hideInv2425 = localStorage.getItem(HIDE_INV_STORAGE_KEY) === '1';
 } catch (e) {
   hideInv2425 = false;
 }
-
 function predioClas(row){
   const esInd = strip(row.PREDIO).toUpperCase()==="COSTOS INDIRECTOS" || strip(row.CUARTEL).toUpperCase()==="COSTOS INDIRECTOS";
   return esInd? "Indirectos":"Productivo";
 }
-
 const state = {
   data: [], supMap: {},
   filtros: {predio:"Todos", sector:"Todos", nivel1:"Todos", faena:"Todas", metrica:"VALOR", mes:"Todos", orden:"Desc"},
   detalle: {nivel1:"Todos", metrica:"VALOR", orden:"Desc"},
-  comparativo: {meses:"Todos"}
+  comparativo: {ordenBy:"v25"}
 };
-
 const comparativoMeta = {
   source2425: 'REST csv 2024-25',
   source2526: 'API',
@@ -213,24 +251,31 @@ const comparativoMeta = {
   last2526Updated: '—',
   url2425: '—'
 };
-
+const comparativoOrdenLabels = {
+  v24t: '24-25 total',
+  v24m: '24-25 meses comparables',
+  v25: '25-26 actual',
+  diff: 'Diferencia (Δ)',
+  pct: 'Diferencia %'
+};
 function formatStatusValue(value){
   const str = String(value || '').trim();
   return str ? str : '—';
 }
-
 function formatComparativoMeses(){
-  const meses = getComparativoMesesSeleccionados();
-  if(!meses || !meses.length) return 'Todos';
-  return meses.join(', ');
+  const fm = state.filtros?.mes;
+  if(fm==="Todos" || !fm) return 'Todos';
+  if(Array.isArray(fm)) return fm.length ? fm.join(', ') : 'Todos';
+  return String(fm);
 }
-
-function updateComparativoStatus(){
-  const wrap = document.getElementById('comparativo-status');
-  if(!wrap) return;
-
-  const html = `
-    <div class="comp-status-title">Estado de datos</div>
+function formatComparativoOrden(){
+  const ordenBy = state.comparativo?.ordenBy || 'v25';
+  const ordenLabel = comparativoOrdenLabels[ordenBy] || '25-26 actual';
+  const dir = state.filtros?.orden === 'Asc' ? 'Ascendente' : 'Descendente';
+  return `${ordenLabel} (${dir})`;
+}
+function buildStatusCardsHtml(){
+  return `
     <div class="comp-status-grid">
       <div class="comp-status-card">
         <h4>24-25</h4>
@@ -249,14 +294,29 @@ function updateComparativoStatus(){
       <div class="comp-status-card">
         <h4>Filtros activos</h4>
         <div class="comp-status-row"><span>Meses seleccionados</span><strong>${formatComparativoMeses()}</strong></div>
+        <div class="comp-status-row"><span>Orden comparativo</span><strong>${formatComparativoOrden()}</strong></div>
         <div class="comp-status-row"><span>Inversiones Varias</span><strong>${hideInv2425 ? 'Ocultas' : 'Mostradas'}</strong></div>
       </div>
     </div>
   `;
-
-  wrap.innerHTML = html;
 }
-
+function updateComparativoStatus(){
+  if(dashboardMetaSource) dashboardMetaSource.textContent = formatStatusValue(comparativoMeta.source2526);
+  if(dashboardMetaGenerated) dashboardMetaGenerated.textContent = formatStatusValue(comparativoMeta.last2526Updated);
+  const srcChip = document.getElementById('srcChip');
+  if(srcChip) srcChip.textContent = formatStatusValue(comparativoMeta.source2526);
+  const genInline = document.getElementById('gen');
+  if(genInline) genInline.textContent = formatStatusValue(comparativoMeta.last2526Updated);
+  const wrap = document.getElementById('comparativo-status');
+  const statusCards = buildStatusCardsHtml();
+  if(wrap){
+    wrap.innerHTML = `<div class="comp-status-title">Estado de datos</div><div class="comp-status-body">${statusCards}</div>`;
+  }
+  const resumenWrap = document.querySelector('#resumen-status .comp-status-body');
+  if(resumenWrap){
+    resumenWrap.innerHTML = statusCards;
+  }
+}
 function buildUrlWithTs(baseUrl, tsValue){
   const ts = String(tsValue || '').trim();
   const finalTs = ts ? ts : String(Date.now());
@@ -314,6 +374,28 @@ function metricByKey(rows, keyAccessor){
     return arr;
   }
 }
+function renderFaenaOptions(){
+  const select = document.querySelector("#f_faena");
+  const search = document.querySelector("#f_faena_search");
+  if(!select) return;
+  const term = strip(search?.value || "").toLowerCase();
+  let options = !term ? faenaOptionsCache.slice() : faenaOptionsCache.filter(o => String(o.k || '').toLowerCase().includes(term));
+  if(state.filtros.faena !== 'Todas' && !options.some(o => o.k === state.filtros.faena)){
+    const selected = faenaOptionsCache.find(o => o.k === state.filtros.faena);
+    if(selected) options = [selected].concat(options);
+  }
+  select.innerHTML = `<option${state.filtros.faena === 'Todas' ? ' selected' : ''}>Todas</option>` + options.map(o=>`<option${o.k===state.filtros.faena?' selected':''}>${o.k} — ${fmt(o.v)}</option>`).join('');
+  if(!options.length){
+    select.innerHTML += '<option disabled>Sin coincidencias</option>';
+  }
+}
+function setupFaenaSearch(){
+  const input = document.querySelector('#f_faena_search');
+  if(!input || input.dataset.bound === '1') return;
+  input.dataset.bound = '1';
+  input.addEventListener('input', ()=> renderFaenaOptions());
+  input.addEventListener('search', ()=> renderFaenaOptions());
+}
 function populateCombos(){
   const rowsBase = state.data.filter(r=> (state.filtros.predio==="Todos")? true : (state.filtros.predio==="Solo Productivo" ? predioClas(r)==="Productivo" : predioClas(r)==="Indirectos"));
   const sectores = Array.from(new Set(rowsBase.map(r=>strip(r.SECTOR)||"Sin dato"))).sort((a,b)=>a.localeCompare(b,'es'));
@@ -327,7 +409,8 @@ function populateCombos(){
   const arrN1 = metricByKey(n1Rows, r=>strip(r.NIVEL_1)||"—").sort((a,b)=> (state.filtros.orden==="Desc"? (b.v-a.v):(a.v-b.v)));
   document.querySelector("#f_n1").innerHTML = `<option>Todos</option>` + arrN1.map(o=>`<option${o.k===state.filtros.nivel1?' selected':''}>${o.k} — ${fmt(o.v)}</option>`).join('');
   const arrFa = metricByKey(n1Rows, r=>strip(r.FAENA)||"—").sort((a,b)=> (state.filtros.orden==="Desc"? (b.v-a.v):(a.v-b.v)));
-  document.querySelector("#f_faena").innerHTML = `<option>Todas</option>` + arrFa.map(o=>`<option${o.k===state.filtros.faena?' selected':''}>${o.k} — ${fmt(o.v)}</option>`).join('');
+  faenaOptionsCache = arrFa.slice();
+  renderFaenaOptions();
   
   const meses = Array.from(new Set(state.data.map(r=>r.MES_STR))).filter(Boolean);
   const orderMes = (a,b)=>{ const [ma,ya]=a.split('-'); const [mb,yb]=b.split('-'); const ia=MES_ABR.indexOf(ma); const ib=MES_ABR.indexOf(mb); const ya2=parseInt(ya,10)||0; const yb2=parseInt(yb,10)||0; if(ya2!==yb2) return ya2-yb2; return ia-ib; };
@@ -351,7 +434,6 @@ function populateCombos(){
   }else{
     labelBtn.innerHTML = `${selArr.length} meses <span class="mes-count">${selArr.length}</span>`;
   }
-
 }
 function buildResumen(){
   const rows = applyFilters();
@@ -365,7 +447,6 @@ function buildResumen(){
   }else{
     meses = [state.filtros.mes];
   }
-
   const orderMes = (a,b)=>{ const [ma,ya]=a.split('-'); const [mb,yb]=b.split('-'); const ia = MES_ABR.indexOf(ma); const ib = MES_ABR.indexOf(mb); const ya2 = parseInt(ya,10); const yb2 = parseInt(yb,10); if(ya2!==yb2) return ya2-yb2; return ia-ib; };
   meses.sort(orderMes);
   const supMap = state.supMap;
@@ -378,9 +459,10 @@ function buildResumen(){
   }
   const sorted = cuarteles.sort((a,b)=>{ const va=metricCuartelTotal(a), vb=metricCuartelTotal(b); return state.filtros.orden==="Desc"?(vb-va):(va-vb); });
   const tbl = document.createElement('table');
-  let thead = `<thead><tr><th>CUARTEL</th>`; for(const m of meses) thead+=`<th>${m}</th>`; thead+=`<th>TOTAL</th></tr></thead>`;
+  tbl.className = 'dense-table resumen-table resumen-table--premium';
+  let thead = `<thead><tr><th>Cuartel</th>`; for(const m of meses) thead+=`<th>${m}</th>`; thead+=`<th>Total</th></tr></thead>`;
   tbl.innerHTML = thead + `<tbody></tbody><tfoot></tfoot>`; const tb = tbl.querySelector('tbody');
-  for(const c of sorted){
+  sorted.forEach((c,index)=>{
     const vals = meses.map(m=> per[c]?.[m] || 0);
     const totalMes = vals.reduce((a,b)=>a+b,0);
     let metricVals = vals.slice();
@@ -390,13 +472,14 @@ function buildResumen(){
     }
     const pct = totalFiltrado>0 ? (totalMes/totalFiltrado) : 0;
     const tr = document.createElement('tr');
-    const btn = `<button class="cuartel-btn" data-c="${c}">${c}</button> <span class="pct">${pctFmt(pct)}</span>`;
+    const rank = `<span class="summary-rank">${index + 1}</span>`;
+    const btn = `<div class="summary-rowhead">${rank}<button class="cuartel-btn" data-c="${c}">${c}</button><span class="pct">${pctFmt(pct)}</span></div>`;
     let tds = `<td>${btn}</td>`; for(const v of metricVals) tds+=`<td>${fmt(v)}</td>`;
     const totalCell = (state.filtros.mes!=="Todos" && !Array.isArray(state.filtros.mes)) ? metricVals[0] : metricTotal;
-    tds += `<td>${fmt(totalCell)}</td>`; tr.innerHTML = tds; tb.appendChild(tr);
+    tds += `<td class="summary-total-cell">${fmt(totalCell)}</td>`; tr.innerHTML = tds; tb.appendChild(tr);
     const trd = document.createElement('tr'); trd.className="hidden mini"; const cols = meses.length + 2; trd.innerHTML = `<td colspan="${cols}"><div class="mini-wrap"></div></td>`; tb.appendChild(trd);
-  }
-  const tf = tbl.querySelector('tfoot'); let totRow = `<tr><td><b>TOTALES</b></td>`;
+  });
+  const tf = tbl.querySelector('tfoot'); let totRow = `<tr><td><div class="summary-rowhead summary-rowhead--total"><span class="summary-rank summary-rank--total">Σ</span><strong>Totales</strong></div></td>`;
   const colTotals = meses.map(m=> rows.filter(r=>r.MES_STR===m).reduce((a,r)=>a+(r.VALOR||0),0));
   let colMetrics = colTotals.slice();
   if(state.filtros.metrica==="COSTO_HA"){
@@ -407,8 +490,12 @@ function buildResumen(){
   const totalAll = colTotals.reduce((a,b)=>a+b,0);
   const totalAllMetric = (state.filtros.metrica==="COSTO_HA") ? (()=>{ const cuSet = new Set(rows.map(r=>r.CUARTEL).filter(Boolean)); const sumSup = Array.from(cuSet).reduce((a,c)=>a+(state.supMap[c]||0),0); return sumSup>0? totalAll/sumSup : NaN; })() : totalAll;
   const totalCell = (state.filtros.mes!=="Todos" && !Array.isArray(state.filtros.mes)) ? (state.filtros.metrica==="COSTO_HA" ? colMetrics[0] : colTotals[0]) : totalAllMetric;
-  totRow += `<td>${fmt(totalCell)}</td></tr>`; tf.innerHTML = totRow;
-  const cont = document.querySelector("#resumen"); cont.innerHTML = ""; cont.appendChild(tbl);
+  totRow += `<td class="summary-total-cell">${fmt(totalCell)}</td></tr>`; tf.innerHTML = totRow;
+  const metricLabel = state.filtros.metrica === 'COSTO_HA' ? 'Costo por hectárea' : 'Gasto total';
+  const mesesLabel = meses.length ? `${meses.length} ${meses.length === 1 ? 'mes' : 'meses'}` : 'Sin meses';
+  const cont = document.querySelector("#resumen");
+  cont.innerHTML = `<div class="summary-table-shell"><div class="summary-table-head"><div><span class="summary-table-kicker">Tabla principal</span><strong>Lectura por cuartel</strong></div><div class="summary-table-meta"><span class="summary-pill">${metricLabel}</span><span class="summary-pill">${mesesLabel}</span><span class="summary-pill">${sorted.length} cuarteles</span></div></div><div class="summary-table-body"></div></div>`;
+  cont.querySelector('.summary-table-body').appendChild(tbl);
   cont.querySelectorAll(".cuartel-btn").forEach(btn=>{
     btn.onclick = ()=>{
       const c = btn.dataset.c;
@@ -439,7 +526,7 @@ function buildResumen(){
       };
       mesesMini.sort(orderMesMini);
       const n1s = Object.keys(byN1M).sort((a,b)=>{ const ta=Object.values(byN1M[a]).reduce((A,B)=>A+B,0); const tb=Object.values(byN1M[b]).reduce((A,B)=>A+B,0); return tb-ta; });
-      const tbl2 = document.createElement('table'); let th = `<thead><tr><th>NIVEL 1</th>`; for(const m of mesesMini) th+=`<th>${m}</th>`; th+=`<th>TOTAL</th></tr></thead>`; tbl2.innerHTML = th + `<tbody></tbody>`; const tb2 = tbl2.querySelector('tbody');
+      const tbl2 = document.createElement('table'); tbl2.className = 'dense-table resumen-mini-table'; let th = `<thead><tr><th>NIVEL 1</th>`; for(const m of mesesMini) th+=`<th>${m}</th>`; th+=`<th>TOTAL</th></tr></thead>`; tbl2.innerHTML = th + `<tbody></tbody>`; const tb2 = tbl2.querySelector('tbody');
       for(const n of n1s){
         let tds = `<td>${n}</td>`; let tot=0;
         for(const m of mesesMini){ const v=byN1M[n][m]||0; tot+=v; const vv=(state.filtros.metrica==="COSTO_HA")?(state.supMap[c]? v/state.supMap[c] : NaN):v; tds+=`<td>${fmt(vv)}</td>`; }
@@ -448,7 +535,6 @@ function buildResumen(){
         const totShown = (!Array.isArray(state.filtros.mes) && state.filtros.mes!=="Todos")
           ? ((state.filtros.metrica==="COSTO_HA")?(state.supMap[c]? (byN1M[n][mesesMini[0]]||0)/state.supMap[c]:NaN):(byN1M[n][mesesMini[0]]||0))
           : tMetric;
-
         tds+=`<td>${fmt(totShown)}</td>`; const tr=document.createElement('tr'); tr.innerHTML=tds; tb2.appendChild(tr);
       }
       wrap.innerHTML = ""; wrap.appendChild(tbl2); trd.classList.remove('hidden');
@@ -537,13 +623,26 @@ function buildDetalle(){
   document.querySelector("#d_n1").innerHTML = `<option>Todos</option>` + n1s.map(n=>`<option${n===state.detalle.nivel1?' selected':''}>${n}</option>`).join('');
   for(const c of cuarteles){
     const rcu = rows.filter(r=>r.CUARTEL===c);
-    const byFaMes = {}; for(const r of rcu){ const f=strip(r.FAENA)||"—"; const m=r.MES_STR||"—"; byFaMes[f]=byFaMes[f]||{}; byFaMes[f][m]=(byFaMes[f][m]||0)+(r.VALOR||0); }
-    const faenas = Object.keys(byFaMes).sort((a,b)=>{ const ta=Object.values(byFaMes[a]).reduce((A,B)=>A+B,0); const tb=Object.values(byFaMes[b]).reduce((A,B)=>A+B,0); return state.detalle.orden==="Desc"? (tb-ta):(ta-tb); });
-    const box = document.createElement('div'); box.className="card";
-    const head=document.createElement('div'); head.className="acc-head"; head.innerHTML=`<span class="acc-caret">▶</span><b>${c}</b>`;
+    const byFaMes = {};
+    for(const r of rcu){
+      const f=strip(r.FAENA)||"—";
+      const m=r.MES_STR||"—";
+      byFaMes[f]=byFaMes[f]||{};
+      byFaMes[f][m]=(byFaMes[f][m]||0)+(r.VALOR||0);
+    }
+    const faenas = Object.keys(byFaMes).sort((a,b)=>{
+      const ta=Object.values(byFaMes[a]).reduce((A,B)=>A+B,0);
+      const tb=Object.values(byFaMes[b]).reduce((A,B)=>A+B,0);
+      return state.detalle.orden==="Desc" ? (tb-ta) : (ta-tb);
+    });
+    const box = document.createElement('div'); box.className="card detail-card";
+    const head=document.createElement('div');
+    head.className="acc-head";
+    head.innerHTML=`<div class="acc-title"><span class="acc-caret">▶</span><b>${c}</b></div><span class="badge">${fmt(faenas.length)} faenas</span>`;
     const body=document.createElement('div'); body.className="acc-body hidden";
-    
+
     const table=document.createElement('table');
+    table.className = 'dense-table detalle-table';
     let meses;
     if(state.filtros.mes==="Todos" || (Array.isArray(state.filtros.mes) && !state.filtros.mes.length)){
       meses = Array.from(new Set(rcu.map(r=>r.MES_STR))).filter(Boolean);
@@ -554,93 +653,43 @@ function buildDetalle(){
     }
     const orderMes = (a,b)=>{ const [ma,ya]=a.split('-'); const [mb,yb]=b.split('-'); const ia=MES_ABR.indexOf(ma); const ib=MES_ABR.indexOf(mb); const ya2=parseInt(ya,10)||0; const yb2=parseInt(yb,10)||0; if(ya2!==yb2) return ya2-yb2; return ia-ib; };
     meses.sort(orderMes);
- let th=`<thead><tr><th>FAENA</th>`; for(const m of meses) th+=`<th>${m}</th>`; th+=`<th>TOTAL</th></tr></thead><tbody></tbody>`; table.innerHTML=th; const tb=table.querySelector('tbody');
+    let th=`<thead><tr><th>FAENA</th>`;
+    for(const m of meses) th+=`<th>${m}</th>`;
+    th+=`<th>TOTAL</th></tr></thead><tbody></tbody>`;
+    table.innerHTML=th;
+    const tb=table.querySelector('tbody');
     for(const f of faenas){
-      let row=`<td>${f}</td>`; let tot=0; for(const m of meses){ const v=byFaMes[f][m]||0; tot+=v; const val=(state.detalle.metrica==="COSTO_HA")?(state.supMap[c]? v/state.supMap[c]:NaN):v; row+=`<td>${fmt(val)}</td>`; }
-      const totVal=(state.detalle.metrica==="COSTO_HA")?(state.supMap[c]? tot/state.supMap[c]:NaN):tot; const shown=(state.filtros.mes!=="Todos")?((state.detalle.metrica==="COSTO_HA")?(state.supMap[c]? (byFaMes[f][meses[0]]||0)/state.supMap[c]:NaN):(byFaMes[f][meses[0]]||0)):totVal; row+=`<td>${fmt(shown)}</td>`; const tr=document.createElement('tr'); tr.innerHTML=row; tb.appendChild(tr);
+      let row=`<td>${f}</td>`;
+      let tot=0;
+      for(const m of meses){
+        const v=byFaMes[f][m]||0;
+        tot+=v;
+        const val=(state.detalle.metrica==="COSTO_HA")?(state.supMap[c]? v/state.supMap[c]:NaN):v;
+        row+=`<td>${fmt(val)}</td>`;
+      }
+      const totVal=(state.detalle.metrica==="COSTO_HA")?(state.supMap[c]? tot/state.supMap[c]:NaN):tot;
+      row+=`<td>${fmt(totVal)}</td>`;
+      const tr=document.createElement('tr');
+      tr.innerHTML=row;
+      tb.appendChild(tr);
     }
-    body.appendChild(table); box.appendChild(head); box.appendChild(body); cont.appendChild(box);
-    head.onclick = ()=>{ const wasHidden = body.classList.contains('hidden'); body.classList.toggle('hidden'); head.querySelector('.acc-caret').textContent = wasHidden ? '▼' : '▶'; };
+    const tableWrap = document.createElement('div');
+    tableWrap.className = 'table-wrap';
+    tableWrap.appendChild(table);
+    body.appendChild(tableWrap);
+    box.appendChild(head);
+    box.appendChild(body);
+    cont.appendChild(box);
+    head.onclick = ()=>{
+      const wasHidden = body.classList.contains('hidden');
+      body.classList.toggle('hidden');
+      head.querySelector('.acc-caret').textContent = wasHidden ? '▼' : '▶';
+    };
   }
   const exp = document.querySelector("#d_expand"), col = document.querySelector("#d_collapse");
   if(exp){ exp.onclick = ()=> { Array.from(document.querySelectorAll('#detalle .acc-body')).forEach(b=>b.classList.remove('hidden')); Array.from(document.querySelectorAll('#detalle .acc-head .acc-caret')).forEach(c=>c.textContent='▼'); } }
   if(col){ col.onclick = ()=> { Array.from(document.querySelectorAll('#detalle .acc-body')).forEach(b=>b.classList.add('hidden')); Array.from(document.querySelectorAll('#detalle .acc-head .acc-caret')).forEach(c=>c.textContent='▶'); } }
 }
-
-function getComparativoMesesSeleccionados(){
-  const fm = state.comparativo?.meses;
-  if(fm==="Todos" || !Array.isArray(fm) || !fm.length) return null;
-  return fm.slice();
-}
-
-function renderComparativoMesesControl(rows25, rows24){
-  const wrap = document.getElementById("comparativo-meses");
-  if(!wrap) return;
-
-  const available = Array.from(new Set([
-    ...rows25.map(r=>r.MES_STR).filter(Boolean),
-    ...rows24.map(r=>r.MES_STR).filter(Boolean)
-  ]));
-  sortMesLabels(available);
-
-  if(!available.length){
-    state.comparativo.meses = "Todos";
-    wrap.innerHTML = '<span class="small">Meses: sin datos</span>';
-    return;
-  }
-
-  const sel = getComparativoMesesSeleccionados();
-  const validSel = sel ? sel.filter(m=>available.includes(m)) : null;
-  if(sel && !validSel.length){
-    state.comparativo.meses = "Todos";
-  }
-
-  const selected = validSel && validSel.length ? validSel : available;
-  const selectedSet = new Set(selected);
-  const allChecked = selected.length===available.length;
-
-  const items = available.map(m=>`<label class="mes-dropdown-item"><input type="checkbox" data-comp-mes="${m}" ${selectedSet.has(m)?'checked':''}><span>${m}</span></label>`).join('');
-  const countText = allChecked ? 'Todos' : `${selectedSet.size} mes(es)`;
-
-  wrap.innerHTML = `<div class="mes-dropdown" id="comp_mes">    <button type="button" class="mes-dropdown-btn">      <span>Meses comparativo</span>      <span class="mes-count">${countText}</span>      <span class="arrow">▼</span>    </button>    <div class="mes-dropdown-panel">      <label class="mes-dropdown-item todos"><input type="checkbox" id="comp_mes_todos" ${allChecked?'checked':''}><span>Todos</span></label>      ${items}    </div>  </div>`;
-
-  const dropdown = wrap.querySelector('#comp_mes');
-  const btn = dropdown.querySelector('.mes-dropdown-btn');
-  btn.onclick = e=>{ e.stopPropagation(); dropdown.classList.toggle('open'); };
-
-  dropdown.addEventListener('change', e=>{
-    const t = e.target;
-    if(!t.matches('input[type="checkbox"]')) return;
-    const panel = dropdown.querySelector('.mes-dropdown-panel');
-    const allBox = panel.querySelector('#comp_mes_todos');
-    const mesBoxes = Array.from(panel.querySelectorAll('input[data-comp-mes]'));
-
-    if(t.id==='comp_mes_todos'){
-      mesBoxes.forEach(x=>x.checked=t.checked);
-      state.comparativo.meses = 'Todos';
-    }else{
-      const checked = mesBoxes.filter(x=>x.checked).map(x=>x.dataset.compMes);
-      if(!checked.length || checked.length===mesBoxes.length){
-        state.comparativo.meses = 'Todos';
-        allBox.checked = true;
-        if(!checked.length) mesBoxes.forEach(x=>x.checked=true);
-      }else{
-        state.comparativo.meses = checked;
-        allBox.checked = false;
-      }
-    }
-    buildComparativo();
-  });
-
-  if(!window.__dlhCompMesDocListener){
-    document.addEventListener('click', e=>{
-      const current = document.getElementById('comp_mes');
-      if(current && !current.contains(e.target)) current.classList.remove('open');
-    });
-    window.__dlhCompMesDocListener = true;
-  }
-}
-
 function buildComparativo(){
   const filtros = state.filtros;
   const tbody = document.querySelector('#tabla-comparativo tbody');
@@ -652,21 +701,18 @@ function buildComparativo(){
     tfoot.innerHTML = "";
     return;
   }
-
   if(comp2425Status==='idle' || comp2425Status==='loading'){
     tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;color:var(--muted)">Cargando temporada 24-25…</td></tr>`;
     tfoot.innerHTML = "";
     ensureComparativo2425Data().then(()=> buildComparativo());
     return;
   }
-
   if(!comp2425 || !comp2425.rows || !comp2425.rows.length){
     const reason = comp2425ErrorReason || 'Sin datos temporada 24-25 para comparar.';
     tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;color:var(--muted)">${reason}</td></tr>`;
     tfoot.innerHTML = "";
     return;
   }
-
   function applyFiltersComparativo(rows, incluirMes){
     let out = rows.slice();
     if(filtros.predio!=="Todos"){
@@ -694,31 +740,18 @@ function buildComparativo(){
         out = out.filter(r => codeSet.has((r.MES_STR||"").slice(0,3)));
       }
     }
-return out;
+    return out;
   }
-
-  // Base comparativo (sin usar filtro global de meses)
-  let rows25 = applyFiltersComparativo(state.data, false);
+  // Comparativo usa el filtro global de meses del header
+  let rows25 = applyFiltersComparativo(state.data, true);
   let rows24Full = applyFiltersComparativo(comp2425.rows, false);
-  let rows24Match = applyFiltersComparativo(comp2425.rows, false);
-
-  renderComparativoMesesControl(rows25, rows24Full);
-  const compMeses = getComparativoMesesSeleccionados();
-  if(compMeses){
-    const mesSet = new Set(compMeses);
-    rows25 = rows25.filter(r=>mesSet.has(r.MES_STR));
-    rows24Full = rows24Full.filter(r=>mesSet.has(r.MES_STR));
-    rows24Match = rows24Match.filter(r=>mesSet.has(r.MES_STR));
-  }
-
-  if(!compMeses){
-    // Meses que existen en 25-26 (JUN, JUL, ...)
+  let rows24Match = applyFiltersComparativo(comp2425.rows, true);
+  if(filtros.mes==="Todos"){
     const meses25 = new Set(rows25.map(r => (r.MES_STR||"").slice(0,3)).filter(Boolean));
     if(meses25.size){
       rows24Match = rows24Match.filter(r => meses25.has((r.MES_STR||"").slice(0,3)));
     }
   }
-
   function agruparPorCuartel(rows){
     const agg = {};
     for(const r of rows){
@@ -728,27 +761,21 @@ return out;
     }
     return agg;
   }
-
   const agg25       = agruparPorCuartel(rows25);
   const agg24Full   = agruparPorCuartel(rows24Full);
   const agg24Match  = agruparPorCuartel(rows24Match);
-
   const cuSet = new Set([...Object.keys(agg25), ...Object.keys(agg24Full), ...Object.keys(agg24Match)]);
   const cuarteles = Array.from(cuSet).filter(Boolean);
-
   const metrica = (filtros.metrica==="COSTO_HA") ? "COSTO_HA" : "VALOR";
   const sup25 = state.supMap || {};
   const sup24 = comp2425.supMap || {};
-
   const rowsComp = cuarteles.map(c => {
     const tot25      = agg25[c]      || 0;
     const tot24Full  = agg24Full[c]  || 0;
     const tot24Match = agg24Match[c] || 0;
-
     let v25      = tot25;
     let v24Full  = tot24Full;
     let v24Match = tot24Match;
-
     if(metrica==="COSTO_HA"){
       const s25 = sup25[c];
       const s24 = sup24[c];
@@ -756,30 +783,33 @@ return out;
       v24Full  = s24 ? tot24Full/s24 : NaN;
       v24Match = s24 ? tot24Match/s24 : NaN;
     }
-
     const vv25      = Number.isFinite(v25) ? v25 : NaN;
     const vv24Full  = Number.isFinite(v24Full) ? v24Full : NaN;
     const vv24Match = Number.isFinite(v24Match) ? v24Match : NaN;
-
     const diff = (Number.isFinite(vv25)?vv25:0) - (Number.isFinite(vv24Match)?vv24Match:0);
     const pct  = (Number.isFinite(vv24Match) && Math.abs(vv24Match)>0) ? (vv25/vv24Match - 1) : NaN;
-
     return {CUARTEL:c, v24m:vv24Match, v24t:vv24Full, v25:vv25, diff, pct};
   }).filter(r => !(Number.isNaN(r.v24m) && Number.isNaN(r.v25)));
-
   const ord = filtros.orden==="Asc" ? "Asc" : "Desc";
+  const ordenBy = state.comparativo?.ordenBy || "v25";
+  const getOrdenValor = (row)=>{
+    const value = ordenBy === "v24t" ? row.v24t
+      : ordenBy === "v24m" ? row.v24m
+      : ordenBy === "diff" ? row.diff
+      : ordenBy === "pct" ? row.pct
+      : row.v25;
+    return Number.isFinite(value) ? value : 0;
+  };
   rowsComp.sort((a,b)=>{
-    const va = Number.isFinite(a.v25)?a.v25:0;
-    const vb = Number.isFinite(b.v25)?b.v25:0;
+    const va = getOrdenValor(a);
+    const vb = getOrdenValor(b);
     return ord==="Asc" ? va-vb : vb-va;
   });
-
   if(!rowsComp.length){
     tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;color:var(--muted)">Sin resultados para los filtros seleccionados en Comparativo.</td></tr>`;
     tfoot.innerHTML = "";
     return;
   }
-
   let bodyHTML = "";
   for(const r of rowsComp){
     const cu = r.CUARTEL;
@@ -794,7 +824,6 @@ return out;
     <tr class="hidden mini comp-mini-row"><td colspan="6"><div class="mini-wrap"></div></td></tr>`;
   }
   tbody.innerHTML = bodyHTML;
-
   // Constructor de detalle por Nivel 1 dentro de la propia tabla
   function renderComparativoMini(cu, miniRow){
     const wrap = miniRow.querySelector('.mini-wrap');
@@ -806,7 +835,6 @@ return out;
       wrap.innerHTML = "";
       return;
     }
-
     const agg25N1      = {};
     const agg24MatchN1 = {};
     for(const r of rows25Cu){
@@ -817,17 +845,14 @@ return out;
       const n = strip(r.NIVEL_1 || "Sin clasificar");
       agg24MatchN1[n] = (agg24MatchN1[n]||0) + (r.VALOR||0);
     }
-
     const niveles = Array.from(new Set([...Object.keys(agg25N1), ...Object.keys(agg24MatchN1)])).filter(Boolean);
     if(!niveles.length){
       wrap.innerHTML = "";
       return;
     }
-
     const met = metrica;
     const s25 = sup25[cuNorm];
     const s24 = sup24[cuNorm];
-
     const rowsDetalle = niveles.map(n1=>{
       const tot25      = agg25N1[n1]      || 0;
       const tot24Match = agg24MatchN1[n1] || 0;
@@ -843,20 +868,26 @@ return out;
       const pct  = (Number.isFinite(vv24Match) && Math.abs(vv24Match)>0) ? (vv25/vv24Match - 1) : NaN;
       return {NIVEL_1:n1, v24:vv24Match, v25:vv25, diff, pct};
     }).filter(r => !(Number.isNaN(r.v24) && Number.isNaN(r.v25)));
-
     const ord2 = ord;
+    const ordenByDetalle = state.comparativo?.ordenBy || "v25";
+    const getOrdenDetalle = (row)=>{
+      const value = ordenByDetalle === "v24t" ? row.v24
+        : ordenByDetalle === "v24m" ? row.v24
+        : ordenByDetalle === "diff" ? row.diff
+        : ordenByDetalle === "pct" ? row.pct
+        : row.v25;
+      return Number.isFinite(value) ? value : 0;
+    };
     rowsDetalle.sort((a,b)=>{
-      const va = Number.isFinite(a.v25)?a.v25:0;
-      const vb = Number.isFinite(b.v25)?b.v25:0;
+      const va = getOrdenDetalle(a);
+      const vb = getOrdenDetalle(b);
       return ord2==="Asc" ? va-vb : vb-va;
     });
-
     const sum24 = rowsDetalle.reduce((a,r)=>a+(Number.isFinite(r.v24)?r.v24:0),0);
     const sum25 = rowsDetalle.reduce((a,r)=>a+(Number.isFinite(r.v25)?r.v25:0),0);
     const diffTot = sum25 - sum24;
     const pctTot = (Number.isFinite(sum24) && Math.abs(sum24)>0) ? (sum25/sum24 - 1) : NaN;
-
-    let inner = '<table><thead><tr><th>Nivel 1</th><th>24-25 (mismos meses)</th><th>25-26</th><th>Diferencia</th><th>% Dif.</th></tr></thead><tbody>';
+    let inner = '<table><thead><tr><th>Categoría</th><th>24-25 (mismos meses)</th><th>25-26</th><th>Diferencia</th><th>% Dif.</th></tr></thead><tbody>';
     for(const r of rowsDetalle){
       inner += `<tr>
         <td>${r.NIVEL_1}</td>
@@ -873,10 +904,8 @@ return out;
       <td>${fmt(diffTot)}</td>
       <td>${pctFmt(pctTot)}</td>
     </tr></tfoot></table>`;
-
     wrap.innerHTML = inner;
   }
-
   // Click en fila principal para mostrar detalle bajo el cuartel
   Array.from(tbody.querySelectorAll('tr.comp-main')).forEach(tr=>{
     const first = tr.firstElementChild;
@@ -902,13 +931,11 @@ return out;
       mini.classList.remove('hidden');
     };
   });
-
   const sum24m = rowsComp.reduce((a,r)=>a+(Number.isFinite(r.v24m)?r.v24m:0),0);
   const sum24t = rowsComp.reduce((a,r)=>a+(Number.isFinite(r.v24t)?r.v24t:0),0);
   const sum25  = rowsComp.reduce((a,r)=>a+(Number.isFinite(r.v25)?r.v25:0),0);
   const diffTot = sum25 - sum24m;
   const pctTot  = (Number.isFinite(sum24m) && Math.abs(sum24m)>0) ? (sum25/sum24m - 1) : NaN;
-
   tfoot.innerHTML = `<tr>
     <td>Total</td>
     <td>${fmt(sum24t)}</td>
@@ -918,26 +945,429 @@ return out;
     <td>${pctFmt(pctTot)}</td>
   </tr>`;
 }
+function getSelectedMesesCount(rows){
+  if(state.filtros.mes === "Todos" || (Array.isArray(state.filtros.mes) && !state.filtros.mes.length)){
+    return new Set(rows.map(r=>r.MES_STR).filter(Boolean)).size;
+  }
+  if(Array.isArray(state.filtros.mes)) return state.filtros.mes.length;
+  return state.filtros.mes ? 1 : 0;
+}
 
+function getRentabilidadCardConfig(){
+  const raw = (typeof dashboardHigueraData !== 'undefined' && dashboardHigueraData.rentabilidadCards) ? dashboardHigueraData.rentabilidadCards : {};
+  const merged = {};
+  Object.keys(RENT_CARD_DEFAULTS).forEach((key)=>{
+    merged[key] = Object.assign({}, RENT_CARD_DEFAULTS[key], raw && raw[key] ? raw[key] : {});
+  });
+  return Object.entries(merged).sort((a,b)=>(a[1].order||0)-(b[1].order||0));
+}
+function parseRentNumber(value){
+  let raw = strip(value || '');
+  if(!raw) return 0;
+  raw = raw.replace(/[$€£¥\s ]/g, '').replace(/[^0-9,.-]/g, '');
+  if(!raw || raw === '-' || raw === '.' || raw === ',') return 0;
+  const commas = (raw.match(/,/g) || []).length;
+  const dots = (raw.match(/\./g) || []).length;
+  if(commas && dots){
+    if(raw.lastIndexOf(',') > raw.lastIndexOf('.')){
+      raw = raw.replace(/\./g, '').replace(',', '.');
+    } else {
+      raw = raw.replace(/,/g, '');
+    }
+  } else if(dots > 1 && !commas){
+    raw = raw.replace(/\./g, '');
+  } else if(commas > 1 && !dots){
+    raw = raw.replace(/,/g, '');
+  } else if(commas === 1 && !dots){
+    raw = raw.replace(',', '.');
+  }
+  const parsed = parseFloat(raw);
+  return Number.isFinite(parsed) ? parsed : 0;
+}
+function ingestRentabilidadCSV(raw){
+  const delim = detectDelimiter(raw);
+  const rows = parseCSV(raw, delim).filter(r=>r && r.some(c=>strip(c)));
+  if(!rows.length) return [];
+  const aliasMap = {
+    predio:['PREDIO'],
+    sector:['SECTOR'],
+    especie:['ESPECIE'],
+    variedad:['VARIEDAD'],
+    cuartel:['CUARTEL'],
+    hectareas:['HECTAREAS','HECTAREA','HAS'],
+    kilos:['KILOS REALES','KILOS_REAL','KG REALES','KILOS'],
+    totalIngresos:['TOTAL INGRESOS','INGRESO TOTAL','INGRESOS TOTALES'],
+    totalCostos:['TOTAL COSTOS ACUMULADOS','TOTAL COSTOS','COSTOS ACUMULADOS'],
+    resultado:['RESULTADO','MARGEN','UTILIDAD'],
+    ingresoHa:['INGRESO HECTAREA','INGRESO POR HECTAREA'],
+    costoHa:['COSTO TOTAL POR HECTAREA','COSTO POR HECTAREA','COSTOS POR HECTAREA'],
+    ingresosKilo:['INGRESOS POR KILO','INGRESO POR KILO'],
+    costoKilo:['COSTO POR KILO','COSTOS POR KILO']
+  };
+  let headerIndex = 0;
+  let bestScore = -1;
+  const targets = ['predio','sector','cuartel','hectareas','kilos','totalIngresos','totalCostos','resultado'];
+  for(let i=0;i<Math.min(rows.length,40);i++){
+    const normalized = rows[i].map(normalizeHeader);
+    const score = targets.reduce((acc,key)=> acc + (aliasMap[key].some(alias => normalized.includes(alias)) ? 1 : 0),0);
+    if(score > bestScore){ bestScore = score; headerIndex = i; }
+  }
+  const header = rows[headerIndex].map(normalizeHeader);
+  const findIndex = (aliases)=> header.findIndex(h => aliases.some(alias => h === alias || h.startsWith(alias)));
+  const map = {
+    predio: findIndex(aliasMap.predio),
+    sector: findIndex(aliasMap.sector),
+    especie: findIndex(aliasMap.especie),
+    variedad: findIndex(aliasMap.variedad),
+    cuartel: findIndex(aliasMap.cuartel),
+    hectareas: findIndex(aliasMap.hectareas),
+    kilos: findIndex(aliasMap.kilos),
+    totalIngresos: findIndex(aliasMap.totalIngresos),
+    totalCostos: findIndex(aliasMap.totalCostos),
+    resultado: findIndex(aliasMap.resultado),
+    ingresoHa: findIndex(aliasMap.ingresoHa),
+    costoHa: findIndex(aliasMap.costoHa),
+    ingresosKilo: findIndex(aliasMap.ingresosKilo),
+    costoKilo: findIndex(aliasMap.costoKilo)
+  };
+  return rows.slice(headerIndex+1).map(row=>({
+    PREDIO: map.predio >= 0 ? strip(row[map.predio]) : '',
+    SECTOR: map.sector >= 0 ? strip(row[map.sector]) : '',
+    ESPECIE: map.especie >= 0 ? strip(row[map.especie]) : '',
+    VARIEDAD: map.variedad >= 0 ? strip(row[map.variedad]) : '',
+    CUARTEL: map.cuartel >= 0 ? strip(row[map.cuartel]) : '',
+    HECTAREAS: map.hectareas >= 0 ? parseRentNumber(row[map.hectareas]) : 0,
+    KILOS_REALES: map.kilos >= 0 ? parseRentNumber(row[map.kilos]) : 0,
+    TOTAL_INGRESOS: map.totalIngresos >= 0 ? parseRentNumber(row[map.totalIngresos]) : 0,
+    TOTAL_COSTOS: map.totalCostos >= 0 ? parseRentNumber(row[map.totalCostos]) : 0,
+    RESULTADO: map.resultado >= 0 ? parseRentNumber(row[map.resultado]) : 0,
+    INGRESO_HECTAREA: map.ingresoHa >= 0 ? parseRentNumber(row[map.ingresoHa]) : 0,
+    COSTO_HECTAREA: map.costoHa >= 0 ? parseRentNumber(row[map.costoHa]) : 0,
+    INGRESOS_KILO: map.ingresosKilo >= 0 ? parseRentNumber(row[map.ingresosKilo]) : 0,
+    COSTO_KILO: map.costoKilo >= 0 ? parseRentNumber(row[map.costoKilo]) : 0,
+  })).filter(r=>r.CUARTEL || r.SECTOR || r.PREDIO);
+}
+async function ensureRentabilidadData(){
+  if(rentabilidadStatus === 'ready' || rentabilidadStatus === 'loading') return;
+  const inlineRaw = (typeof dashboardHigueraData !== 'undefined' && dashboardHigueraData.rentabilidadCsvInline) ? String(dashboardHigueraData.rentabilidadCsvInline) : '';
+  if(strip(inlineRaw)){
+    try{
+      const inlineRows = ingestRentabilidadCSV(inlineRaw);
+      if(inlineRows.length){
+        rentabilidadData = inlineRows;
+        rentabilidadStatus = 'ready';
+        rentabilidadErrorReason = '';
+        return;
+      }
+    }catch(e){
+      console.warn('Fallback inline de rentabilidad inválido', e);
+    }
+  }
+  const url = (typeof dashboardHigueraData !== 'undefined' && dashboardHigueraData.csvRentabilidadUrl) ? dashboardHigueraData.csvRentabilidadUrl : '';
+  if(!url){
+    rentabilidadStatus = 'error';
+    rentabilidadErrorReason = 'No hay endpoint configurado para la base de rentabilidad.';
+    return;
+  }
+  rentabilidadStatus = 'loading';
+  try{
+    const resp = await fetch(url, {credentials:'same-origin'});
+    if(!resp.ok){
+      let detail = '';
+      try{
+        const json = await resp.clone().json();
+        detail = (json && (json.message || json.code)) ? (json.message || json.code) : '';
+      }catch(err){
+        try{ detail = strip(await resp.text()); }catch(_e){}
+      }
+      throw new Error(detail || ('HTTP ' + resp.status));
+    }
+    let raw = await resp.text();
+    const t = (raw || '').trim();
+    if(t.startsWith('"') && t.endsWith('"')){
+      try{ raw = JSON.parse(t); }catch(e){}
+    }
+    rentabilidadData = ingestRentabilidadCSV(raw);
+    rentabilidadStatus = rentabilidadData.length ? 'ready' : 'empty';
+    rentabilidadErrorReason = '';
+  }catch(e){
+    console.warn('No se pudo cargar rentabilidad', e);
+    rentabilidadStatus = 'error';
+    rentabilidadErrorReason = e && e.message ? e.message : 'Error desconocido al leer rentabilidad.';
+    rentabilidadData = [];
+  }
+}
+function applyRentabilidadFilters(){
+  let rows = rentabilidadData.slice();
+  const activeSector = state.filtros.sector !== 'Todos' ? state.filtros.sector : 'Todos';
+  if(activeSector !== 'Todos') rows = rows.filter(r => strip(r.SECTOR) === activeSector);
+  if(rentabilidadState.cuartel !== 'Todos') rows = rows.filter(r => strip(r.CUARTEL) === rentabilidadState.cuartel);
+  return rows;
+}
+function getRentMetricValue(rows, key){
+  if(!rows.length) return 0;
+  if(key === 'total_ingresos') return rows.reduce((a,r)=>a+(r.TOTAL_INGRESOS||0),0);
+  if(key === 'total_costos') return rows.reduce((a,r)=>a+(r.TOTAL_COSTOS||0),0);
+  if(key === 'resultado') return rows.reduce((a,r)=>a+(r.RESULTADO||0),0);
+  if(key === 'kilos_reales') return rows.reduce((a,r)=>a+(r.KILOS_REALES||0),0);
+  if(key === 'ingreso_hectarea'){
+    const has = rows.reduce((a,r)=>a+(r.HECTAREAS||0),0);
+    const total = rows.reduce((a,r)=>a+(r.TOTAL_INGRESOS||0),0);
+    return has > 0 ? total/has : 0;
+  }
+  if(key === 'costo_hectarea'){
+    const has = rows.reduce((a,r)=>a+(r.HECTAREAS||0),0);
+    const total = rows.reduce((a,r)=>a+(r.TOTAL_COSTOS||0),0);
+    return has > 0 ? total/has : 0;
+  }
+  if(key === 'ingresos_kilo'){
+    const kilos = rows.reduce((a,r)=>a+(r.KILOS_REALES||0),0);
+    const total = rows.reduce((a,r)=>a+(r.TOTAL_INGRESOS||0),0);
+    return kilos > 0 ? total/kilos : 0;
+  }
+  if(key === 'costo_kilo'){
+    const kilos = rows.reduce((a,r)=>a+(r.KILOS_REALES||0),0);
+    const total = rows.reduce((a,r)=>a+(r.TOTAL_COSTOS||0),0);
+    return kilos > 0 ? total/kilos : 0;
+  }
+  return 0;
+}
+function getRentEmptyStateHTML(message, cls='is-empty'){
+  return `<div class="rent-empty-state ${cls}"><strong>Rentabilidad no disponible</strong><p>${message}</p></div>`;
+}
+function renderRentabilidadResumen(){
+  const block = document.getElementById('rentabilidad-resumen-block');
+  const cardsWrap = document.getElementById('rentabilidad-cards');
+  const tableWrap = document.getElementById('rentabilidad-resumen');
+  const quickWrap = document.getElementById('rentabilidad-quick-filters');
+  if(!block || !cardsWrap || !tableWrap || !quickWrap) return;
+  block.classList.remove('hidden');
 
+  if(rentabilidadStatus === 'loading'){
+    cardsWrap.innerHTML = '';
+    quickWrap.innerHTML = '';
+    tableWrap.innerHTML = getRentEmptyStateHTML('Cargando base de rentabilidad…', 'is-loading');
+    return;
+  }
+  if(rentabilidadStatus === 'error'){
+    cardsWrap.innerHTML = '';
+    quickWrap.innerHTML = '';
+    const reason = rentabilidadErrorReason ? ` Detalle: ${rentabilidadErrorReason}` : '';
+    tableWrap.innerHTML = getRentEmptyStateHTML('No se pudo leer la base activa o la base fuente de rentabilidad. Revisa Ajustes > Rentabilidad o Base 24-25.' + reason, 'is-error');
+    return;
+  }
+  if(!rentabilidadData.length){
+    cardsWrap.innerHTML = '';
+    quickWrap.innerHTML = '';
+    tableWrap.innerHTML = getRentEmptyStateHTML('Todavía no hay datos renderizables para rentabilidad. El bloque queda disponible como apoyo del resumen.', 'is-empty');
+    return;
+  }
+
+  const rows = applyRentabilidadFilters();
+  const config = getRentabilidadCardConfig();
+  cardsWrap.innerHTML = config.filter(([,cfg])=>String(cfg.enabled) === '1' || cfg.enabled === 1).map(([key,cfg])=>{
+    const value = getRentMetricValue(rows, key);
+    const cls = key === 'resultado' ? (value >= 0 ? 'is-positive' : 'is-negative') : '';
+    return `<article class="rent-card ${cls}"><div class="rent-card-label">${cfg.label}</div><div class="rent-card-value">${fmt(value)}</div></article>`;
+  }).join('');
+  const icons = (typeof dashboardHigueraData !== 'undefined' && dashboardHigueraData.rentabilidadIcons) ? dashboardHigueraData.rentabilidadIcons : {};
+  const sectorIcon = icons.sector ? `<img src="${icons.sector}" alt="" />` : '<span class="rent-chip-icon">▦</span>';
+  const cuartelIcon = icons.cuartel ? `<img src="${icons.cuartel}" alt="" />` : '<span class="rent-chip-icon">◫</span>';
+  const sectors = Array.from(new Set(rentabilidadData.map(r=>strip(r.SECTOR)).filter(Boolean))).sort((a,b)=>a.localeCompare(b,'es'));
+  const activeSector = state.filtros.sector !== 'Todos' ? state.filtros.sector : 'Todos';
+  const cuarteles = Array.from(new Set(rentabilidadData.filter(r => activeSector === 'Todos' || strip(r.SECTOR) === activeSector).map(r=>strip(r.CUARTEL)).filter(Boolean))).sort((a,b)=>a.localeCompare(b,'es'));
+  quickWrap.innerHTML = `
+    <div class="rent-quick-group">
+      <span class="rent-quick-title">${sectorIcon}<span>Sector</span></span>
+      <div class="rent-quick-list">${['Todos', ...sectors].map(sec=>`<button type="button" class="rent-chip ${sec===activeSector?'is-active':''}" data-rent-sector="${sec}">${sectorIcon}<span>${sec}</span></button>`).join('')}</div>
+    </div>
+    <div class="rent-quick-group">
+      <span class="rent-quick-title">${cuartelIcon}<span>Cuartel</span></span>
+      <div class="rent-quick-list">${['Todos', ...cuarteles].map(cu=>`<button type="button" class="rent-chip ${cu===rentabilidadState.cuartel?'is-active':''}" data-rent-cuartel="${cu}">${cuartelIcon}<span>${cu}</span></button>`).join('')}</div>
+    </div>`;
+  quickWrap.querySelectorAll('[data-rent-sector]').forEach(btn=>btn.addEventListener('click', ()=>{ state.filtros.sector = btn.dataset.rentSector; rentabilidadState.cuartel = 'Todos'; syncFilterInputsWithState(); refreshAll(); }));
+  quickWrap.querySelectorAll('[data-rent-cuartel]').forEach(btn=>btn.addEventListener('click', ()=>{ rentabilidadState.cuartel = btn.dataset.rentCuartel; refreshAll(); }));
+  const grouped = new Map();
+  rows.forEach(r=>{
+    const key = strip(r.CUARTEL) || 'Sin cuartel';
+    if(!grouped.has(key)) grouped.set(key,{CUARTEL:key,HECTAREAS:0,KILOS_REALES:0,TOTAL_INGRESOS:0,TOTAL_COSTOS:0,RESULTADO:0});
+    const g = grouped.get(key);
+    g.HECTAREAS += r.HECTAREAS||0; g.KILOS_REALES += r.KILOS_REALES||0; g.TOTAL_INGRESOS += r.TOTAL_INGRESOS||0; g.TOTAL_COSTOS += r.TOTAL_COSTOS||0; g.RESULTADO += r.RESULTADO||0;
+  });
+  const sortKeyMap = {cuartel:'CUARTEL', hectareas:'HECTAREAS', kilos:'KILOS_REALES', ingresos:'TOTAL_INGRESOS', costos:'TOTAL_COSTOS', resultado:'RESULTADO'};
+  const sortKey = sortKeyMap[rentabilidadState.sortBy] || 'RESULTADO';
+  const dir = rentabilidadState.sortDir === 'asc' ? 1 : -1;
+  const data = Array.from(grouped.values()).sort((a,b)=>{
+    const av = a[sortKey]; const bv = b[sortKey];
+    if(sortKey === 'CUARTEL') return String(av).localeCompare(String(bv),'es') * dir;
+    return ((Number(av)||0) - (Number(bv)||0)) * dir;
+  });
+  const headers = [
+    ['cuartel','Cuartel'],
+    ['hectareas','Has'],
+    ['kilos','Kilos'],
+    ['ingresos','Ingresos'],
+    ['costos','Costos'],
+    ['resultado','Resultado']
+  ];
+  const table = data.length ? `<table class="dense-table resumen-table rent-table"><thead><tr>${headers.map(([key,label])=>`<th><button type="button" class="rent-sort-btn ${rentabilidadState.sortBy===key?'is-active':''}" data-rent-sort="${key}">${label}${rentabilidadState.sortBy===key ? `<span>${rentabilidadState.sortDir==='asc'?'↑':'↓'}</span>` : ''}</button></th>`).join('')}</tr></thead><tbody>${data.map(r=>`<tr><td>${r.CUARTEL}</td><td>${fmt(r.HECTAREAS)}</td><td>${fmt(r.KILOS_REALES)}</td><td>${fmt(r.TOTAL_INGRESOS)}</td><td>${fmt(r.TOTAL_COSTOS)}</td><td class="${r.RESULTADO<0?'is-neg-cell':'is-pos-cell'}">${fmt(r.RESULTADO)}</td></tr>`).join('')}</tbody></table>` : getRentEmptyStateHTML('No hay filas para los filtros seleccionados.');
+  tableWrap.innerHTML = table;
+  tableWrap.querySelectorAll('[data-rent-sort]').forEach(btn=>btn.addEventListener('click', ()=>{
+    const key = btn.dataset.rentSort;
+    if(rentabilidadState.sortBy === key){
+      rentabilidadState.sortDir = rentabilidadState.sortDir === 'asc' ? 'desc' : 'asc';
+    } else {
+      rentabilidadState.sortBy = key;
+      rentabilidadState.sortDir = key === 'cuartel' ? 'asc' : 'desc';
+    }
+    renderRentabilidadResumen();
+  }));
+}
+function renderResumenSignals(){
+  const wrap = document.getElementById('resumen-signal-cards');
+  const note = document.getElementById('nota-resumen');
+  if(!wrap) return;
+  const rows = applyFilters();
+  const total = rows.reduce((a,r)=>a+(r.VALOR||0),0);
+  const cuarteles = Array.from(new Set(rows.map(r=>r.CUARTEL).filter(Boolean)));
+  const sumSup = cuarteles.reduce((a,c)=>a + (state.supMap[c]||0), 0);
+  const costoHa = sumSup > 0 ? total / sumSup : NaN;
+  const meses = (state.filtros.mes === 'Todos' || (Array.isArray(state.filtros.mes) && !state.filtros.mes.length))
+    ? Array.from(new Set(rows.map(r=>r.MES_STR).filter(Boolean))).sort((a,b)=>{
+        const [ma,ya]=String(a).split('-');
+        const [mb,yb]=String(b).split('-');
+        if((parseInt(ya,10)||0)!==(parseInt(yb,10)||0)) return (parseInt(ya,10)||0)-(parseInt(yb,10)||0);
+        return MES_ABR.indexOf(ma)-MES_ABR.indexOf(mb);
+      })
+    : (Array.isArray(state.filtros.mes) ? state.filtros.mes.slice() : [state.filtros.mes]);
+  const ultimoMes = meses.length ? meses[meses.length - 1] : '—';
+  wrap.innerHTML = [
+    {label:'Foco actual', value: ultimoMes, help:`${fmt(cuarteles.length)} cuarteles visibles con filtros activos.`},
+    {label: state.filtros.metrica === 'COSTO_HA' ? 'Costo agregado / ha' : 'Costo agregado', value: fmt(state.filtros.metrica === 'COSTO_HA' ? costoHa : total), help: state.filtros.metrica === 'COSTO_HA' ? 'Promedio ponderado según superficie visible.' : 'Suma acumulada del universo filtrado.'},
+    {label:'Lectura aplicada', value: state.filtros.orden === 'Asc' ? 'Ascendente' : 'Descendente', help:`Métrica: ${state.filtros.metrica === 'COSTO_HA' ? 'Costo por hectárea' : 'Gasto total'}.`}
+  ].map(card => `<article class="resumen-signal-card"><div class="resumen-signal-label">${card.label}</div><div class="resumen-signal-value">${card.value}</div><div class="resumen-signal-help">${card.help}</div></article>`).join('');
+  if(note){
+    note.textContent = `Resumen por cuartel para ${fmt(cuarteles.length)} cuarteles visibles${ultimoMes !== '—' ? ` · último mes visible: ${ultimoMes}` : ''}.`;
+    note.classList.remove('hidden');
+  }
+}
+
+function renderKpis(){
+  const wrap = document.getElementById('kpi-row');
+  if(!wrap) return;
+  const rows = applyFilters();
+  const total = rows.reduce((a,r)=>a+(r.VALOR||0),0);
+  const cuSet = new Set(rows.map(r=>r.CUARTEL).filter(Boolean));
+  const sup = Array.from(cuSet).reduce((a,c)=>a+(state.supMap[c]||0),0);
+  const costoHa = sup>0 ? total/sup : NaN;
+  const mesesCount = getSelectedMesesCount(rows);
+  wrap.innerHTML = `
+    <article class="kpi-card kpi-card--premium"><div class="kpi-label">Gasto total</div><div class="kpi-value">${fmt(total)}</div><div class="kpi-meta">Universo filtrado acumulado</div></article>
+    <article class="kpi-card kpi-card--premium"><div class="kpi-label">Costo por hectárea</div><div class="kpi-value">${fmt(costoHa)}</div><div class="kpi-meta">Promedio sobre ${fmt(sup)} ha visibles</div></article>
+    <article class="kpi-card kpi-card--premium"><div class="kpi-label">Cuarteles visibles</div><div class="kpi-value">${fmt(cuSet.size)}</div><div class="kpi-meta">Base activa para Resumen y Detalle</div></article>
+    <article class="kpi-card kpi-card--premium"><div class="kpi-label">Meses seleccionados</div><div class="kpi-value">${fmt(mesesCount)}</div><div class="kpi-meta">Rango aplicado al tablero</div></article>
+  `;
+}
+function renderActiveFilterChips(){
+  const wrap = document.getElementById('active-filters-chips');
+  if(!wrap) return;
+  const chips = [];
+  if(state.filtros.predio !== 'Todos') chips.push({ key:'predio', value: state.filtros.predio, text:`Tipo de registro: ${state.filtros.predio}` });
+  if(state.filtros.sector !== 'Todos') chips.push({ key:'sector', value: state.filtros.sector, text:`Cultivo: ${state.filtros.sector}` });
+  if(state.filtros.nivel1 !== 'Todos') chips.push({ key:'nivel1', value: state.filtros.nivel1, text:`Categoría: ${state.filtros.nivel1}` });
+  if(state.filtros.faena !== 'Todas') chips.push({ key:'faena', value: state.filtros.faena, text:`Faena: ${state.filtros.faena}` });
+  if(state.filtros.mes !== 'Todos'){
+    const mesValue = Array.isArray(state.filtros.mes) ? state.filtros.mes.join(', ') : state.filtros.mes;
+    chips.push({ key:'mes', value: mesValue, text:`Meses: ${mesValue}` });
+  }
+  if(hideInv2425) chips.push({ key:'hideInv2425', value:'ocultas', text:'Inversiones varias: ocultas' });
+  wrap.innerHTML = chips.length
+    ? chips.map(c=>`<button class="filter-chip" type="button" data-chip-key="${c.key}" aria-label="Quitar filtro ${c.text}"><span>${c.text}</span><span class="filter-chip-remove" aria-hidden="true">×</span></button>`).join('')
+    : `<span class="filter-chip is-muted">Sin filtros activos</span>`;
+}
+function clearFilterChip(key){
+  if(key === 'hideInv2425'){
+    if(!hideInv2425) return;
+    hideInv2425 = false;
+    const btnInv = document.getElementById('btnToggleInv2425');
+    if(btnInv){
+      btnInv.textContent = 'Ocultar INVERSIONES VARIAS';
+      btnInv.setAttribute('aria-pressed', 'false');
+      btnInv.classList.remove('is-active');
+    }
+    try{ localStorage.setItem(HIDE_INV_STORAGE_KEY, '0'); }catch(e){}
+    refreshAll();
+    return;
+  }
+  const meta = FILTER_CHIP_META[key];
+  if(!meta || !meta.stateKey) return;
+  state.filtros[meta.stateKey] = meta.clearValue;
+  refreshAll();
+}
+
+function syncFilterInputsWithState(){
+  const predio = document.querySelector('#f_predio');
+  const cultivo = document.querySelector('#f_cultivo');
+  const categoria = document.querySelector('#f_n1');
+  const faena = document.querySelector('#f_faena');
+  const faenaSearch = document.querySelector('#f_faena_search');
+  const metrica = document.querySelector('#f_metrica');
+  const orden = document.querySelector('#f_orden');
+  const dN1 = document.querySelector('#d_n1');
+  const dMetrica = document.querySelector('#d_metrica');
+  const dOrden = document.querySelector('#d_orden');
+  if(predio) predio.value = state.filtros.predio;
+  if(cultivo) cultivo.value = state.filtros.sector;
+  if(categoria) categoria.value = state.filtros.nivel1;
+  if(faenaSearch) faenaSearch.value = '';
+  if(faena) faena.value = state.filtros.faena;
+  if(metrica) metrica.value = state.filtros.metrica;
+  if(orden) orden.value = state.filtros.orden;
+  if(dN1) dN1.value = state.detalle.nivel1;
+  if(dMetrica) dMetrica.value = state.detalle.metrica;
+  if(dOrden) dOrden.value = state.detalle.orden;
+  const compOrden = document.getElementById('comparativo-orden-by');
+  if(compOrden) compOrden.value = state.comparativo?.ordenBy || 'v25';
+}
+function clearFilters(resetView){
+  state.filtros.predio = 'Todos';
+  state.filtros.sector = 'Todos';
+  state.filtros.nivel1 = 'Todos';
+  state.filtros.faena = 'Todas';
+  state.filtros.metrica = 'VALOR';
+  state.filtros.mes = 'Todos';
+  state.filtros.orden = 'Desc';
+  state.detalle.nivel1 = 'Todos';
+  state.detalle.metrica = 'VALOR';
+  state.detalle.orden = 'Desc';
+  state.comparativo.ordenBy = 'v25';
+  rentabilidadState.cuartel = 'Todos';
+  rentabilidadState.sortBy = 'resultado';
+  rentabilidadState.sortDir = 'desc';
+  syncFilterInputsWithState();
+  refreshAll();
+  if(resetView) showTab('resumen');
+}
 function refreshAll(){
+  updateComparativoStatus();
   populateCombos();
   buildResumen();
   buildCharts();
   buildDetalle();
+  renderKpis();
+  renderResumenSignals();
+  renderActiveFilterChips();
+  renderRentabilidadResumen();
   const activeTab = document.querySelector('.tab.active');
   if(activeTab && activeTab.dataset.tab==='comparativo') buildComparativo();
 }
-
 async function ensureComparativo2425Data(){
   if(comp2425Status==='ready' && comp2425.rows.length) return true;
   if(comp2425Status==='loading') return false;
-
   comp2425Status = 'loading';
   comp2425ErrorReason = '';
   const candidates = [];
   if(EMBED_CSV_2425 && EMBED_CSV_2425.trim()) candidates.push(EMBED_CSV_2425);
-
   const csv2425Url = (typeof dashboardHigueraData !== 'undefined' && dashboardHigueraData.csv2425Url)
     ? dashboardHigueraData.csv2425Url
     : 'data/temporada-2024-25.csv';
@@ -948,7 +1378,6 @@ async function ensureComparativo2425Data(){
   comparativoMeta.last2425Updated = last2425Updated || comparativoMeta.last2425Updated;
   comparativoMeta.url2425 = csv2425UrlWithTs;
   updateComparativoStatus();
-
   if(!candidates.length){
     try{
       const resp = await fetch(csv2425UrlWithTs);
@@ -978,11 +1407,9 @@ async function ensureComparativo2425Data(){
       comp2425ErrorReason = 'No se pudo descargar el CSV 24-25.';
     }
   }
-
   if(!candidates.length && !comp2425ErrorReason){
     comp2425ErrorReason = 'CSV 24-25 no disponible.';
   }
-
   for(const raw of candidates){
     try{
       const parsed = ingestCSV2425(raw);
@@ -1006,13 +1433,11 @@ async function ensureComparativo2425Data(){
       comp2425ErrorReason = 'CSV 24-25 inválido o con formato no reconocido.';
     }
   }
-
   comp2425 = {rows:[], supMap:{}};
   if(!comp2425ErrorReason) comp2425ErrorReason = 'CSV 24-25 vacío o sin filas válidas.';
   comp2425Status = 'error';
   return false;
 }
-
 function initDashboardFromRawCSV(raw){
   const ing = ingestCSV(raw); state.data = ing.rows; state.supMap = ing.supMap;
   comparativoMeta.rows2526Read = ing.totalRows || 0;
@@ -1020,20 +1445,28 @@ function initDashboardFromRawCSV(raw){
   comparativoMeta.rows2425Read = 0;
   comparativoMeta.rows2425Valid = 0;
   updateComparativoStatus();
-
   comp2425Status = 'idle';
   comp2425ErrorReason = '';
-
   document.querySelector("#f_predio").innerHTML = `<option>Todos</option><option>Solo Productivo</option><option>Solo Costos Indirectos</option>`;
   document.querySelector("#f_metrica").innerHTML = `<option value="VALOR">Gasto total</option><option value="COSTO_HA">Costo por hectárea</option>`;
   document.querySelector("#f_orden").innerHTML = `<option value="Desc">Descendente</option><option value="Asc">Ascendente</option>`;
   document.querySelector("#d_metrica").innerHTML = `<option value="VALOR">Gasto total</option><option value="COSTO_HA">Costo por hectárea</option>`;
   document.querySelector("#d_orden").innerHTML = `<option value="Desc">Descendente</option><option value="Asc">Ascendente</option>`;
+  setupFaenaSearch();
   refreshAll();
   document.querySelector("#f_predio").onchange = e=>{ state.filtros.predio=e.target.value; refreshAll(); };
   document.querySelector("#f_cultivo").onchange = e=>{ state.filtros.sector = e.target.value; refreshAll(); };
   document.querySelector("#f_n1").onchange = e=>{ state.filtros.nivel1 = e.target.value.split(' — ')[0]; refreshAll(); };
   document.querySelector("#f_faena").onchange = e=>{ state.filtros.faena = e.target.value.split(' — ')[0]; refreshAll(); };
+  const faenaSearch = document.querySelector("#f_faena_search");
+  if(faenaSearch){
+    faenaSearch.addEventListener("keydown", (evt)=>{
+      if(evt.key === "Escape"){
+        faenaSearch.value = "";
+        renderFaenaOptions();
+      }
+    });
+  }
   document.querySelector("#f_metrica").onchange = e=>{ state.filtros.metrica=e.target.value; refreshAll(); };
   
   // Event listener para dropdown de meses
@@ -1080,23 +1513,31 @@ function initDashboardFromRawCSV(raw){
     }
     refreshAll();
   });
-
   document.querySelector("#f_orden").onchange = e=>{ state.filtros.orden=e.target.value==="Asc"?"Asc":"Desc"; refreshAll(); };
   document.querySelector("#d_n1").onchange = e=>{ state.detalle.nivel1 = e.target.value; buildDetalle(); };
   document.querySelector("#d_metrica").onchange = e=>{ state.detalle.metrica=e.target.value; buildDetalle(); };
   document.querySelector("#d_orden").onchange = e=>{ state.detalle.orden=e.target.value; buildDetalle(); };
+  const compOrden = document.getElementById('comparativo-orden-by');
+  if(compOrden){
+    compOrden.value = state.comparativo?.ordenBy || 'v25';
+    compOrden.onchange = e=>{
+      state.comparativo.ordenBy = e.target.value || 'v25';
+      buildComparativo();
+    };
+  }
 }
 window.__initDashboardFromRawCSV = initDashboardFromRawCSV;
-
 const btnInv2425 = document.getElementById('btnToggleInv2425');
-
+const resumenStatus = document.getElementById('resumen-status');
+const dataStatusToggle = document.getElementById('btnToggleDataStatus');
+const dashboardMetaSource = document.getElementById('dashboardMetaSource');
+const dashboardMetaGenerated = document.getElementById('dashboardMetaGenerated');
 if(btnInv2425){
   btnInv2425.textContent = hideInv2425
     ? 'Mostrar INVERSIONES VARIAS'
     : 'Ocultar INVERSIONES VARIAS';
   btnInv2425.setAttribute('aria-pressed', hideInv2425 ? 'true' : 'false');
   btnInv2425.classList.toggle('is-active', hideInv2425);
-
   btnInv2425.onclick = ()=>{
     hideInv2425 = !hideInv2425;
     btnInv2425.textContent = hideInv2425
@@ -1113,17 +1554,158 @@ if(btnInv2425){
   };
 }
 
+function setupThemeToggle(){
+  const root = document.getElementById('dashboard-higuera-wrapper');
+  const btn = document.getElementById('themeToggle');
+  const txt = document.getElementById('themeToggleText');
+  if(!root || !btn) return;
+  let theme = 'light';
+  try{
+    const stored = localStorage.getItem(THEME_STORAGE_KEY);
+    if(stored === 'dark' || stored === 'light') theme = stored;
+  }catch(e){ theme = 'light'; }
+  const applyTheme = (next)=>{
+    root.setAttribute('data-theme', next);
+    document.body && document.body.setAttribute('data-dlh-theme', next);
+    btn.setAttribute('aria-pressed', next === 'dark' ? 'true' : 'false');
+    if(txt) txt.textContent = next === 'dark' ? 'Oscuro' : 'Claro';
+    try{ localStorage.setItem(THEME_STORAGE_KEY, next); }catch(e){}
+  };
+  applyTheme(theme);
+  btn.addEventListener('click', ()=>{
+    const current = root.getAttribute('data-theme') === 'dark' ? 'dark' : 'light';
+    applyTheme(current === 'dark' ? 'light' : 'dark');
+  });
+}
+function getAccordionState(){
+  try{
+    return JSON.parse(localStorage.getItem(FILTER_ACCORDIONS_STORAGE_KEY) || '{}');
+  }catch(e){
+    return {};
+  }
+}
+function saveAccordionState(next){
+  try{ localStorage.setItem(FILTER_ACCORDIONS_STORAGE_KEY, JSON.stringify(next)); }catch(e){}
+}
+function setupFilterAccordions(){
+  const accordions = Array.from(document.querySelectorAll('.filter-accordion'));
+  if(!accordions.length) return;
+  const defaults = { ubicacion:true, clasificacion:false, periodo:true, visualizacion:false, opciones:false };
+  const stored = getAccordionState();
+  accordions.forEach(section=>{
+    const key = section.dataset.filterGroup || '';
+    const btn = section.querySelector('.filter-group-toggle');
+    const body = section.querySelector('.filter-group-body');
+    if(!btn || !body) return;
+    const isOpen = Object.prototype.hasOwnProperty.call(stored, key) ? !!stored[key] : !!defaults[key];
+    section.classList.toggle('is-open', isOpen);
+    body.classList.toggle('hidden', !isOpen);
+    btn.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+    btn.addEventListener('click', ()=>{
+      const nextOpen = !section.classList.contains('is-open');
+      section.classList.toggle('is-open', nextOpen);
+      body.classList.toggle('hidden', !nextOpen);
+      btn.setAttribute('aria-expanded', nextOpen ? 'true' : 'false');
+      const snapshot = getAccordionState();
+      snapshot[key] = nextOpen;
+      saveAccordionState(snapshot);
+    });
+  });
+}
+function setupSidebarToggle(){
+  const btn = document.getElementById('btnToggleSidebar');
+  const sidebar = document.getElementById('dashboard-sidebar');
+  const layout = document.querySelector('.dashboard-layout');
+  const root = document.getElementById('dashboard-higuera-wrapper');
+  if(!btn || !sidebar || !layout || !root) return;
+  let collapsed = false;
+  let mobileOpen = false;
+  try{ collapsed = localStorage.getItem(SIDEBAR_COLLAPSED_STORAGE_KEY) === '1'; }catch(e){ collapsed = false; }
+  const isMobile = ()=> window.matchMedia('(max-width: 980px)').matches;
+  const applyState = ()=>{
+    const mobile = isMobile();
+    if(mobile){
+      layout.classList.remove('is-sidebar-collapsed');
+      root.classList.remove('sidebar-collapsed');
+      sidebar.classList.remove('is-collapsed');
+      sidebar.hidden = !mobileOpen;
+      sidebar.classList.toggle('is-open', mobileOpen);
+      btn.textContent = mobileOpen ? 'Cerrar filtros' : 'Mostrar filtros';
+      btn.setAttribute('aria-expanded', mobileOpen ? 'true' : 'false');
+      return;
+    }
+    mobileOpen = false;
+    sidebar.classList.remove('is-open');
+    sidebar.hidden = collapsed;
+    sidebar.classList.toggle('is-collapsed', collapsed);
+    layout.classList.toggle('is-sidebar-collapsed', collapsed);
+    root.classList.toggle('sidebar-collapsed', collapsed);
+    btn.textContent = collapsed ? 'Mostrar filtros' : 'Ocultar filtros';
+    btn.setAttribute('aria-expanded', collapsed ? 'false' : 'true');
+  };
+  btn.addEventListener('click', ()=>{
+    if(isMobile()){
+      mobileOpen = !mobileOpen;
+      applyState();
+      return;
+    }
+    collapsed = !collapsed;
+    try{ localStorage.setItem(SIDEBAR_COLLAPSED_STORAGE_KEY, collapsed ? '1' : '0'); }catch(e){}
+    applyState();
+  });
+  window.addEventListener('resize', applyState);
+  applyState();
+}
+function setDenseMode(tabId){
+  const root = document.getElementById('dashboard-higuera-wrapper');
+  if(!root) return;
+  root.classList.toggle('dense-mode', tabId === 'resumen' || tabId === 'detalle');
+}
+function setupActionButtons(){
+  const btnClear = document.getElementById('btnClearFilters');
+  const btnReset = document.getElementById('btnResetView');
+  if(btnClear) btnClear.addEventListener('click', ()=> clearFilters(false));
+  if(btnReset) btnReset.addEventListener('click', ()=> clearFilters(true));
+}
+setupThemeToggle();
+setupFilterAccordions();
+setupSidebarToggle();
+setupActionButtons();
+if(resumenStatus && dataStatusToggle){
+  const comparativoStatus = document.getElementById('comparativo-status');
+  let isHidden = true;
+  try{
+    const stored = localStorage.getItem(RESUMEN_STATUS_STORAGE_KEY);
+    isHidden = stored === null ? true : stored === '1';
+  }catch(e){
+    isHidden = true;
+  }
+  const applyResumenToggle = (hidden)=>{
+    resumenStatus.classList.toggle('is-collapsed', hidden);
+    if(comparativoStatus) comparativoStatus.classList.toggle('is-collapsed', hidden);
+    dataStatusToggle.textContent = hidden ? 'Mostrar estado' : 'Ocultar estado';
+    dataStatusToggle.setAttribute('aria-expanded', hidden ? 'false' : 'true');
+  };
+  applyResumenToggle(isHidden);
+  dataStatusToggle.addEventListener('click', ()=>{
+    isHidden = !isHidden;
+    try{
+      localStorage.setItem(RESUMEN_STATUS_STORAGE_KEY, isHidden ? '1' : '0');
+    }catch(e){
+      // Ignorar errores de almacenamiento
+    }
+    applyResumenToggle(isHidden);
+  });
+}
+setDenseMode('resumen');
 document.querySelector('#gen').textContent = new Date().toISOString().slice(0,16).replace('T',' ');
-
 // CSV data will be loaded from external files
 let EMBED_CSV = '';
 let EMBED_CSV_2425 = '';
-
 async function loadCsv2526Fallback() {
   const csv2526Url = (typeof dashboardHigueraData !== 'undefined' && dashboardHigueraData.csv2526Url)
     ? dashboardHigueraData.csv2526Url
     : 'data/temporada-2025-26.csv';
-
   const resp = await fetch(csv2526Url);
   if(!resp.ok) throw new Error('No se pudo cargar fallback CSV 25-26');
   const raw = await resp.text();
@@ -1131,33 +1713,65 @@ async function loadCsv2526Fallback() {
   EMBED_CSV = raw;
   return raw;
 }
-
 // Compatibilidad con template actual (no precargar CSV automáticamente)
 async function loadExternalCSVs() {
   return true;
 }
-
+function extractApiUrlFromPowerBIFormula(formula){
+  const raw = String(formula || '').trim();
+  if(!raw) return '';
+  const m = raw.match(/Web\.Contents\(\s*"([^"]+)"\s*\)/i);
+  if(m && m[1]) return m[1].trim();
+  return '';
+}
 
 async function initDashboardLive(){
-  const API_URL = (typeof dashboardHigueraData !== "undefined" && dashboardHigueraData.apiUrl)
+  const apiSourceMode = (typeof dashboardHigueraData !== "undefined" && dashboardHigueraData.apiSourceMode)
+    ? dashboardHigueraData.apiSourceMode
+    : 'url';
+  const powerBIFormula = (typeof dashboardHigueraData !== "undefined" && dashboardHigueraData.apiPowerBIFormula)
+    ? dashboardHigueraData.apiPowerBIFormula
+    : '';
+  const formulaUrl = extractApiUrlFromPowerBIFormula(powerBIFormula);
+  const configuredApiUrl = (typeof dashboardHigueraData !== "undefined" && dashboardHigueraData.apiUrl)
     ? dashboardHigueraData.apiUrl
-    : "https://app.agrosmart.cl/v1/api/reporte/base_consolidada.php?token=02376e47a4771e34fcba564f88a9d4fbc42a0c40894ebd8e3ba0d60039bd4528";
+    : '';
+  const API_URL = (apiSourceMode === 'powerbi' && formulaUrl) ? formulaUrl : configuredApiUrl;
+  const apiProxyUrl = (typeof dashboardHigueraData !== "undefined" && dashboardHigueraData.apiProxyUrl)
+    ? dashboardHigueraData.apiProxyUrl
+    : '';
   try{
-    const resp = await fetch(API_URL);
+    const requestUrl = apiProxyUrl || API_URL;
+    if(!requestUrl){
+      throw new Error('URL de API no configurada');
+    }
+    const controller = (typeof AbortController !== 'undefined') ? new AbortController() : null;
+    const timeoutId = setTimeout(()=>{ if(controller) controller.abort(); }, 15000);
+    const resp = await fetch(requestUrl, controller ? {signal: controller.signal} : undefined);
+    clearTimeout(timeoutId);
     if(!resp.ok) throw new Error('HTTP ' + resp.status);
     const json = await resp.json();
     const rows = Array.isArray(json) ? json : (Array.isArray(json.data) ? json.data : []);
-    const csv = buildCSVFromApi(rows, {temporada:"2025-2026", predioContains:"HIGUERA"});
+    const csv = buildCSVFromApi(rows, {
+      temporada:"2025-2026",
+      predioContains:"HIGUERA",
+      razonSocial:"AGRICOLA LA HIGUERA S.A."
+    });
+    if(!csv || !csv.trim()) throw new Error('API sin filas mapeables para 25-26');
     window.__lastCSV = csv;
     __initDashboardFromRawCSV(csv);
+    await ensureRentabilidadData();
+    refreshAll();
     const chip = document.getElementById('srcChip');
-    if(chip) chip.textContent = 'API Agrosmart (en vivo)';
+    if(chip) chip.textContent = (apiSourceMode === 'powerbi' && formulaUrl) ? 'API Agrosmart (Power BI URL)' : 'API Agrosmart (en vivo)';
   }catch(e){
     console.error('No se pudo cargar la API, intentando fallback CSV 25-26', e);
     try{
       const csvFallback = await loadCsv2526Fallback();
       window.__lastCSV = csvFallback;
       __initDashboardFromRawCSV(csvFallback);
+      await ensureRentabilidadData();
+      refreshAll();
       const chip = document.getElementById('srcChip');
       if(chip) chip.textContent = 'CSV 25-26 (fallback por falla de API)';
     }catch(csvError){
@@ -1168,26 +1782,19 @@ async function initDashboardLive(){
     }
   }
 }
-
 // Iniciar el dashboard en vivo al cargar la página
 // En WordPress, esto se maneja desde el template del shortcode
 // initDashboardLive();
-
-
 function buildCSVFromApi(rows, opts){
   opts = opts || {};
   const temporadaTarget = opts.temporada || null;
   const predioContains = opts.predioContains || null;
-
+  const razonSocialTarget = opts.razonSocial || null;
+  const razonSocialContains = opts.razonSocialContains || null;
   if(!rows || !rows.length){
     return "";
   }
-
-  const headerOut = ["TEMPORADA","FECHA","PREDIO","SECTOR","CUARTEL","FAENA","NIVEL 1","SUPERFICIE REAL (há)","TOTAL CUARTEL"];
-
-  const sample = rows[0] || {};
-  const keys = Object.keys(sample);
-
+  const headerOut = ["TEMPORADA","FECHA","ORIGEN","PREDIO","SECTOR","CUARTEL","FAENA","NIVEL 1","SUPERFICIE REAL (há)","TOTAL CUARTEL"];
   function norm(s){
     return String(s || "")
       .toUpperCase()
@@ -1196,62 +1803,78 @@ function buildCSVFromApi(rows, opts){
       .replace(/\s+/g," ")
       .trim();
   }
-
-  const normKeys = {};
-  for(const k of keys){
-    normKeys[k] = norm(k);
-  }
-
-  function findKey(label){
-    const target = norm(label).replace("(HA)","HA");
-    // exact
-    for(const k of keys){
-      if(normKeys[k] === target) return k;
+  const keySet = new Set();
+  for(const row of rows){
+    if(row && typeof row === 'object'){
+      for(const k of Object.keys(row)) keySet.add(k);
     }
-    // contiene / contenido
-    for(const k of keys){
-      const nk = normKeys[k];
-      if(nk.includes(target) || target.includes(nk)) return k;
+  }
+  const keys = Array.from(keySet);
+  const normKeys = {};
+  for(const k of keys) normKeys[k] = norm(k);
+  function findKeyByAliases(aliases){
+    const aliasNorm = aliases.map(a=>norm(a));
+    for(const a of aliasNorm){
+      for(const k of keys){ if(normKeys[k]===a) return k; }
+    }
+    for(const a of aliasNorm){
+      for(const k of keys){
+        const nk = normKeys[k];
+        if(nk.includes(a) || a.includes(nk)) return k;
+      }
     }
     return null;
   }
-
-  const map = {};
-  map["TEMPORADA"]             = findKey("TEMPORADA");
-  map["FECHA"]                 = findKey("FECHA");
-  map["PREDIO"]                = findKey("PREDIO");
-  map["SECTOR"]                = findKey("SECTOR");
-  map["CUARTEL"]               = findKey("CUARTEL");
-  map["FAENA"]                 = findKey("FAENA");
-  map["NIVEL 1"]               = findKey("NIVEL 1");
-  map["SUPERFICIE REAL (há)"]  = findKey("SUPERFICIE REAL");
-  map["TOTAL CUARTEL"]         = findKey("TOTAL CUARTEL");
-
-  const linesOut = [];
-  linesOut.push(headerOut.join(";"));
-
+  const map = {
+    "TEMPORADA": findKeyByAliases(["TEMPORADA", "TEMP"]),
+    "FECHA": findKeyByAliases(["FECHA", "FECHA DOCUMENTO", "FEC"]),
+    "ORIGEN": findKeyByAliases(["ORIGEN", "TIPO ORIGEN"]),
+    "RAZON SOCIAL": findKeyByAliases(["RAZON SOCIAL", "RAZON_SOCIAL", "EMPRESA", "CLIENTE"]),
+    "PREDIO": findKeyByAliases(["PREDIO", "CAMPO"]),
+    "SECTOR": findKeyByAliases(["SECTOR", "CULTIVO"]),
+    "CUARTEL": findKeyByAliases(["CUARTEL", "LOTE"]),
+    "FAENA": findKeyByAliases(["FAENA", "LABOR"]),
+    "NIVEL 1": findKeyByAliases(["NIVEL 1", "NIVEL_1", "NIVEL1"]),
+    "SUPERFICIE REAL (há)": findKeyByAliases(["SUPERFICIE REAL (HA)", "SUPERFICIE REAL", "SUPERFICIE", "HAS", "HECTAREAS"]),
+    "TOTAL CUARTEL": findKeyByAliases(["TOTAL CUARTEL", "TOTAL", "MONTO", "VALOR"])
+  };
+  const required = ["FECHA", "PREDIO", "SECTOR", "CUARTEL", "FAENA", "NIVEL 1", "TOTAL CUARTEL"];
+  const missing = required.filter(k=>!map[k]);
+  if(missing.length){
+    console.warn('buildCSVFromApi: columnas no detectadas', missing, 'keys:', keys);
+    throw new Error('Mapeo incompleto API: ' + missing.join(', '));
+  }
+  const linesOut = [headerOut.join(';')];
   for(const r of rows){
+    if(!r || typeof r !== 'object') continue;
     if(temporadaTarget || predioContains){
       const tempVal = map["TEMPORADA"] ? String(r[map["TEMPORADA"]] || "").trim() : "";
       const predVal = map["PREDIO"] ? String(r[map["PREDIO"]] || "").toUpperCase() : "";
       if(temporadaTarget && tempVal !== temporadaTarget) continue;
       if(predioContains && !predVal.includes(predioContains.toUpperCase())) continue;
     }
-
+    if(razonSocialTarget || razonSocialContains){
+      const rsVal = map["RAZON SOCIAL"] ? String(r[map["RAZON SOCIAL"]] || "") : "";
+      const rsNorm = norm(rsVal);
+      if(razonSocialTarget && rsNorm !== norm(razonSocialTarget)) continue;
+      if(razonSocialContains && !rsNorm.includes(norm(razonSocialContains))) continue;
+    }
     const line = headerOut.map(h=>{
       const key = map[h];
       const v = key ? (r[key] != null ? r[key] : "") : "";
       const s = String(v).replace(/"/g,'""');
       return '"' + s + '"';
-    }).join(";");
+    }).join(';');
     linesOut.push(line);
   }
-
   return linesOut.join("\n");
 }
-
 function showTab(id){ 
-  $$('.tab').forEach(t=>t.classList.toggle('active', t.dataset.tab===id)); 
+  $$('.tab').forEach(t=>{
+    const active = t.dataset.tab===id;
+    t.classList.toggle('active', active);
+    t.setAttribute('aria-selected', active ? 'true' : 'false');
+  });
   $('#panel-resumen').classList.toggle('hidden', id!=='resumen');
   $('#panel-graficos').classList.toggle('hidden', id!=='graficos');
   const pc = $('#panel-comparativo');
@@ -1259,10 +1882,17 @@ function showTab(id){
   $('#panel-detalle').classList.toggle('hidden', id!=='detalle');
   const nota = $('#nota-resumen');
   if(nota) nota.classList.toggle('hidden', id!=='resumen');
-
+  setDenseMode(id);
   if(id==='comparativo') buildComparativo();
 }
 $$('.tab').forEach(t=> t.onclick = ()=> showTab(t.dataset.tab));
+document.addEventListener('click', (e)=>{
+  const chipBtn = e.target.closest('.filter-chip[data-chip-key]');
+  if(chipBtn){
+    clearFilterChip(chipBtn.dataset.chipKey || '');
+    return;
+  }
+});
 document.addEventListener('change', (e)=>{
   if(e.target.name==='gtype'){
     const v=e.target.value;
