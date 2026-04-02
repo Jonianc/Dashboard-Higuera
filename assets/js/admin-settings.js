@@ -208,17 +208,20 @@
   function getCurrentSectionId(){
     var sections = document.querySelectorAll('.dlh-settings-form .dlh-settings-section[id]');
     if(!sections.length){ return ''; }
-    var bestId = '';
-    var bestTop = Number.POSITIVE_INFINITY;
+    var anchorOffset = 120;
+    var lastPassedId = '';
+    var firstUpcomingId = '';
     sections.forEach(function(section){
       var rect = section.getBoundingClientRect();
-      if(rect.top >= 0 && rect.top < bestTop){
-        bestTop = rect.top;
-        bestId = section.id;
+      if(rect.top <= anchorOffset){
+        lastPassedId = section.id;
+      } else if(!firstUpcomingId){
+        firstUpcomingId = section.id;
       }
     });
-    if(bestId){ return bestId; }
-    return sections[0].id || '';
+    if(lastPassedId){ return lastPassedId; }
+    if(firstUpcomingId){ return firstUpcomingId; }
+    return sections[sections.length - 1].id || '';
   }
 
   function persistCurrentSection(){

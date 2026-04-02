@@ -1,3 +1,8 @@
+## 1.17.0 - 2026-04-02
+- Admin UI/UX (Ajustes): corregida la detección de sección activa para que, al guardar desde el final del formulario, no vuelva erróneamente a la primera sección.
+- Admin UI/UX (Base 24-25/Rentabilidad): añadida confirmación explícita antes de acciones sensibles de activación/reemplazo de base.
+- Compatibilidad: cambios solo en flujo visual/admin; sin alterar permisos, nonces, persistencia de opciones ni endpoints.
+
 ## 1.16.0 - 2026-04-02
 - Admin UI/UX (Ajustes): se persiste la sección activa de la navegación interna para volver al mismo bloque tras guardar o recargar.
 - Compatibilidad: no se modifican opciones, permisos, nonces, endpoints ni lógica de persistencia; ajuste solo de flujo visual en admin.

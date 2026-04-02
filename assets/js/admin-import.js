@@ -7,10 +7,11 @@
   ready(function(){
     var input = document.getElementById('dlh-rentabilidad-file');
     var feedback = document.getElementById('dlh-rent-file-feedback');
+    var labels = (window.dlhImportPage && window.dlhImportPage.labels) || {};
+    bindSensitiveActionConfirms(labels);
     if(!input || !feedback) return;
     var strong = feedback.querySelector('strong');
     var span = feedback.querySelector('span');
-    var labels = (window.dlhImportPage && window.dlhImportPage.labels) || {};
 
     input.addEventListener('change', function(){
       var file = input.files && input.files[0] ? input.files[0] : null;
@@ -30,5 +31,26 @@
     var i = Math.min(Math.floor(Math.log(bytes) / Math.log(1024)), units.length - 1);
     var value = bytes / Math.pow(1024, i);
     return value.toFixed(value >= 10 || i === 0 ? 0 : 1) + ' ' + units[i];
+  }
+
+  function bindSensitiveActionConfirms(labels){
+    var confirmMap = {
+      activate: labels.confirmActivate2425 || 'Se activará la base 24-25 vigente. ¿Deseas continuar?',
+      upload_validate_rentabilidad: labels.confirmActivateRentabilidad || 'Se validará y activará la base de rentabilidad reemplazando la activa. ¿Deseas continuar?',
+      activate_rentabilidad: labels.confirmActivateRentabilidad || 'Se validará y activará la base de rentabilidad reemplazando la activa. ¿Deseas continuar?'
+    };
+
+    var forms = document.querySelectorAll('form');
+    forms.forEach(function(form){
+      form.addEventListener('submit', function(e){
+        var actionInput = form.querySelector('input[name="dlh_import_action"]');
+        if(!actionInput){ return; }
+        var action = String(actionInput.value || '').trim();
+        if(!Object.prototype.hasOwnProperty.call(confirmMap, action)){ return; }
+        if(!window.confirm(confirmMap[action])){
+          e.preventDefault();
+        }
+      });
+    });
   }
 })();
