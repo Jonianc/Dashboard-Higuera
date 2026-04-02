@@ -1,4 +1,6 @@
 (function($){
+  var SETTINGS_SECTION_STORAGE_KEY = 'dlh_settings_active_section';
+
   function byId(id){ return document.getElementById(id); }
 
   function escapeHtml(value){
@@ -201,6 +203,70 @@
       var hero = document.querySelector('.dlh-settings-page__hero');
       if(hero && hero.parentNode){ hero.parentNode.insertBefore(nav, hero.nextSibling); }
     }
+  }
+
+  function getCurrentSectionId(){
+    var sections = document.querySelectorAll('.dlh-settings-form .dlh-settings-section[id]');
+    if(!sections.length){ return ''; }
+    var bestId = '';
+    var bestTop = Number.POSITIVE_INFINITY;
+    sections.forEach(function(section){
+      var rect = section.getBoundingClientRect();
+      if(rect.top >= 0 && rect.top < bestTop){
+        bestTop = rect.top;
+        bestId = section.id;
+      }
+    });
+    if(bestId){ return bestId; }
+    return sections[0].id || '';
+  }
+
+  function persistCurrentSection(){
+    var sectionId = getCurrentSectionId();
+    if(!sectionId){ return; }
+    try {
+      window.sessionStorage.setItem(SETTINGS_SECTION_STORAGE_KEY, sectionId);
+    } catch (e) {}
+  }
+
+  function restorePersistedSection(){
+    var hash = String(window.location.hash || '').replace(/^#/, '').trim();
+    var targetId = hash;
+    if(!targetId){
+      try {
+        targetId = String(window.sessionStorage.getItem(SETTINGS_SECTION_STORAGE_KEY) || '').trim();
+      } catch (e) {
+        targetId = '';
+      }
+    }
+    if(!targetId){ return; }
+    var target = document.getElementById(targetId);
+    if(!target){ return; }
+    window.requestAnimationFrame(function(){
+      target.scrollIntoView({ behavior: 'auto', block: 'start' });
+    });
+  }
+
+  function bindSectionPersistence(){
+    var nav = document.querySelector('.dlh-settings-nav');
+    if(nav){
+      nav.addEventListener('click', function(e){
+        var link = e.target.closest('a[href^="#"]');
+        if(!link){ return; }
+        var id = String(link.getAttribute('href') || '').replace(/^#/, '').trim();
+        if(!id){ return; }
+        try {
+          window.sessionStorage.setItem(SETTINGS_SECTION_STORAGE_KEY, id);
+        } catch (err) {}
+      });
+    }
+
+    var form = document.querySelector('.dlh-settings-form');
+    if(form){
+      form.addEventListener('submit', persistCurrentSection);
+    }
+
+    window.addEventListener('beforeunload', persistCurrentSection);
   }
 
   function refreshRentOrderValues(){
@@ -1166,6 +1232,8 @@
     if(portalEnabled){ portalEnabled.addEventListener('change', togglePasswordPortalFields); }
 
     buildSectionCards();
+    restorePersistedSection();
+    bindSectionPersistence();
     bindRentCardOrdering();
     bindIconUploaders();
     var builderApi = initRentManualBuilder();

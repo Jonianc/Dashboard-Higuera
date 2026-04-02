@@ -1,3 +1,7 @@
+## 1.16.0 - 2026-04-02
+- Admin UI/UX (Ajustes): se persiste la sección activa de la navegación interna para volver al mismo bloque tras guardar o recargar.
+- Compatibilidad: no se modifican opciones, permisos, nonces, endpoints ni lógica de persistencia; ajuste solo de flujo visual en admin.
+
 ## 1.15.0 - 2026-04-02
 - UI/UX (Vista principal): el bloque de Rentabilidad se mueve inmediatamente debajo de la caja única de filtros para quedar siempre “arriba” en el flujo principal.
 - Compatibilidad: se mantiene la lógica actual de filtros globales y cálculos de rentabilidad; cambio solo de ubicación visual.
