@@ -12,6 +12,13 @@
       .replace(/'/g, '&#039;');
   }
 
+  function applyFeedbackState(node, message, state){
+    if(!node){ return; }
+    var safeState = (state === 'ok' || state === 'warning' || state === 'error') ? state : 'warning';
+    node.textContent = String(message || '');
+    node.className = 'description dlh-field-feedback dlh-feedback--' + safeState;
+  }
+
   function syncRoles(){
     var checks = document.querySelectorAll('input[name="dlh_roles_arr[]"]:checked');
     var vals = [];
@@ -36,17 +43,14 @@
     if(!input || !feedback){ return; }
     var value = String(input.value || '').trim();
     if(!value){
-      feedback.textContent = 'Ingresa una URL para probar la carga por API.';
-      feedback.className = 'description dlh-field-feedback is-warning';
+      applyFeedbackState(feedback, 'Ingresa una URL para probar la carga por API.', 'warning');
       return;
     }
     try {
       new URL(value);
-      feedback.textContent = 'URL válida.';
-      feedback.className = 'description dlh-field-feedback is-ok';
+      applyFeedbackState(feedback, 'URL válida.', 'ok');
     } catch (e) {
-      feedback.textContent = 'URL inválida. Revisa el formato (https://...).';
-      feedback.className = 'description dlh-field-feedback is-error';
+      applyFeedbackState(feedback, 'URL inválida. Revisa el formato (https://...).', 'error');
     }
   }
 
@@ -62,18 +66,15 @@
     if(!input || !feedback){ return; }
     var value = String(input.value || '').trim();
     if(!value){
-      feedback.textContent = 'Opcional. Si la dejas vacía, no se probará fuente Power BI.';
-      feedback.className = 'description dlh-field-feedback is-warning';
+      applyFeedbackState(feedback, 'Opcional. Si la dejas vacía, no se probará fuente Power BI.', 'warning');
       return;
     }
     var url = extractPowerBiUrl(value);
     if(url){
-      feedback.textContent = 'Fórmula válida. URL detectada: ' + url;
-      feedback.className = 'description dlh-field-feedback is-ok';
+      applyFeedbackState(feedback, 'Fórmula válida. URL detectada: ' + url, 'ok');
       return;
     }
-    feedback.textContent = 'No se detectó Web.Contents("..."). Revisa la fórmula.';
-    feedback.className = 'description dlh-field-feedback is-error';
+    applyFeedbackState(feedback, 'No se detectó Web.Contents("..."). Revisa la fórmula.', 'error');
   }
 
   function toggleApiSourceFields(){
@@ -104,7 +105,7 @@
     var out = byId('dlh-test-api-results');
     if(!out){ return; }
     if(!payload || !payload.results){
-      out.innerHTML = '<p class="is-error">' + escapeHtml(dlhSettings.labels.errorExec) + '</p>';
+      out.innerHTML = '<p class="description dlh-field-feedback dlh-feedback--error">' + escapeHtml(dlhSettings.labels.errorExec) + '</p>';
       return;
     }
 
@@ -151,13 +152,13 @@
       .then(function(r){ return r.json(); })
       .then(function(data){
         if(!data || !data.success){
-          out.innerHTML = '<p class="is-error">' + escapeHtml(dlhSettings.labels.errorExec) + '</p>';
+          out.innerHTML = '<p class="description dlh-field-feedback dlh-feedback--error">' + escapeHtml(dlhSettings.labels.errorExec) + '</p>';
           return;
         }
         renderApiTestResults(data.data);
       })
       .catch(function(){
-        out.innerHTML = '<p class="is-error">' + escapeHtml(dlhSettings.labels.errorNetwork) + '</p>';
+        out.innerHTML = '<p class="description dlh-field-feedback dlh-feedback--error">' + escapeHtml(dlhSettings.labels.errorNetwork) + '</p>';
       })
       .finally(function(){
         btn.disabled = false;

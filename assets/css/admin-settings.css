@@ -144,17 +144,15 @@
   margin-top: 8px;
 }
 
-.dlh-field-feedback.is-ok,
-.is-ok {
+.dlh-field-feedback.dlh-feedback--ok {
   color: #006e2e;
 }
 
-.dlh-field-feedback.is-warning {
+.dlh-field-feedback.dlh-feedback--warning {
   color: #8a6d00;
 }
 
-.dlh-field-feedback.is-error,
-.is-error {
+.dlh-field-feedback.dlh-feedback--error {
   color: #b32d2e;
 }
 

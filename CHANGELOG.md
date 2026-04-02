@@ -1,3 +1,7 @@
+## 1.18.0 - 2026-04-02
+- Admin UI/UX (Ajustes): feedback de validación (URL API, fórmula Power BI y errores del test API) normalizado con una misma convención visual de estados `ok/warning/error`.
+- Compatibilidad: no se cambia la lógica de validación ni el flujo de guardado; ajuste de consistencia visual/textual en admin.
+
 ## 1.17.0 - 2026-04-02
 - Admin UI/UX (Ajustes): corregida la detección de sección activa para que, al guardar desde el final del formulario, no vuelva erróneamente a la primera sección.
 - Admin UI/UX (Base 24-25/Rentabilidad): añadida confirmación explícita antes de acciones sensibles de activación/reemplazo de base.
