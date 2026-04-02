@@ -61,8 +61,8 @@ if (!defined('ABSPATH')) {
 
                     <div class="filters-toolbar filters-toolbar--primary">
                         <div class="filters-toolbar-copy">
-                            <span class="filters-toolbar-kicker">Filtros principales</span>
-                            <p>Primero define el universo y luego afina la lectura.</p>
+                            <span class="filters-toolbar-kicker">Filtros</span>
+                            <p>Usa una sola caja de filtros para definir universo, métrica y orden de lectura.</p>
                         </div>
                         <div class="filters-master-grid filters-master-grid--primary">
                             <div class="field"><label for="f_cultivo">Cultivo</label><select id="f_cultivo"><option>Todos</option></select></div>
@@ -78,13 +78,6 @@ if (!defined('ABSPATH')) {
                                     </div>
                                 </div>
                             </div>
-                        </div>
-                    </div>
-
-                    <div class="filters-toolbar filters-toolbar--secondary">
-                        <div class="filters-toolbar-copy">
-                            <span class="filters-toolbar-kicker">Filtros secundarios</span>
-                            <p>Ajusta cómo se ordena y presenta la información.</p>
                         </div>
                         <div class="filters-master-grid filters-master-grid--secondary">
                             <div class="field"><label for="f_predio">Tipo de registro</label><select id="f_predio"><option>Todos</option></select></div>
@@ -138,28 +131,25 @@ if (!defined('ABSPATH')) {
                     </section>
 
                     <div class="panel-resumen-shell">
-                        <div class="panel-resumen-main">
-                            <div id="resumen" class="table-wrap"></div>
-                        </div>
-
-                        <aside id="rentabilidad-resumen-block" class="rent-panel rent-panel--aside rent-panel--collapsible hidden" aria-label="Rentabilidad resumida">
+                        <aside id="rentabilidad-resumen-block" class="rent-panel rent-panel--aside" aria-label="Rentabilidad resumida">
                             <div class="rent-panel-head rent-panel-head--compact">
                                 <div>
                                     <span class="dashboard-command-kicker">Complemento</span>
                                     <h3>Rentabilidad</h3>
                                     <p>Bloque de apoyo para revisar ingresos, costos y resultado sin cortar la lectura del resumen.</p>
                                 </div>
-                                <div class="rent-panel-actions">
-                                    <button id="rentabilidadCollapseToggle" class="rent-collapse-toggle" type="button" aria-expanded="false" aria-controls="rentabilidadCollapseBody">Mostrar</button>
-                                </div>
                             </div>
-                            <div id="rentabilidadCollapseBody" class="rent-panel-body is-collapsed" hidden>
+                            <div id="rentabilidadCollapseBody" class="rent-panel-body">
                                 <div id="rentabilidad-cards" class="rentabilidad-cards"></div>
                                 <div class="table-wrap rent-table-wrap">
                                     <div id="rentabilidad-resumen" class="rentabilidad-resumen-table"></div>
                                 </div>
                             </div>
                         </aside>
+
+                        <div class="panel-resumen-main">
+                            <div id="resumen" class="table-wrap"></div>
+                        </div>
                     </div>
 
                     <div id="resumen-status" class="comp-status comp-status--subtle">
@@ -293,24 +283,6 @@ if (!defined('ABSPATH')) {
                 genEl.textContent = new Date().toISOString().slice(0,16).replace('T',' ');
             }
 
-            const rentToggle = document.getElementById('rentabilidadCollapseToggle');
-            const rentBody = document.getElementById('rentabilidadCollapseBody');
-            if (rentToggle && rentBody && !rentToggle.dataset.bound) {
-                const syncRentPanel = function(forceExpanded) {
-                    const expanded = typeof forceExpanded === 'boolean'
-                        ? forceExpanded
-                        : rentToggle.getAttribute('aria-expanded') === 'true';
-                    rentToggle.setAttribute('aria-expanded', expanded ? 'true' : 'false');
-                    rentToggle.textContent = expanded ? 'Ocultar rentabilidad' : 'Mostrar rentabilidad';
-                    rentBody.hidden = !expanded;
-                    rentBody.classList.toggle('is-collapsed', !expanded);
-                };
-                syncRentPanel(false);
-                rentToggle.addEventListener('click', function() {
-                    syncRentPanel(rentToggle.getAttribute('aria-expanded') !== 'true');
-                });
-                rentToggle.dataset.bound = 'true';
-            }
         } catch (error) {
             console.error('Error inicializando dashboard:', error);
             const loadingEl = document.getElementById('dashboard-higuera-loading');

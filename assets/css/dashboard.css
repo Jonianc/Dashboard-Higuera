@@ -273,6 +273,7 @@
 .filters-master-grid--primary .field:nth-child(4),
 .filters-master-grid--primary .field:nth-child(5){grid-column:span 12}
 .filters-master-grid--secondary{grid-template-columns:repeat(3,minmax(0,1fr))}
+.filters-master-grid--secondary{margin-top:2px}
 
 
 .filters-master-grid--primary .field:nth-child(1),
@@ -421,7 +422,7 @@ button.filter-chip:hover{border-color:var(--primary);background:color-mix(in srg
 .resumen-signal-label{font-size:11px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:var(--muted)}
 .resumen-signal-value{font-size:24px;line-height:1.02;font-weight:800;letter-spacing:-.03em;color:var(--text)}
 .resumen-signal-help{font-size:12px;line-height:1.4;color:var(--muted)}
-.panel-resumen-shell{display:grid;grid-template-columns:minmax(0,1.6fr) minmax(320px,.95fr);gap:16px;align-items:start}
+.panel-resumen-shell{display:grid;grid-template-columns:1fr;gap:16px;align-items:start}
 .panel-resumen-main{display:grid;gap:12px;min-width:0}
 .panel-resumen .table-wrap{min-width:0}
 .comp-status--subtle{margin-top:14px;background:transparent;box-shadow:none}
@@ -676,14 +677,12 @@ button.filter-chip:hover{border-color:var(--primary);background:color-mix(in srg
 .filters-master-grid--premium .mes-dropdown-btn{min-height:44px;padding:9px 12px}
 
 .rent-panel{gap:12px}
-.rent-panel--aside{padding:14px;border:1px solid var(--border);border-radius:18px;background:linear-gradient(180deg,#fff 0%,#fbfcfa 100%);position:sticky;top:18px}
+.rent-panel--aside{padding:14px;border:1px solid var(--border);border-radius:18px;background:linear-gradient(180deg,#fff 0%,#fbfcfa 100%);position:relative;top:auto}
 .rent-panel-head--compact{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap}
 .rent-panel-head--compact h2,.rent-panel-head--compact h3{margin:0 0 4px;font-size:18px}
 .rent-panel-head--compact p{margin:0;font-size:13px;color:var(--muted)}
 .rent-panel-actions{display:flex;align-items:center;gap:10px;flex-wrap:wrap;justify-content:flex-end}
 .rent-panel-body{display:grid;gap:12px}
-.rent-panel-body.is-collapsed{display:none}
-.rent-collapse-toggle{font-weight:700;min-width:104px}
 .rent-quick-filters{display:grid;gap:10px}
 .rent-table-wrap{max-height:540px}
 .active-filters-chips--premium{padding:0}

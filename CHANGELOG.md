@@ -1,3 +1,8 @@
+## 1.14.0 - 2026-04-02
+- UI/UX (Vista principal): Rentabilidad en Resumen pasa a mostrarse siempre visible y en la parte superior del bloque principal.
+- UI/UX (Filtros): los filtros principales y secundarios se consolidan en una sola caja visual de filtros.
+- Compatibilidad: se mantiene la lógica de filtros/cálculos existente, sin cambios en persistencia ni endpoints.
+
 ## 1.13.0 - 2026-04-01
 - UI/UX (Resumen > Rentabilidad): se eliminan los quick-filters propios del bloque de Rentabilidad para operar solo con los filtros globales del dashboard.
 - Compatibilidad: Rentabilidad mantiene ordenamiento de tabla y métricas, pero ya no aplica subfiltro local de cuartel.
