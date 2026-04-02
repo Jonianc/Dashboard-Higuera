@@ -154,7 +154,6 @@ if (!defined('ABSPATH')) {
                                 </div>
                             </div>
                             <div id="rentabilidadCollapseBody" class="rent-panel-body is-collapsed" hidden>
-                                <div id="rentabilidad-quick-filters" class="rent-quick-filters"></div>
                                 <div id="rentabilidad-cards" class="rentabilidad-cards"></div>
                                 <div class="table-wrap rent-table-wrap">
                                     <div id="rentabilidad-resumen" class="rentabilidad-resumen-table"></div>

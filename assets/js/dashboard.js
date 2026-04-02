@@ -1101,7 +1101,6 @@ function applyRentabilidadFilters(){
   let rows = rentabilidadData.slice();
   const activeSector = state.filtros.sector !== 'Todos' ? state.filtros.sector : 'Todos';
   if(activeSector !== 'Todos') rows = rows.filter(r => strip(r.SECTOR) === activeSector);
-  if(rentabilidadState.cuartel !== 'Todos') rows = rows.filter(r => strip(r.CUARTEL) === rentabilidadState.cuartel);
   return rows;
 }
 function getRentMetricValue(rows, key){
@@ -1139,26 +1138,22 @@ function renderRentabilidadResumen(){
   const block = document.getElementById('rentabilidad-resumen-block');
   const cardsWrap = document.getElementById('rentabilidad-cards');
   const tableWrap = document.getElementById('rentabilidad-resumen');
-  const quickWrap = document.getElementById('rentabilidad-quick-filters');
-  if(!block || !cardsWrap || !tableWrap || !quickWrap) return;
+  if(!block || !cardsWrap || !tableWrap) return;
   block.classList.remove('hidden');
 
   if(rentabilidadStatus === 'loading'){
     cardsWrap.innerHTML = '';
-    quickWrap.innerHTML = '';
     tableWrap.innerHTML = getRentEmptyStateHTML('Cargando base de rentabilidad…', 'is-loading');
     return;
   }
   if(rentabilidadStatus === 'error'){
     cardsWrap.innerHTML = '';
-    quickWrap.innerHTML = '';
     const reason = rentabilidadErrorReason ? ` Detalle: ${rentabilidadErrorReason}` : '';
     tableWrap.innerHTML = getRentEmptyStateHTML('No se pudo leer la base activa o la base fuente de rentabilidad. Revisa Ajustes > Rentabilidad o Base 24-25.' + reason, 'is-error');
     return;
   }
   if(!rentabilidadData.length){
     cardsWrap.innerHTML = '';
-    quickWrap.innerHTML = '';
     tableWrap.innerHTML = getRentEmptyStateHTML('Todavía no hay datos renderizables para rentabilidad. El bloque queda disponible como apoyo del resumen.', 'is-empty');
     return;
   }
@@ -1170,23 +1165,6 @@ function renderRentabilidadResumen(){
     const cls = key === 'resultado' ? (value >= 0 ? 'is-positive' : 'is-negative') : '';
     return `<article class="rent-card ${cls}"><div class="rent-card-label">${cfg.label}</div><div class="rent-card-value">${fmt(value)}</div></article>`;
   }).join('');
-  const icons = (typeof dashboardHigueraData !== 'undefined' && dashboardHigueraData.rentabilidadIcons) ? dashboardHigueraData.rentabilidadIcons : {};
-  const sectorIcon = icons.sector ? `<img src="${icons.sector}" alt="" />` : '<span class="rent-chip-icon">▦</span>';
-  const cuartelIcon = icons.cuartel ? `<img src="${icons.cuartel}" alt="" />` : '<span class="rent-chip-icon">◫</span>';
-  const sectors = Array.from(new Set(rentabilidadData.map(r=>strip(r.SECTOR)).filter(Boolean))).sort((a,b)=>a.localeCompare(b,'es'));
-  const activeSector = state.filtros.sector !== 'Todos' ? state.filtros.sector : 'Todos';
-  const cuarteles = Array.from(new Set(rentabilidadData.filter(r => activeSector === 'Todos' || strip(r.SECTOR) === activeSector).map(r=>strip(r.CUARTEL)).filter(Boolean))).sort((a,b)=>a.localeCompare(b,'es'));
-  quickWrap.innerHTML = `
-    <div class="rent-quick-group">
-      <span class="rent-quick-title">${sectorIcon}<span>Sector</span></span>
-      <div class="rent-quick-list">${['Todos', ...sectors].map(sec=>`<button type="button" class="rent-chip ${sec===activeSector?'is-active':''}" data-rent-sector="${sec}">${sectorIcon}<span>${sec}</span></button>`).join('')}</div>
-    </div>
-    <div class="rent-quick-group">
-      <span class="rent-quick-title">${cuartelIcon}<span>Cuartel</span></span>
-      <div class="rent-quick-list">${['Todos', ...cuarteles].map(cu=>`<button type="button" class="rent-chip ${cu===rentabilidadState.cuartel?'is-active':''}" data-rent-cuartel="${cu}">${cuartelIcon}<span>${cu}</span></button>`).join('')}</div>
-    </div>`;
-  quickWrap.querySelectorAll('[data-rent-sector]').forEach(btn=>btn.addEventListener('click', ()=>{ state.filtros.sector = btn.dataset.rentSector; rentabilidadState.cuartel = 'Todos'; syncFilterInputsWithState(); refreshAll(); }));
-  quickWrap.querySelectorAll('[data-rent-cuartel]').forEach(btn=>btn.addEventListener('click', ()=>{ rentabilidadState.cuartel = btn.dataset.rentCuartel; refreshAll(); }));
   const grouped = new Map();
   rows.forEach(r=>{
     const key = strip(r.CUARTEL) || 'Sin cuartel';
@@ -1341,7 +1319,6 @@ function clearFilters(resetView){
   state.detalle.metrica = 'VALOR';
   state.detalle.orden = 'Desc';
   state.comparativo.ordenBy = 'v25';
-  rentabilidadState.cuartel = 'Todos';
   rentabilidadState.sortBy = 'resultado';
   rentabilidadState.sortDir = 'desc';
   syncFilterInputsWithState();

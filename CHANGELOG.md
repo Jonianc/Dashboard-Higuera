@@ -1,3 +1,7 @@
+## 1.13.0 - 2026-04-01
+- UI/UX (Resumen > Rentabilidad): se eliminan los quick-filters propios del bloque de Rentabilidad para operar solo con los filtros globales del dashboard.
+- Compatibilidad: Rentabilidad mantiene ordenamiento de tabla y métricas, pero ya no aplica subfiltro local de cuartel.
+
 ## 1.12.0 - 2026-04-01
 - UI/UX: el bloque de “Filtros unificados y navegación principal” adopta estilo visual tipo quick-filters (píldoras) como en Rentabilidad.
 - UI/UX: selects, búsqueda, dropdown de meses y acciones de toolbar se unifican en forma/altura/borde para una lectura más consistente.
