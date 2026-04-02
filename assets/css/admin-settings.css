@@ -83,14 +83,15 @@
 }
 
 .dlh-settings-section .form-table th {
-  width: 240px;
-  padding: 18px 16px 18px 0;
+  width: 220px;
+  padding: 14px 14px 14px 0;
   font-size: 13px;
   color: #1d2327;
+  vertical-align: top;
 }
 
 .dlh-settings-section .form-table td {
-  padding: 16px 0;
+  padding: 12px 0;
 }
 
 .dlh-settings-section input[type="text"],
@@ -99,12 +100,27 @@
 .dlh-settings-section textarea,
 .dlh-settings-section select {
   border-radius: 12px;
-  min-height: 42px;
+  min-height: 40px;
   border-color: #c7cbd1;
 }
 
 .dlh-settings-section textarea {
   min-height: 96px;
+}
+
+@media (max-width: 960px) {
+  .dlh-settings-section .form-table th {
+    width: 190px;
+  }
+}
+
+@media (max-width: 782px) {
+  .dlh-settings-section .form-table th,
+  .dlh-settings-section .form-table td {
+    display: block;
+    width: 100%;
+    padding: 8px 0;
+  }
 }
 
 .dlh-settings-submit {

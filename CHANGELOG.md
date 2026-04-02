@@ -1,3 +1,8 @@
+## 1.19.0 - 2026-04-02
+- Admin UI/UX (Ajustes): se ajusta densidad de `form-table` (ancho de labels, paddings y altura de campos) para mejorar alineación y lectura.
+- Admin UI/UX (Responsive): en pantallas pequeñas las celdas `th/td` del formulario pasan a bloque para reducir cortes visuales y scroll horizontal.
+- Compatibilidad: cambio visual únicamente; sin alterar lógica, permisos, nonces ni persistencia.
+
 ## 1.18.0 - 2026-04-02
 - Admin UI/UX (Ajustes): feedback de validación (URL API, fórmula Power BI y errores del test API) normalizado con una misma convención visual de estados `ok/warning/error`.
 - Compatibilidad: no se cambia la lógica de validación ni el flujo de guardado; ajuste de consistencia visual/textual en admin.
