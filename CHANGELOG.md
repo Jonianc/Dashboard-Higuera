@@ -1,3 +1,7 @@
+## 1.15.0 - 2026-04-02
+- UI/UX (Vista principal): el bloque de Rentabilidad se mueve inmediatamente debajo de la caja única de filtros para quedar siempre “arriba” en el flujo principal.
+- Compatibilidad: se mantiene la lógica actual de filtros globales y cálculos de rentabilidad; cambio solo de ubicación visual.
+
 ## 1.14.0 - 2026-04-02
 - UI/UX (Vista principal): Rentabilidad en Resumen pasa a mostrarse siempre visible y en la parte superior del bloque principal.
 - UI/UX (Filtros): los filtros principales y secundarios se consolidan en una sola caja visual de filtros.

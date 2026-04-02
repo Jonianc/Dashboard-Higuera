@@ -92,6 +92,22 @@ if (!defined('ABSPATH')) {
                     </div>
                 </section>
 
+                <section id="rentabilidad-resumen-block" class="rent-panel rent-panel--aside" aria-label="Rentabilidad resumida">
+                    <div class="rent-panel-head rent-panel-head--compact">
+                        <div>
+                            <span class="dashboard-command-kicker">Complemento</span>
+                            <h3>Rentabilidad</h3>
+                            <p>Bloque de apoyo para revisar ingresos, costos y resultado sin cortar la lectura del resumen.</p>
+                        </div>
+                    </div>
+                    <div id="rentabilidadCollapseBody" class="rent-panel-body">
+                        <div id="rentabilidad-cards" class="rentabilidad-cards"></div>
+                        <div class="table-wrap rent-table-wrap">
+                            <div id="rentabilidad-resumen" class="rentabilidad-resumen-table"></div>
+                        </div>
+                    </div>
+                </section>
+
                 <section class="dashboard-overview" aria-label="Resumen rápido y navegación">
                     <section id="kpi-row" class="kpi-grid kpi-grid--premium"></section>
                     <section id="active-filters-chips" class="active-filters-chips active-filters-chips--premium"></section>
@@ -131,22 +147,6 @@ if (!defined('ABSPATH')) {
                     </section>
 
                     <div class="panel-resumen-shell">
-                        <aside id="rentabilidad-resumen-block" class="rent-panel rent-panel--aside" aria-label="Rentabilidad resumida">
-                            <div class="rent-panel-head rent-panel-head--compact">
-                                <div>
-                                    <span class="dashboard-command-kicker">Complemento</span>
-                                    <h3>Rentabilidad</h3>
-                                    <p>Bloque de apoyo para revisar ingresos, costos y resultado sin cortar la lectura del resumen.</p>
-                                </div>
-                            </div>
-                            <div id="rentabilidadCollapseBody" class="rent-panel-body">
-                                <div id="rentabilidad-cards" class="rentabilidad-cards"></div>
-                                <div class="table-wrap rent-table-wrap">
-                                    <div id="rentabilidad-resumen" class="rentabilidad-resumen-table"></div>
-                                </div>
-                            </div>
-                        </aside>
-
                         <div class="panel-resumen-main">
                             <div id="resumen" class="table-wrap"></div>
                         </div>
