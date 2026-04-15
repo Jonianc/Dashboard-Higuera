@@ -2,6 +2,37 @@
   max-width: 1240px;
 }
 
+.dlh-summary-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.dlh-summary-card {
+  background: #fff;
+  border: 1px solid #dcdcde;
+  border-radius: 16px;
+  padding: 14px 16px;
+  box-shadow: 0 8px 20px rgba(16, 24, 40, 0.04);
+  margin-bottom: 12px;
+}
+
+.dlh-summary-card h3 {
+  margin: 0 0 6px;
+  font-size: 15px;
+}
+
+.dlh-summary-card p {
+  margin: 0;
+}
+
+.dlh-summary-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
 .dlh-settings-page__hero {
   display: flex;
   align-items: flex-start;
@@ -128,6 +159,35 @@
   min-height: 42px;
   padding-inline: 18px;
   border-radius: 12px;
+}
+
+.dlh-settings-form > h2 {
+  background: #fff;
+  border: 1px solid #dcdcde;
+  border-bottom: 0;
+  border-radius: 16px 16px 0 0;
+  padding: 18px 22px 8px;
+  margin: 0;
+}
+
+.dlh-settings-form > h2 + p {
+  background: #fff;
+  border: 1px solid #dcdcde;
+  border-top: 0;
+  border-bottom: 0;
+  margin: 0;
+  padding: 0 22px 8px;
+  color: #50575e;
+}
+
+.dlh-settings-form > .form-table {
+  margin: 0 0 18px;
+  background: #fff;
+  border: 1px solid #dcdcde;
+  border-top: 0;
+  border-radius: 0 0 16px 16px;
+  padding: 6px 22px 14px;
+  box-shadow: 0 8px 20px rgba(16, 24, 40, 0.04);
 }
 
 #dlh-test-api-results {

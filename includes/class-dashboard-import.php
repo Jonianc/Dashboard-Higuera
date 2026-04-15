@@ -30,7 +30,8 @@ class Dashboard_Higuera_Import {
     }
 
     public static function enqueue_assets($hook) {
-        if ($hook !== 'dashboard_page_' . self::SUBMENU_SLUG) {
+        $current_page = isset($_GET['page']) ? sanitize_key(wp_unslash($_GET['page'])) : '';
+        if ($current_page !== self::SUBMENU_SLUG) {
             return;
         }
 

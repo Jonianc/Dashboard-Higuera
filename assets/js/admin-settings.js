@@ -1018,7 +1018,7 @@
   function initRentWorkspace(builderApi){
     var builder = builderApi && builderApi.element ? builderApi.element : document.querySelector('[data-dlh-rent-manual-builder]');
     if(!builder){ return; }
-    var rentSection = builder.closest('.dlh-settings-section');
+    var rentSection = builder.closest('.dlh-settings-section') || builder.closest('.dlh-settings-form');
     if(!rentSection || rentSection.hasAttribute('data-dlh-rent-workspace-ready')){ return; }
     rentSection.setAttribute('data-dlh-rent-workspace-ready', '1');
 
@@ -1234,9 +1234,6 @@
     var portalEnabled = document.querySelector('input[name="dlh_password_portal_enabled"]');
     if(portalEnabled){ portalEnabled.addEventListener('change', togglePasswordPortalFields); }
 
-    buildSectionCards();
-    restorePersistedSection();
-    bindSectionPersistence();
     bindRentCardOrdering();
     bindIconUploaders();
     var builderApi = initRentManualBuilder();

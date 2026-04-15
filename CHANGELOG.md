@@ -1,3 +1,10 @@
+## 1.18.0 - 2026-04-15
+- Admin: menú principal renombrado a `Dashboard Higuera` y estructura modular por submenús (`Resumen`, `Acceso`, `Datos/API`, `Rentabilidad`, `Base 24-25`).
+- Admin (Resumen): nueva vista de estado con cards y acciones rápidas; deja de ser formulario largo.
+- Admin (Acceso/Datos/API/Rentabilidad): campos separados por módulo sin cambiar option keys ni lógica de guardado.
+- Compatibilidad: `admin-settings.js` deja de depender de reconstrucción por `H2/buildSectionCards`; mantiene toggles, test API, uploaders y workspace rentabilidad.
+- Fix (Admin assets): enqueue ajustado para cargar CSS/JS también en los nuevos submenús del plugin.
+
 ## 1.17.16 - 2026-04-08
 - UI/UX (Cultivos): el estado activo de chips se rehace para que se vea como la opción 3 aprobada, con fondo verde marcado, borde más grueso y contraste real en modo claro y oscuro.
 - Fix (Cultivos): se agregan `aria-pressed` y `data-selected` al render para reforzar el estado visual activo y evitar que estilos genéricos lo diluyan.

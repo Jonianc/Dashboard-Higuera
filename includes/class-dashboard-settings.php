@@ -11,6 +11,9 @@ class Dashboard_Higuera_Settings {
 
     /** Slug de la página de opciones */
     const MENU_SLUG = 'dlh-settings';
+    const PAGE_ACCESS = 'dlh-settings-access';
+    const PAGE_DATA_API = 'dlh-settings-data-api';
+    const PAGE_RENTABILIDAD = 'dlh-settings-rentabilidad';
 
     /** Grupo de opciones */
     const OPTION_GROUP = 'dlh_options';
@@ -30,7 +33,14 @@ class Dashboard_Higuera_Settings {
      * Cargar CSS/JS de ajustes solo en la pantalla del plugin
      */
     public static function enqueue_assets($hook) {
-        if ($hook !== 'toplevel_page_' . self::MENU_SLUG) {
+        $allowed_pages = array(
+            self::MENU_SLUG,
+            self::PAGE_ACCESS,
+            self::PAGE_DATA_API,
+            self::PAGE_RENTABILIDAD,
+        );
+        $current_page = isset($_GET['page']) ? sanitize_key(wp_unslash($_GET['page'])) : '';
+        if (!in_array($current_page, $allowed_pages, true)) {
             return;
         }
 
@@ -84,12 +94,48 @@ class Dashboard_Higuera_Settings {
     public static function add_menu() {
         add_menu_page(
             'Ajustes Dashboard La Higuera',    // Título de la página
-            'Dashboard',                        // Título del menú
+            'Dashboard Higuera',               // Título del menú
             'manage_options',                   // Capacidad requerida
             self::MENU_SLUG,                    // Slug del menú
-            array(__CLASS__, 'render_page'),    // Callback
+            array(__CLASS__, 'render_page_summary'), // Callback
             'dashicons-chart-area',             // Icono
             30                                  // Posición
+        );
+
+        add_submenu_page(
+            self::MENU_SLUG,
+            'Resumen',
+            'Resumen',
+            'manage_options',
+            self::MENU_SLUG,
+            array(__CLASS__, 'render_page_summary')
+        );
+
+        add_submenu_page(
+            self::MENU_SLUG,
+            'Acceso',
+            'Acceso',
+            'manage_options',
+            self::PAGE_ACCESS,
+            array(__CLASS__, 'render_page_access')
+        );
+
+        add_submenu_page(
+            self::MENU_SLUG,
+            'Datos/API',
+            'Datos/API',
+            'manage_options',
+            self::PAGE_DATA_API,
+            array(__CLASS__, 'render_page_data_api')
+        );
+
+        add_submenu_page(
+            self::MENU_SLUG,
+            'Rentabilidad',
+            'Rentabilidad',
+            'manage_options',
+            self::PAGE_RENTABILIDAD,
+            array(__CLASS__, 'render_page_rentabilidad')
         );
     }
 
@@ -103,7 +149,7 @@ class Dashboard_Higuera_Settings {
             'dlh_section_url',
             'URL del Dashboard',
             array(__CLASS__, 'section_url_cb'),
-            self::MENU_SLUG
+            self::PAGE_ACCESS
         );
 
         register_setting(self::OPTION_GROUP, 'dlh_slug', array(
@@ -112,14 +158,14 @@ class Dashboard_Higuera_Settings {
             'default'           => 'dashboard',
         ));
 
-        add_settings_field('dlh_slug', 'Slug / ruta', array(__CLASS__, 'field_slug'), self::MENU_SLUG, 'dlh_section_url');
+        add_settings_field('dlh_slug', 'Slug / ruta', array(__CLASS__, 'field_slug'), self::PAGE_ACCESS, 'dlh_section_url');
 
         // --- Sección: Acceso ---
         add_settings_section(
             'dlh_section_access',
             'Control de acceso',
             array(__CLASS__, 'section_access_cb'),
-            self::MENU_SLUG
+            self::PAGE_ACCESS
         );
 
         register_setting(self::OPTION_GROUP, 'dlh_access', array(
@@ -128,7 +174,7 @@ class Dashboard_Higuera_Settings {
             'default'           => 'public',
         ));
 
-        add_settings_field('dlh_access', 'Tipo de acceso', array(__CLASS__, 'field_access'), self::MENU_SLUG, 'dlh_section_access');
+        add_settings_field('dlh_access', 'Tipo de acceso', array(__CLASS__, 'field_access'), self::PAGE_ACCESS, 'dlh_section_access');
 
         register_setting(self::OPTION_GROUP, 'dlh_roles', array(
             'type'              => 'string',
@@ -136,7 +182,7 @@ class Dashboard_Higuera_Settings {
             'default'           => 'administrator',
         ));
 
-        add_settings_field('dlh_roles', 'Roles permitidos', array(__CLASS__, 'field_roles'), self::MENU_SLUG, 'dlh_section_access');
+        add_settings_field('dlh_roles', 'Roles permitidos', array(__CLASS__, 'field_roles'), self::PAGE_ACCESS, 'dlh_section_access');
 
 
         register_setting(self::OPTION_GROUP, 'dlh_password_portal_enabled', array(
@@ -145,7 +191,7 @@ class Dashboard_Higuera_Settings {
             'default'           => '0',
         ));
 
-        add_settings_field('dlh_password_portal_enabled', 'Portal con contraseña (standalone)', array(__CLASS__, 'field_password_portal_enabled'), self::MENU_SLUG, 'dlh_section_access');
+        add_settings_field('dlh_password_portal_enabled', 'Portal con contraseña (standalone)', array(__CLASS__, 'field_password_portal_enabled'), self::PAGE_ACCESS, 'dlh_section_access');
 
         register_setting(self::OPTION_GROUP, 'dlh_password_portal_password', array(
             'type'              => 'string',
@@ -153,7 +199,7 @@ class Dashboard_Higuera_Settings {
             'default'           => '',
         ));
 
-        add_settings_field('dlh_password_portal_password', 'Contraseña del portal', array(__CLASS__, 'field_password_portal_password'), self::MENU_SLUG, 'dlh_section_access');
+        add_settings_field('dlh_password_portal_password', 'Contraseña del portal', array(__CLASS__, 'field_password_portal_password'), self::PAGE_ACCESS, 'dlh_section_access');
 
         register_setting(self::OPTION_GROUP, 'dlh_password_portal_title', array(
             'type'              => 'string',
@@ -161,7 +207,7 @@ class Dashboard_Higuera_Settings {
             'default'           => 'Acceso al Dashboard',
         ));
 
-        add_settings_field('dlh_password_portal_title', 'Título portal', array(__CLASS__, 'field_password_portal_title'), self::MENU_SLUG, 'dlh_section_access');
+        add_settings_field('dlh_password_portal_title', 'Título portal', array(__CLASS__, 'field_password_portal_title'), self::PAGE_ACCESS, 'dlh_section_access');
 
         register_setting(self::OPTION_GROUP, 'dlh_password_portal_message', array(
             'type'              => 'string',
@@ -169,14 +215,14 @@ class Dashboard_Higuera_Settings {
             'default'           => 'Ingresa la contraseña para continuar.',
         ));
 
-        add_settings_field('dlh_password_portal_message', 'Mensaje portal', array(__CLASS__, 'field_password_portal_message'), self::MENU_SLUG, 'dlh_section_access');
+        add_settings_field('dlh_password_portal_message', 'Mensaje portal', array(__CLASS__, 'field_password_portal_message'), self::PAGE_ACCESS, 'dlh_section_access');
 
         // --- Sección: Assets ---
         add_settings_section(
             'dlh_section_assets',
             'CSS / JS del Dashboard',
             array(__CLASS__, 'section_assets_cb'),
-            self::MENU_SLUG
+            self::PAGE_DATA_API
         );
 
         register_setting(self::OPTION_GROUP, 'dlh_load_assets', array(
@@ -185,14 +231,14 @@ class Dashboard_Higuera_Settings {
             'default'           => '1',
         ));
 
-        add_settings_field('dlh_load_assets', 'Cargar assets', array(__CLASS__, 'field_load_assets'), self::MENU_SLUG, 'dlh_section_assets');
+        add_settings_field('dlh_load_assets', 'Cargar assets', array(__CLASS__, 'field_load_assets'), self::PAGE_DATA_API, 'dlh_section_assets');
 
         // --- Sección: Fuente de datos ---
         add_settings_section(
             'dlh_section_data',
             'Fuente de datos',
             array(__CLASS__, 'section_data_cb'),
-            self::MENU_SLUG
+            self::PAGE_DATA_API
         );
 
         register_setting(self::OPTION_GROUP, 'dlh_data_source', array(
@@ -201,7 +247,7 @@ class Dashboard_Higuera_Settings {
             'default'           => 'api_fallback_csv',
         ));
 
-        add_settings_field('dlh_data_source', 'Origen de datos', array(__CLASS__, 'field_data_source'), self::MENU_SLUG, 'dlh_section_data');
+        add_settings_field('dlh_data_source', 'Origen de datos', array(__CLASS__, 'field_data_source'), self::PAGE_DATA_API, 'dlh_section_data');
 
         register_setting(self::OPTION_GROUP, 'dlh_api_url', array(
             'type'              => 'string',
@@ -209,7 +255,7 @@ class Dashboard_Higuera_Settings {
             'default'           => '',
         ));
 
-        add_settings_field('dlh_api_url', 'URL de la API', array(__CLASS__, 'field_api_url'), self::MENU_SLUG, 'dlh_section_data');
+        add_settings_field('dlh_api_url', 'URL de la API', array(__CLASS__, 'field_api_url'), self::PAGE_DATA_API, 'dlh_section_data');
 
         register_setting(self::OPTION_GROUP, 'dlh_api_source_mode', array(
             'type'              => 'string',
@@ -217,7 +263,7 @@ class Dashboard_Higuera_Settings {
             'default'           => 'url',
         ));
 
-        add_settings_field('dlh_api_source_mode', 'Fuente API 25-26', array(__CLASS__, 'field_api_source_mode'), self::MENU_SLUG, 'dlh_section_data');
+        add_settings_field('dlh_api_source_mode', 'Fuente API 25-26', array(__CLASS__, 'field_api_source_mode'), self::PAGE_DATA_API, 'dlh_section_data');
 
         register_setting(self::OPTION_GROUP, 'dlh_api_powerbi_formula', array(
             'type'              => 'string',
@@ -225,14 +271,14 @@ class Dashboard_Higuera_Settings {
             'default'           => '',
         ));
 
-        add_settings_field('dlh_api_powerbi_formula', 'Fórmula Power BI (opcional)', array(__CLASS__, 'field_api_powerbi_formula'), self::MENU_SLUG, 'dlh_section_data');
+        add_settings_field('dlh_api_powerbi_formula', 'Fórmula Power BI (opcional)', array(__CLASS__, 'field_api_powerbi_formula'), self::PAGE_DATA_API, 'dlh_section_data');
 
         // --- Sección: Rentabilidad ---
         add_settings_section(
             'dlh_section_rentabilidad',
             'Rentabilidad en Resumen',
             array(__CLASS__, 'section_rentabilidad_cb'),
-            self::MENU_SLUG
+            self::PAGE_RENTABILIDAD
         );
 
         register_setting(self::OPTION_GROUP, 'dlh_rentabilidad_cards', array(
@@ -241,29 +287,29 @@ class Dashboard_Higuera_Settings {
             'default'           => array(),
         ));
 
-        add_settings_field('dlh_rentabilidad_cards', 'Cards de rentabilidad', array(__CLASS__, 'field_rentabilidad_cards'), self::MENU_SLUG, 'dlh_section_rentabilidad');
+        add_settings_field('dlh_rentabilidad_cards', 'Cards de rentabilidad', array(__CLASS__, 'field_rentabilidad_cards'), self::PAGE_RENTABILIDAD, 'dlh_section_rentabilidad');
 
         register_setting(self::OPTION_GROUP, 'dlh_rent_sector_icon_url', array(
             'type'              => 'string',
             'sanitize_callback' => 'esc_url_raw',
             'default'           => '',
         ));
-        add_settings_field('dlh_rent_sector_icon_url', 'Ícono rápido: Sector', array(__CLASS__, 'field_rent_sector_icon_url'), self::MENU_SLUG, 'dlh_section_rentabilidad');
+        add_settings_field('dlh_rent_sector_icon_url', 'Ícono rápido: Sector', array(__CLASS__, 'field_rent_sector_icon_url'), self::PAGE_RENTABILIDAD, 'dlh_section_rentabilidad');
 
         register_setting(self::OPTION_GROUP, 'dlh_rent_cuartel_icon_url', array(
             'type'              => 'string',
             'sanitize_callback' => 'esc_url_raw',
             'default'           => '',
         ));
-        add_settings_field('dlh_rent_cuartel_icon_url', 'Ícono rápido: Cuartel', array(__CLASS__, 'field_rent_cuartel_icon_url'), self::MENU_SLUG, 'dlh_section_rentabilidad');
+        add_settings_field('dlh_rent_cuartel_icon_url', 'Ícono rápido: Cuartel', array(__CLASS__, 'field_rent_cuartel_icon_url'), self::PAGE_RENTABILIDAD, 'dlh_section_rentabilidad');
 
         register_setting(self::OPTION_GROUP, 'dlh_rentabilidad_manual_rows', array(
             'type'              => 'array',
             'sanitize_callback' => array(__CLASS__, 'sanitize_rentabilidad_manual_rows'),
             'default'           => array(),
         ));
-        add_settings_field('dlh_rentabilidad_manual_rows', 'Carga manual complementaria', array(__CLASS__, 'field_rentabilidad_manual_rows'), self::MENU_SLUG, 'dlh_section_rentabilidad');
-        add_settings_field('dlh_rentabilidad_diagnostics', 'Diagnóstico de rentabilidad', array(__CLASS__, 'field_rentabilidad_diagnostics'), self::MENU_SLUG, 'dlh_section_rentabilidad');
+        add_settings_field('dlh_rentabilidad_manual_rows', 'Carga manual complementaria', array(__CLASS__, 'field_rentabilidad_manual_rows'), self::PAGE_RENTABILIDAD, 'dlh_section_rentabilidad');
+        add_settings_field('dlh_rentabilidad_diagnostics', 'Diagnóstico de rentabilidad', array(__CLASS__, 'field_rentabilidad_diagnostics'), self::PAGE_RENTABILIDAD, 'dlh_section_rentabilidad');
 
     }
 
@@ -831,18 +877,135 @@ class Dashboard_Higuera_Settings {
        Renderizar página
        ================================================================ */
 
-    public static function render_page() {
+    private static function render_header($title, $description, $badge = '') {
+        ?>
+        <div class="dlh-settings-page__hero">
+            <div>
+                <h1><?php echo esc_html($title); ?></h1>
+                <p><?php echo esc_html($description); ?></p>
+            </div>
+            <div class="dlh-settings-page__badge"><?php echo esc_html($badge !== '' ? $badge : ('v' . DASHBOARD_HIGUERA_VERSION)); ?></div>
+        </div>
+        <?php
+    }
+
+    private static function render_settings_page_form($title, $description, $settings_page, $submit_label = 'Guardar ajustes') {
+        ?>
+        <div class="wrap dlh-settings-page" data-dlh-settings-saved="<?php echo isset($_GET['settings-updated']) ? '1' : '0'; ?>">
+            <?php self::render_header($title, $description); ?>
+            <?php if (isset($_GET['settings-updated'])) : ?>
+                <div class="notice notice-success is-dismissible dlh-settings-save-feedback"><p>Ajustes guardados correctamente.</p></div>
+            <?php endif; ?>
+            <form method="post" action="options.php" class="dlh-settings-form">
+                <?php
+                settings_fields(self::OPTION_GROUP);
+                do_settings_sections($settings_page);
+                submit_button($submit_label);
+                ?>
+            </form>
+        </div>
+        <?php
+    }
+
+    private static function get_access_label() {
+        $access = get_option('dlh_access', 'public');
+        $labels = array(
+            'public' => 'Público',
+            'logged_in' => 'Solo usuarios logueados',
+            'role' => 'Solo ciertos roles',
+        );
+        return isset($labels[$access]) ? $labels[$access] : $access;
+    }
+
+    private static function get_api_mode_label() {
+        $mode = get_option('dlh_api_source_mode', 'url');
+        return $mode === 'powerbi' ? 'Fórmula Power BI' : 'URL de API';
+    }
+
+    private static function get_rentabilidad_status_label() {
+        $status = Dashboard_Higuera_Import::get_rentabilidad_dataset_status();
+        $mode = isset($status['using']) ? (string) $status['using'] : 'none';
+        if ($mode === 'hybrid') {
+            return 'Híbrido API + manual activo';
+        }
+        if ($mode === 'active') {
+            return 'Base rentabilidad activa';
+        }
+        if ($mode === 'source') {
+            return 'Usando fallback fuente';
+        }
+        return 'Sin datos activos';
+    }
+
+    public static function render_page_summary() {
         if (!current_user_can('manage_options')) {
             return;
         }
+        $slug = Dashboard_Higuera_Standalone::get_slug();
+        $dashboard_url = home_url('/' . $slug . '/');
+        $access_label = self::get_access_label();
+        $portal_enabled = get_option('dlh_password_portal_enabled', '0') === '1';
+        $api_mode = self::get_api_mode_label();
+        $rentabilidad_status = self::get_rentabilidad_status_label();
+        $data_source = get_option('dlh_data_source', 'api_fallback_csv');
+        $data_source_label = $data_source === 'api_fallback_csv' ? 'API + fallback CSV' : 'Modo legado';
+        $base_2425_url = admin_url('admin.php?page=' . Dashboard_Higuera_Import::SUBMENU_SLUG);
+        $access_url = admin_url('admin.php?page=' . self::PAGE_ACCESS);
+        $data_api_url = admin_url('admin.php?page=' . self::PAGE_DATA_API);
+        $rentabilidad_url = admin_url('admin.php?page=' . self::PAGE_RENTABILIDAD);
+        ?>
+        <div class="wrap dlh-settings-page">
+            <?php self::render_header('Resumen — Dashboard Higuera', 'Estado general del plugin y accesos rápidos por módulo.'); ?>
+            <div class="dlh-summary-grid">
+                <article class="dlh-summary-card"><h3>URL / Slug actual</h3><p><code><?php echo esc_html($dashboard_url); ?></code></p></article>
+                <article class="dlh-summary-card"><h3>Tipo de acceso</h3><p><?php echo esc_html($access_label); ?></p></article>
+                <article class="dlh-summary-card"><h3>Portal con contraseña</h3><p><?php echo esc_html($portal_enabled ? 'Activo' : 'Inactivo'); ?></p></article>
+                <article class="dlh-summary-card"><h3>Modo API actual</h3><p><?php echo esc_html($api_mode); ?></p></article>
+                <article class="dlh-summary-card"><h3>Fuente de datos</h3><p><?php echo esc_html($data_source_label); ?></p></article>
+                <article class="dlh-summary-card"><h3>Estado rentabilidad</h3><p><?php echo esc_html($rentabilidad_status); ?></p></article>
+            </div>
+            <div class="dlh-summary-card">
+                <h3>Test rápido API</h3>
+                <p><button type="button" class="button" id="dlh-test-api-sources">Test de API (velocidad)</button></p>
+                <div id="dlh-test-api-results" class="dlh-test-results" role="status" aria-live="polite"></div>
+            </div>
+            <div class="dlh-summary-actions">
+                <a class="button button-primary" href="<?php echo esc_url($dashboard_url); ?>" target="_blank" rel="noopener noreferrer">Abrir dashboard</a>
+                <a class="button" href="<?php echo esc_url($access_url); ?>">Ir a Acceso</a>
+                <a class="button" href="<?php echo esc_url($data_api_url); ?>">Ir a Datos/API</a>
+                <a class="button" href="<?php echo esc_url($rentabilidad_url); ?>">Ir a Rentabilidad</a>
+                <a class="button" href="<?php echo esc_url($base_2425_url); ?>">Ir a Base 24-25</a>
+            </div>
+        </div>
+        <?php
+    }
+
+    public static function render_page_access() {
+        if (!current_user_can('manage_options')) {
+            return;
+        }
+        self::render_settings_page_form(
+            'Acceso — Dashboard Higuera',
+            'Configura publicación, restricción por roles y portal con contraseña para el standalone.',
+            self::PAGE_ACCESS,
+            'Guardar ajustes de Acceso'
+        );
+    }
+
+    public static function render_page_data_api() {
+        if (!current_user_can('manage_options')) {
+            return;
+        }
+        $data_source = get_option('dlh_data_source', 'api_fallback_csv');
+        $mode = get_option('dlh_api_source_mode', 'url');
+        $api_url = Dashboard_La_Higuera::get_configured_api_url();
         ?>
         <div class="wrap dlh-settings-page" data-dlh-settings-saved="<?php echo isset($_GET['settings-updated']) ? '1' : '0'; ?>">
-            <div class="dlh-settings-page__hero">
-                <div>
-                    <h1>Ajustes — Dashboard La Higuera</h1>
-                    <p>Panel centralizado para URL, acceso, carga de assets, fuentes de datos y configuración del bloque Rentabilidad.</p>
-                </div>
-                <div class="dlh-settings-page__badge">v<?php echo esc_html(DASHBOARD_HIGUERA_VERSION); ?></div>
+            <?php self::render_header('Datos/API — Dashboard Higuera', 'Configura assets, origen de datos y parámetros de API para temporada 25-26.'); ?>
+            <div class="dlh-summary-grid">
+                <article class="dlh-summary-card"><h3>Fuente de datos</h3><p><?php echo esc_html($data_source === 'api_fallback_csv' ? 'API + fallback CSV' : 'Modo legado'); ?></p></article>
+                <article class="dlh-summary-card"><h3>Modo API activo</h3><p><?php echo esc_html($mode === 'powerbi' ? 'Fórmula Power BI' : 'URL de API'); ?></p></article>
+                <article class="dlh-summary-card"><h3>Endpoint actual</h3><p><code><?php echo esc_html($api_url !== '' ? $api_url : 'Sin URL configurada'); ?></code></p></article>
             </div>
             <?php if (isset($_GET['settings-updated'])) : ?>
                 <div class="notice notice-success is-dismissible dlh-settings-save-feedback"><p>Ajustes guardados correctamente.</p></div>
@@ -850,11 +1013,23 @@ class Dashboard_Higuera_Settings {
             <form method="post" action="options.php" class="dlh-settings-form">
                 <?php
                 settings_fields(self::OPTION_GROUP);
-                do_settings_sections(self::MENU_SLUG);
-                submit_button('Guardar ajustes');
+                do_settings_sections(self::PAGE_DATA_API);
+                submit_button('Guardar ajustes de Datos/API');
                 ?>
             </form>
         </div>
         <?php
+    }
+
+    public static function render_page_rentabilidad() {
+        if (!current_user_can('manage_options')) {
+            return;
+        }
+        self::render_settings_page_form(
+            'Rentabilidad — Dashboard Higuera',
+            'Configura cards, íconos, carga manual complementaria y diagnóstico del bloque Rentabilidad.',
+            self::PAGE_RENTABILIDAD,
+            'Guardar ajustes de Rentabilidad'
+        );
     }
 }
