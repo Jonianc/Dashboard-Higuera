@@ -192,6 +192,7 @@
         if(next){ wrap.insertBefore(next, item); }
       }
       refreshRentOrderValues();
+      wrap.dispatchEvent(new CustomEvent('dlh-form-dirty-signal', { bubbles: true }));
     });
     refreshRentOrderValues();
   }
@@ -1080,6 +1081,7 @@
         if(url){ url.textContent = src || 'Sin URL seleccionada'; }
         if(removeBtn){ removeBtn.style.display = src ? '' : 'none'; }
         selectBtn.textContent = src ? dlhSettings.labels.replaceImage : dlhSettings.labels.selectImage;
+        box.dispatchEvent(new CustomEvent('dlh-form-dirty-signal', { bubbles: true }));
       }
 
       selectBtn.addEventListener('click', function(e){
@@ -1103,6 +1105,89 @@
           e.preventDefault();
           setImage('');
         });
+      }
+    });
+  }
+
+  function snapshotFormValues(form){
+    var payload = [];
+    form.querySelectorAll('input, select, textarea').forEach(function(el){
+      if(!el.name){ return; }
+      if(el.type === 'submit' || el.type === 'button' || el.type === 'file'){ return; }
+      if(el.type === 'checkbox' || el.type === 'radio'){
+        payload.push(el.name + '|' + (el.value || '1') + '|' + (el.checked ? '1' : '0'));
+        return;
+      }
+      payload.push(el.name + '|' + String(el.value || ''));
+    });
+    payload.sort();
+    return payload.join('||');
+  }
+
+  function setSaveState(statusNode, state){
+    if(!statusNode){ return; }
+    var text = statusNode.querySelector('.dlh-save-indicator__text');
+    statusNode.classList.remove('is-clean', 'is-dirty', 'is-saving', 'is-saved');
+    statusNode.setAttribute('data-state', state);
+    if(state === 'dirty'){
+      statusNode.classList.add('is-dirty');
+      if(text){ text.textContent = 'Cambios sin guardar'; }
+      return;
+    }
+    if(state === 'saving'){
+      statusNode.classList.add('is-saving');
+      if(text){ text.textContent = 'Guardando cambios…'; }
+      return;
+    }
+    if(state === 'saved'){
+      statusNode.classList.add('is-saved');
+      if(text){ text.textContent = 'Guardado correcto'; }
+      return;
+    }
+    statusNode.classList.add('is-clean');
+    if(text){ text.textContent = 'Sin cambios'; }
+  }
+
+  function initModuleSaveState(){
+    var pageRoot = document.querySelector('.dlh-settings-page[data-dlh-settings-saved]');
+    var pageSaved = !!(pageRoot && pageRoot.getAttribute('data-dlh-settings-saved') === '1');
+
+    document.querySelectorAll('form[data-dlh-edit-form]').forEach(function(form){
+      var statusNode = form.parentElement ? form.parentElement.querySelector('[data-dlh-save-status]') : null;
+      if(!statusNode){ return; }
+
+      var baseline = snapshotFormValues(form);
+      var state = { dirty: false, savedTimer: null };
+
+      function applyDirtyFromSnapshot(){
+        var current = snapshotFormValues(form);
+        var isDirty = current !== baseline;
+        if(isDirty === state.dirty){ return; }
+        state.dirty = isDirty;
+        setSaveState(statusNode, isDirty ? 'dirty' : 'clean');
+      }
+
+      form.addEventListener('input', applyDirtyFromSnapshot);
+      form.addEventListener('change', applyDirtyFromSnapshot);
+      form.addEventListener('dlh-form-dirty-signal', function(){
+        state.dirty = true;
+        setSaveState(statusNode, 'dirty');
+      });
+
+      form.addEventListener('submit', function(){
+        if(state.savedTimer){ window.clearTimeout(state.savedTimer); }
+        setSaveState(statusNode, 'saving');
+      });
+
+      if(pageSaved){
+        setSaveState(statusNode, 'saved');
+        state.savedTimer = window.setTimeout(function(){
+          baseline = snapshotFormValues(form);
+          state.dirty = false;
+          setSaveState(statusNode, 'clean');
+        }, 2500);
+      } else {
+        setSaveState(statusNode, 'clean');
       }
     });
   }
@@ -1136,6 +1221,7 @@
     validatePowerBiFormula();
     togglePasswordPortalFields();
     bindApiTest();
+    initModuleSaveState();
 
     var savedRoot = document.querySelector('[data-dlh-settings-saved="1"]');
     if(savedRoot){

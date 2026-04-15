@@ -899,11 +899,16 @@ class Dashboard_Higuera_Settings {
             <?php if (isset($_GET['settings-updated'])) : ?>
                 <div class="notice notice-success is-dismissible dlh-settings-save-feedback"><p>Ajustes guardados correctamente.</p></div>
             <?php endif; ?>
-            <form method="post" action="options.php" class="dlh-settings-form">
+            <div class="dlh-save-indicator is-clean" data-dlh-save-status data-state="clean" role="status" aria-live="polite">
+                <span class="dlh-save-indicator__text">Sin cambios</span>
+            </div>
+            <form method="post" action="options.php" class="dlh-settings-form" data-dlh-edit-form>
                 <?php
                 settings_fields(self::OPTION_GROUP);
                 self::render_settings_sections_blocks($settings_page);
-                submit_button($submit_label);
+                echo '<div class="dlh-settings-actions">';
+                submit_button($submit_label, 'primary', 'submit', false);
+                echo '</div>';
                 ?>
             </form>
         </div>
@@ -1051,11 +1056,16 @@ class Dashboard_Higuera_Settings {
             <?php if (isset($_GET['settings-updated'])) : ?>
                 <div class="notice notice-success is-dismissible dlh-settings-save-feedback"><p>Ajustes guardados correctamente.</p></div>
             <?php endif; ?>
-            <form method="post" action="options.php" class="dlh-settings-form">
+            <div class="dlh-save-indicator is-clean" data-dlh-save-status data-state="clean" role="status" aria-live="polite">
+                <span class="dlh-save-indicator__text">Sin cambios</span>
+            </div>
+            <form method="post" action="options.php" class="dlh-settings-form" data-dlh-edit-form>
                 <?php
                 settings_fields(self::OPTION_GROUP);
                 self::render_settings_sections_blocks(self::PAGE_DATA_API);
-                submit_button('Guardar ajustes de Datos/API');
+                echo '<div class="dlh-settings-actions">';
+                submit_button('Guardar ajustes de Datos/API', 'primary', 'submit', false);
+                echo '</div>';
                 ?>
             </form>
         </div>

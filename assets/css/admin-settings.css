@@ -116,7 +116,8 @@
   min-height: 96px;
 }
 
-.dlh-settings-form > .submit .button-primary {
+.dlh-settings-form > .submit .button-primary,
+.dlh-settings-actions .button-primary {
   min-height: 42px;
   padding-inline: 18px;
   border-radius: 12px;
@@ -124,6 +125,49 @@
 
 .dlh-settings-form > .submit {
   margin-top: 8px;
+}
+
+.dlh-save-indicator {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0 0 12px;
+  padding: 8px 12px;
+  border-radius: 999px;
+  border: 1px solid #dcdcde;
+  background: #fff;
+  color: #3c434a;
+  font-weight: 600;
+}
+
+.dlh-save-indicator.is-dirty {
+  border-color: #dba617;
+  background: #fff9e5;
+  color: #8a6d00;
+}
+
+.dlh-save-indicator.is-saving {
+  border-color: #2271b1;
+  background: #eef6fc;
+  color: #135e96;
+}
+
+.dlh-save-indicator.is-saved {
+  border-color: #1f7a1f;
+  background: #edf7ed;
+  color: #176117;
+}
+
+.dlh-settings-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 10px;
+  margin: 8px 0 0;
+  padding: 12px 14px;
+  border: 1px solid #dcdcde;
+  border-radius: 14px;
+  background: #fff;
 }
 
 #dlh-test-api-results {

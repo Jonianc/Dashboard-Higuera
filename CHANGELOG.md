@@ -1,3 +1,8 @@
+## 1.18.2 - 2026-04-15
+- UX (Admin guardado por módulo): Acceso, Datos/API y Rentabilidad ahora muestran estado discreto por pantalla (`Sin cambios`, `Cambios sin guardar`, `Guardado correcto`).
+- UX (Admin acciones): cada pantalla editable muestra bloque claro de acciones con submit principal del módulo.
+- Compatibilidad: se mantiene Settings API actual, option keys existentes, AJAX y flujos de guardado sin autosave.
+
 ## 1.18.1 - 2026-04-15
 - Fix (Admin layout): estructura de formularios y secciones renderizada explícitamente desde PHP por pantalla (sin depender de reconstrucción estructural en JS).
 - Fix (Admin JS): se elimina `buildSectionCards()` y toda lógica de agrupación por `H2` para construir secciones.
