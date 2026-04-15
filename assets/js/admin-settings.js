@@ -1,6 +1,4 @@
 (function($){
-  var SETTINGS_SECTION_STORAGE_KEY = 'dlh_settings_active_section';
-
   function byId(id){ return document.getElementById(id); }
 
   function escapeHtml(value){
@@ -164,112 +162,6 @@
         btn.textContent = dlhSettings.labels.runTest;
       });
     });
-  }
-
-  function buildSectionCards(){
-    var form = document.querySelector('.dlh-settings-form');
-    if(!form){ return; }
-    var nodes = Array.prototype.slice.call(form.children);
-    var submit = form.querySelector('.submit');
-    var sections = [];
-    var current = null;
-
-    nodes.forEach(function(node){
-      if(node.classList && node.classList.contains('submit')){ return; }
-      if(node.tagName === 'H2'){
-        current = document.createElement('section');
-        current.className = 'dlh-settings-section';
-        var slug = 'section-' + String(node.textContent || '').trim().toLowerCase().replace(/[^a-z0-9]+/g, '-');
-        current.id = slug;
-        sections.push({ id: slug, label: String(node.textContent || '').trim() });
-        form.insertBefore(current, node);
-      }
-      if(current){ current.appendChild(node); }
-    });
-
-    if(submit){
-      var submitWrap = document.createElement('div');
-      submitWrap.className = 'dlh-settings-submit';
-      submit.parentNode.insertBefore(submitWrap, submit);
-      submitWrap.appendChild(submit);
-    }
-
-    if(sections.length){
-      var nav = document.createElement('nav');
-      nav.className = 'dlh-settings-nav';
-      nav.innerHTML = sections.map(function(item){
-        return '<a href="#' + escapeHtml(item.id) + '">' + escapeHtml(item.label) + '</a>';
-      }).join('');
-      var hero = document.querySelector('.dlh-settings-page__hero');
-      if(hero && hero.parentNode){ hero.parentNode.insertBefore(nav, hero.nextSibling); }
-    }
-  }
-
-  function getCurrentSectionId(){
-    var sections = document.querySelectorAll('.dlh-settings-form .dlh-settings-section[id]');
-    if(!sections.length){ return ''; }
-    var anchorOffset = 120;
-    var lastPassedId = '';
-    var firstUpcomingId = '';
-    sections.forEach(function(section){
-      var rect = section.getBoundingClientRect();
-      if(rect.top <= anchorOffset){
-        lastPassedId = section.id;
-      } else if(!firstUpcomingId){
-        firstUpcomingId = section.id;
-      }
-    });
-    if(lastPassedId){ return lastPassedId; }
-    if(firstUpcomingId){ return firstUpcomingId; }
-    return sections[sections.length - 1].id || '';
-  }
-
-  function persistCurrentSection(){
-    var sectionId = getCurrentSectionId();
-    if(!sectionId){ return; }
-    try {
-      window.sessionStorage.setItem(SETTINGS_SECTION_STORAGE_KEY, sectionId);
-    } catch (e) {}
-  }
-
-  function restorePersistedSection(){
-    var hash = String(window.location.hash || '').replace(/^#/, '').trim();
-    var targetId = hash;
-    if(!targetId){
-      try {
-        targetId = String(window.sessionStorage.getItem(SETTINGS_SECTION_STORAGE_KEY) || '').trim();
-      } catch (e) {
-        targetId = '';
-      }
-    }
-    if(!targetId){ return; }
-    var target = document.getElementById(targetId);
-    if(!target){ return; }
-    window.requestAnimationFrame(function(){
-      target.scrollIntoView({ behavior: 'auto', block: 'start' });
-    });
-  }
-
-  function bindSectionPersistence(){
-    var nav = document.querySelector('.dlh-settings-nav');
-    if(nav){
-      nav.addEventListener('click', function(e){
-        var link = e.target.closest('a[href^="#"]');
-        if(!link){ return; }
-        var id = String(link.getAttribute('href') || '').replace(/^#/, '').trim();
-        if(!id){ return; }
-        try {
-          window.sessionStorage.setItem(SETTINGS_SECTION_STORAGE_KEY, id);
-        } catch (err) {}
-      });
-    }
-
-    var form = document.querySelector('.dlh-settings-form');
-    if(form){
-      form.addEventListener('submit', persistCurrentSection);
-    }
-
-    window.addEventListener('beforeunload', persistCurrentSection);
   }
 
   function refreshRentOrderValues(){

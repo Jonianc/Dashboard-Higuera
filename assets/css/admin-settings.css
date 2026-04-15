@@ -64,29 +64,6 @@
   font-weight: 700;
 }
 
-.dlh-settings-nav {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
-  margin: 0 0 18px;
-}
-
-.dlh-settings-nav a {
-  display: inline-flex;
-  align-items: center;
-  padding: 8px 12px;
-  border: 1px solid #dcdcde;
-  border-radius: 999px;
-  background: #fff;
-  color: #1d2327;
-  text-decoration: none;
-}
-
-.dlh-settings-nav a:hover {
-  border-color: #a7b693;
-  color: #2f5d2b;
-}
-
 .dlh-settings-section {
   background: #fff;
   border: 1px solid #dcdcde;
@@ -104,7 +81,8 @@
 }
 
 .dlh-settings-section > p,
-.dlh-settings-section .dlh-section-intro p {
+.dlh-settings-section .dlh-section-intro p,
+.dlh-settings-section .dlh-settings-section__intro p {
   color: #50575e;
   max-width: 820px;
 }
@@ -138,56 +116,14 @@
   min-height: 96px;
 }
 
-.dlh-settings-submit {
-  position: sticky;
-  bottom: 12px;
-  padding: 14px 16px;
-  border: 1px solid #dcdcde;
-  border-radius: 16px;
-  background: rgba(255,255,255,0.92);
-  backdrop-filter: blur(8px);
-  box-shadow: 0 10px 30px rgba(16,24,40,0.08);
-  z-index: 5;
-}
-
-.dlh-settings-submit .submit {
-  margin: 0;
-  padding: 0;
-}
-
-.dlh-settings-submit .button-primary {
+.dlh-settings-form > .submit .button-primary {
   min-height: 42px;
   padding-inline: 18px;
   border-radius: 12px;
 }
 
-.dlh-settings-form > h2 {
-  background: #fff;
-  border: 1px solid #dcdcde;
-  border-bottom: 0;
-  border-radius: 16px 16px 0 0;
-  padding: 18px 22px 8px;
-  margin: 0;
-}
-
-.dlh-settings-form > h2 + p {
-  background: #fff;
-  border: 1px solid #dcdcde;
-  border-top: 0;
-  border-bottom: 0;
-  margin: 0;
-  padding: 0 22px 8px;
-  color: #50575e;
-}
-
-.dlh-settings-form > .form-table {
-  margin: 0 0 18px;
-  background: #fff;
-  border: 1px solid #dcdcde;
-  border-top: 0;
-  border-radius: 0 0 16px 16px;
-  padding: 6px 22px 14px;
-  box-shadow: 0 8px 20px rgba(16, 24, 40, 0.04);
+.dlh-settings-form > .submit {
+  margin-top: 8px;
 }
 
 #dlh-test-api-results {

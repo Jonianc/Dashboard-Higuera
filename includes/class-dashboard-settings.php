@@ -889,22 +889,62 @@ class Dashboard_Higuera_Settings {
         <?php
     }
 
-    private static function render_settings_page_form($title, $description, $settings_page, $submit_label = 'Guardar ajustes') {
+    private static function render_settings_page_form($title, $description, $settings_page, $submit_label = 'Guardar ajustes', $context = '') {
         ?>
         <div class="wrap dlh-settings-page" data-dlh-settings-saved="<?php echo isset($_GET['settings-updated']) ? '1' : '0'; ?>">
             <?php self::render_header($title, $description); ?>
+            <?php if ($context !== '') : ?>
+                <div class="dlh-summary-card dlh-summary-card--context"><p><?php echo esc_html($context); ?></p></div>
+            <?php endif; ?>
             <?php if (isset($_GET['settings-updated'])) : ?>
                 <div class="notice notice-success is-dismissible dlh-settings-save-feedback"><p>Ajustes guardados correctamente.</p></div>
             <?php endif; ?>
             <form method="post" action="options.php" class="dlh-settings-form">
                 <?php
                 settings_fields(self::OPTION_GROUP);
-                do_settings_sections($settings_page);
+                self::render_settings_sections_blocks($settings_page);
                 submit_button($submit_label);
                 ?>
             </form>
         </div>
         <?php
+    }
+
+    private static function render_settings_sections_blocks($page, $only_section_ids = array()) {
+        global $wp_settings_sections;
+
+        if (empty($wp_settings_sections[$page]) || !is_array($wp_settings_sections[$page])) {
+            return;
+        }
+
+        foreach ($wp_settings_sections[$page] as $section) {
+            if (!empty($only_section_ids) && !in_array($section['id'], $only_section_ids, true)) {
+                continue;
+            }
+            self::render_settings_section_block($page, $section);
+        }
+    }
+
+    private static function render_settings_section_block($page, $section) {
+        $section_id = isset($section['id']) ? (string) $section['id'] : '';
+        if ($section_id === '') {
+            return;
+        }
+
+        echo '<section class="dlh-settings-section" id="' . esc_attr($section_id) . '">';
+        if (!empty($section['title'])) {
+            echo '<h2>' . esc_html($section['title']) . '</h2>';
+        }
+        if (!empty($section['callback']) && is_callable($section['callback'])) {
+            echo '<div class="dlh-settings-section__intro">';
+            call_user_func($section['callback'], $section);
+            echo '</div>';
+        }
+
+        echo '<table class="form-table" role="presentation">';
+        do_settings_fields($page, $section_id);
+        echo '</table>';
+        echo '</section>';
     }
 
     private static function get_access_label() {
@@ -988,7 +1028,8 @@ class Dashboard_Higuera_Settings {
             'Acceso — Dashboard Higuera',
             'Configura publicación, restricción por roles y portal con contraseña para el standalone.',
             self::PAGE_ACCESS,
-            'Guardar ajustes de Acceso'
+            'Guardar ajustes de Acceso',
+            'Aquí solo se administra la publicación del standalone: slug, tipo de acceso, roles y portal con contraseña.'
         );
     }
 
@@ -1013,7 +1054,7 @@ class Dashboard_Higuera_Settings {
             <form method="post" action="options.php" class="dlh-settings-form">
                 <?php
                 settings_fields(self::OPTION_GROUP);
-                do_settings_sections(self::PAGE_DATA_API);
+                self::render_settings_sections_blocks(self::PAGE_DATA_API);
                 submit_button('Guardar ajustes de Datos/API');
                 ?>
             </form>
@@ -1029,7 +1070,8 @@ class Dashboard_Higuera_Settings {
             'Rentabilidad — Dashboard Higuera',
             'Configura cards, íconos, carga manual complementaria y diagnóstico del bloque Rentabilidad.',
             self::PAGE_RENTABILIDAD,
-            'Guardar ajustes de Rentabilidad'
+            'Guardar ajustes de Rentabilidad',
+            'Este módulo mantiene el builder/workspace y diagnóstico de rentabilidad sin alterar la persistencia actual.'
         );
     }
 }

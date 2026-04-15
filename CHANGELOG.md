@@ -1,3 +1,8 @@
+## 1.18.1 - 2026-04-15
+- Fix (Admin layout): estructura de formularios y secciones renderizada explícitamente desde PHP por pantalla (sin depender de reconstrucción estructural en JS).
+- Fix (Admin JS): se elimina `buildSectionCards()` y toda lógica de agrupación por `H2` para construir secciones.
+- Compatibilidad: se mantienen option keys existentes, guardado por Settings API, Test API y workspace de rentabilidad.
+
 ## 1.18.0 - 2026-04-15
 - Admin: menú principal renombrado a `Dashboard Higuera` y estructura modular por submenús (`Resumen`, `Acceso`, `Datos/API`, `Rentabilidad`, `Base 24-25`).
 - Admin (Resumen): nueva vista de estado con cards y acciones rápidas; deja de ser formulario largo.
