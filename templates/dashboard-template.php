@@ -10,7 +10,7 @@ if (!defined('ABSPATH')) {
 }
 ?>
 
-<div id="dashboard-higuera-wrapper" class="dashboard-higuera-container" data-theme="light">
+<div id="dashboard-higuera-wrapper" class="dashboard-higuera-container dlh-ui-reference" data-theme="light">
     <div id="dashboard-higuera-loading" class="dlh-loading">
         <div class="dlh-loading-card">
             <div class="dlh-loading-title">Cargando Dashboard...</div>
@@ -24,8 +24,8 @@ if (!defined('ABSPATH')) {
                 <h1>Dashboard — Agrícola La Higuera</h1>
                 <div class="subtitle">
                     <span>Temporada 2025–2026</span>
-                    <span>· Fuente: <span class="badge" id="srcChip">Inicializando...</span></span>
-                    <span>· Generado: <span id="gen">—</span></span>
+                    <span class="hidden">· Fuente: <span class="badge" id="srcChip">Inicializando...</span></span>
+                    <span class="hidden">· Generado: <span id="gen">—</span></span>
                 </div>
             </div>
             <div class="dlh-header-actions">
@@ -48,11 +48,11 @@ if (!defined('ABSPATH')) {
                             <p>Usa una sola barra de control para cambiar la lectura del dashboard completo y mantener el contexto entre pestañas.</p>
                         </div>
                         <div class="dashboard-command-meta" aria-label="Estado rápido del dashboard">
-                            <div class="dashboard-meta-card">
+                            <div class="dashboard-meta-card hidden">
                                 <span class="dashboard-meta-label">Fuente activa</span>
                                 <strong id="dashboardMetaSource">Inicializando...</strong>
                             </div>
-                            <div class="dashboard-meta-card">
+                            <div class="dashboard-meta-card hidden">
                                 <span class="dashboard-meta-label">Generado</span>
                                 <strong id="dashboardMetaGenerated">—</strong>
                             </div>
@@ -61,40 +61,58 @@ if (!defined('ABSPATH')) {
 
                     <div class="filters-toolbar filters-toolbar--primary">
                         <div class="filters-toolbar-copy">
-                            <span class="filters-toolbar-kicker">Filtros principales</span>
-                            <p>Primero define el universo y luego afina la lectura.</p>
+                            <span class="filters-toolbar-kicker">Filtros</span>
+                            <p>Usa una sola caja de filtros para definir universo, métrica y orden de lectura.</p>
                         </div>
                         <div class="filters-master-grid filters-master-grid--primary">
-                            <div class="field"><label for="f_cultivo">Cultivo</label><select id="f_cultivo"><option>Todos</option></select></div>
-                            <div class="field"><label for="f_n1">Categoría</label><select id="f_n1"><option>Todos</option></select></div>
-                            <div class="field"><label for="f_faena">Faena</label><select id="f_faena"><option>Todas</option></select></div>
-                            <div class="field field-search"><label for="f_faena_search">Buscar faena</label><input id="f_faena_search" type="search" placeholder="Escribe para filtrar opciones"></div>
+                            <div class="field field-cultivo"><label for="f_cultivo">Cultivos</label><select id="f_cultivo" class="hidden"><option>Todos</option></select><div id="f_cultivo_chips" class="cultivo-chips" role="group" aria-label="Cultivos"></div></div>
+                            <div class="field field-predio"><label for="f_predio">Tipo de registro</label><select id="f_predio"><option>Todos</option></select></div>
+                            <div class="field field-categoria"><label for="f_n1">Categoría</label><select id="f_n1"><option>Todos</option></select></div>
+                            <div class="field field-cuartel">
+                                <label for="f_cuartel">Cuartel</label>
+                                <div id="f_cuartel" class="mes-dropdown">
+                                    <button type="button" class="mes-dropdown-btn" aria-haspopup="true" aria-expanded="false"><span class="mes-label">Todos</span><span class="arrow">▼</span></button>
+                                    <div class="mes-dropdown-panel">
+                                        <div class="mes-dropdown-item todos"><input type="checkbox" id="cuartel_todos" checked><label for="cuartel_todos">Seleccionar todos</label></div>
+                                        <div class="mes-dropdown-item"><input type="search" id="cuartel_search" placeholder="Buscar cuartel"></div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="field field-faena"><label for="f_faena">Faena</label><select id="f_faena"><option>Todas</option></select></div>
                             <div class="field field-meses field-meses--premium">
                                 <label for="f_mes">Meses</label>
                                 <div id="f_mes" class="mes-dropdown">
-                                    <button type="button" class="mes-dropdown-btn"><span class="mes-label">Todos</span><span class="arrow">▼</span></button>
+                                    <button type="button" class="mes-dropdown-btn" aria-haspopup="true" aria-expanded="false"><span class="mes-label">Todos</span><span class="arrow">▼</span></button>
                                     <div class="mes-dropdown-panel">
                                         <div class="mes-dropdown-item todos"><input type="checkbox" id="mes_todos" checked><label for="mes_todos">Seleccionar todos</label></div>
                                     </div>
                                 </div>
                             </div>
                         </div>
-                    </div>
-
-                    <div class="filters-toolbar filters-toolbar--secondary">
-                        <div class="filters-toolbar-copy">
-                            <span class="filters-toolbar-kicker">Filtros secundarios</span>
-                            <p>Ajusta cómo se ordena y presenta la información.</p>
-                        </div>
                         <div class="filters-master-grid filters-master-grid--secondary">
-                            <div class="field"><label for="f_predio">Tipo de registro</label><select id="f_predio"><option>Todos</option></select></div>
-                            <div class="field"><label for="f_metrica">Métrica</label><select id="f_metrica"><option value="VALOR">Gasto total</option><option value="COSTO_HA">Costo por hectárea</option></select></div>
-                            <div class="field"><label for="f_orden">Orden</label><select id="f_orden"><option value="Desc">Descendente</option><option value="Asc">Ascendente</option></select></div>
+                            <div class="field field-metrica"><label for="f_metrica">Métrica</label><select id="f_metrica"><option value="VALOR">Gasto total</option><option value="COSTO_HA">Costo por hectárea</option></select></div>
+                            <div class="field field-orden"><label for="f_orden">Orden</label><select id="f_orden"><option value="Desc">Descendente</option><option value="Asc">Ascendente</option></select></div>
+                            <div class="filters-master-actions filters-master-actions--toolbar">
+                                <button id="btnToggleInv2425" type="button">Ocultar INVERSIONES VARIAS</button>
+                                <button id="btnClearFilters" type="button">Limpiar filtros</button>
+                                <button id="btnResetView" type="button">Restablecer vista</button>
+                            </div>
                         </div>
-                        <div class="filters-master-actions filters-master-actions--toolbar">
-                            <button id="btnToggleInv2425" type="button">Ocultar INVERSIONES VARIAS</button>
-                            <button id="btnClearFilters" type="button">Limpiar filtros</button>
-                            <button id="btnResetView" type="button">Restablecer vista</button>
+                    </div>
+                </section>
+
+                <section id="rentabilidad-resumen-block" class="rent-panel rent-panel--aside" aria-label="Rentabilidad resumida">
+                    <div class="rent-panel-head rent-panel-head--compact">
+                        <div>
+                            <span class="dashboard-command-kicker">Complemento</span>
+                            <h3>Rentabilidad</h3>
+                            <p>Bloque de apoyo para revisar ingresos, costos y resultado sin cortar la lectura del resumen.</p>
+                        </div>
+                    </div>
+                    <div id="rentabilidadCollapseBody" class="rent-panel-body">
+                        <div id="rentabilidad-cards" class="rentabilidad-cards"></div>
+                        <div class="table-wrap rent-table-wrap">
+                            <div id="rentabilidad-resumen" class="rentabilidad-resumen-table"></div>
                         </div>
                     </div>
                 </section>
@@ -113,14 +131,14 @@ if (!defined('ABSPATH')) {
                         <p>Cambia entre resumen operativo, comparativo histórico, gráficos y detalle sin perder filtros.</p>
                     </div>
                     <div class="tabs tabs--elevated" role="tablist" aria-label="Vistas del dashboard">
-                    <div class="tab active" data-tab="resumen" role="tab" aria-selected="true">Resumen</div>
-                    <div class="tab" data-tab="comparativo" role="tab" aria-selected="false">Comparativo 24-25 vs 25-26</div>
-                    <div class="tab" data-tab="graficos" role="tab" aria-selected="false">Gráficos</div>
-                    <div class="tab" data-tab="detalle" role="tab" aria-selected="false">Detalle</div>
+                    <div id="tab-resumen" class="tab active" data-tab="resumen" role="tab" tabindex="0" aria-selected="true" aria-controls="panel-resumen">Resumen</div>
+                    <div id="tab-comparativo" class="tab" data-tab="comparativo" role="tab" tabindex="-1" aria-selected="false" aria-controls="panel-comparativo">Comparativo 24-25 vs 25-26</div>
+                    <div id="tab-graficos" class="tab" data-tab="graficos" role="tab" tabindex="-1" aria-selected="false" aria-controls="panel-graficos">Gráficos</div>
+                    <div id="tab-detalle" class="tab" data-tab="detalle" role="tab" tabindex="-1" aria-selected="false" aria-controls="panel-detalle">Detalle</div>
                 </div>
                 </section>
 
-                <div id="panel-resumen" class="card panel-card panel-resumen">
+                <div id="panel-resumen" class="card panel-card panel-resumen" role="tabpanel" aria-labelledby="tab-resumen">
                     <div class="panel-section-head panel-section-head--resumen">
                         <div>
                             <span class="dashboard-command-kicker">Vista principal</span>
@@ -141,26 +159,6 @@ if (!defined('ABSPATH')) {
                         <div class="panel-resumen-main">
                             <div id="resumen" class="table-wrap"></div>
                         </div>
-
-                        <aside id="rentabilidad-resumen-block" class="rent-panel rent-panel--aside rent-panel--collapsible hidden" aria-label="Rentabilidad resumida">
-                            <div class="rent-panel-head rent-panel-head--compact">
-                                <div>
-                                    <span class="dashboard-command-kicker">Complemento</span>
-                                    <h3>Rentabilidad</h3>
-                                    <p>Bloque de apoyo para revisar ingresos, costos y resultado sin cortar la lectura del resumen.</p>
-                                </div>
-                                <div class="rent-panel-actions">
-                                    <button id="rentabilidadCollapseToggle" class="rent-collapse-toggle" type="button" aria-expanded="false" aria-controls="rentabilidadCollapseBody">Mostrar</button>
-                                </div>
-                            </div>
-                            <div id="rentabilidadCollapseBody" class="rent-panel-body is-collapsed" hidden>
-                                <div id="rentabilidad-quick-filters" class="rent-quick-filters"></div>
-                                <div id="rentabilidad-cards" class="rentabilidad-cards"></div>
-                                <div class="table-wrap rent-table-wrap">
-                                    <div id="rentabilidad-resumen" class="rentabilidad-resumen-table"></div>
-                                </div>
-                            </div>
-                        </aside>
                     </div>
 
                     <div id="resumen-status" class="comp-status comp-status--subtle">
@@ -171,7 +169,7 @@ if (!defined('ABSPATH')) {
                     </div>
                 </div>
 
-                <div id="panel-comparativo" class="card panel-card hidden">
+                <div id="panel-comparativo" class="card panel-card hidden" role="tabpanel" aria-labelledby="tab-comparativo">
                     <div class="panel-section-head">
                         <div>
                             <span class="dashboard-command-kicker">Comparativo</span>
@@ -212,7 +210,7 @@ if (!defined('ABSPATH')) {
                     </div>
                 </div>
 
-                <div id="panel-graficos" class="card panel-card hidden">
+                <div id="panel-graficos" class="card panel-card hidden" role="tabpanel" aria-labelledby="tab-graficos">
                     <div class="panel-section-head">
                         <div>
                             <span class="dashboard-command-kicker">Visualización</span>
@@ -247,7 +245,7 @@ if (!defined('ABSPATH')) {
                     </div>
                 </div>
 
-                <div id="panel-detalle" class="card panel-card hidden">
+                <div id="panel-detalle" class="card panel-card hidden" role="tabpanel" aria-labelledby="tab-detalle">
                     <div class="panel-section-head">
                         <div>
                             <span class="dashboard-command-kicker">Desglose</span>
@@ -294,24 +292,6 @@ if (!defined('ABSPATH')) {
                 genEl.textContent = new Date().toISOString().slice(0,16).replace('T',' ');
             }
 
-            const rentToggle = document.getElementById('rentabilidadCollapseToggle');
-            const rentBody = document.getElementById('rentabilidadCollapseBody');
-            if (rentToggle && rentBody && !rentToggle.dataset.bound) {
-                const syncRentPanel = function(forceExpanded) {
-                    const expanded = typeof forceExpanded === 'boolean'
-                        ? forceExpanded
-                        : rentToggle.getAttribute('aria-expanded') === 'true';
-                    rentToggle.setAttribute('aria-expanded', expanded ? 'true' : 'false');
-                    rentToggle.textContent = expanded ? 'Ocultar rentabilidad' : 'Mostrar rentabilidad';
-                    rentBody.hidden = !expanded;
-                    rentBody.classList.toggle('is-collapsed', !expanded);
-                };
-                syncRentPanel(false);
-                rentToggle.addEventListener('click', function() {
-                    syncRentPanel(rentToggle.getAttribute('aria-expanded') !== 'true');
-                });
-                rentToggle.dataset.bound = 'true';
-            }
         } catch (error) {
             console.error('Error inicializando dashboard:', error);
             const loadingEl = document.getElementById('dashboard-higuera-loading');

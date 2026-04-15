@@ -54,6 +54,8 @@ class Dashboard_Higuera_Import {
                 'noFile' => 'Ningún archivo seleccionado',
                 'chooseFile' => 'Selecciona un CSV o XLSX para rentabilidad.',
                 'selected' => 'Archivo listo para validar y activar',
+                'confirmActivate2425' => 'Se activará la base 24-25 vigente. ¿Deseas continuar?',
+                'confirmActivateRentabilidad' => 'Se validará y activará la base de rentabilidad reemplazando la activa. ¿Deseas continuar?',
             ),
         ));
     }

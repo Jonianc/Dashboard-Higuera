@@ -1,3 +1,114 @@
+## 1.17.16 - 2026-04-08
+- UI/UX (Cultivos): el estado activo de chips se rehace para que se vea como la opción 3 aprobada, con fondo verde marcado, borde más grueso y contraste real en modo claro y oscuro.
+- Fix (Cultivos): se agregan `aria-pressed` y `data-selected` al render para reforzar el estado visual activo y evitar que estilos genéricos lo diluyan.
+- Fix (Cache): versión del plugin y assets actualizada para forzar recarga del CSS/JS modificado.
+
+## 1.17.15 - 2026-04-08
+- UI/UX (Cultivos): los chips seleccionados ahora muestran un estado activo mucho más visible en modo claro y oscuro, con fondo diferenciado, borde más grueso y mayor contraste.
+- Compatibilidad: ajuste solo visual/CSS; se mantiene la lógica actual de multiselección y filtros.
+
+## 1.17.14 - 2026-04-08
+- Fix (Rentabilidad): los filtros de rentabilidad ahora soportan chips multiselección de Cultivos y el filtro de Cuartel, evitando que el bloque quede vacío al filtrar.
+- Fix (Cultivos): se elimina el duplicado visual de "Costos indirectos"; queda un solo chip que actúa como acceso al modo indirectos.
+
+## 1.17.13 - 2026-04-08
+- Fix (Rentabilidad): la grilla de cards usa 4 columnas en desktop (2 filas para 8 métricas) y cae a 2/1 columnas en responsive.
+
+## 1.17.12 - 2026-04-08
+- UI/UX (Rentabilidad): cards superiores se compactan y pasan a grilla 4 columnas (2 filas para 8 métricas) con tamaños homogéneos.
+- UI/UX (Rentabilidad): se reduce tipografía/padding para lectura tipo “chip card” sin perder jerarquía.
+
+## 1.17.11 - 2026-04-08
+- Fix (Cache): se alinea `DASHBOARD_HIGUERA_VERSION` con la versión del plugin para forzar recarga de CSS/JS en navegadores con caché agresiva (Chrome).
+
+## 1.17.10 - 2026-04-08
+- UI/UX (Filtros): se corrige la grilla principal para evitar apilado innecesario y acomodar los controles como en la referencia compacta.
+- UI/UX (Filtros): Métrica y Orden quedan alineados en la misma fila con las acciones a la derecha para optimizar espacio horizontal.
+- Compatibilidad: ajuste solo de template/CSS; se mantienen IDs, lógica JS y comportamiento actual de filtros.
+
+## 1.17.9 - 2026-04-08
+- UI/UX (Filtros): se reduce ancho visual de Tipo de registro, Categoría, Cuartel y Faena para optimizar espacio horizontal.
+- UI/UX (Cuartel): se elimina opción “Ninguno”; queda “Seleccionar todos” (marcar/desmarcar) + lista multiselección de cuarteles.
+- UI/UX (Orden): se mantiene distribución compacta en filas: Cultivos|Tipo|Categoría, Cuartel|Faena|Meses, Métrica|Orden.
+
+## 1.17.8 - 2026-04-08
+- UI/UX (Filtros): ajuste de layout para calzar con referencia (Cultivos | Tipo/Categoría, luego Cuartel/Faena/Meses, y finalmente Métrica/Orden).
+- UI/UX (Cultivos): chips en una sola fila, con “COSTOS INDIRECTOS” y “OTROS CULTIVOS” en variante de 2 líneas.
+- UI/UX (Filtros): ajuste de tamaño visual en Cuartel/Faena y corrección de interacción de Cuartel en el flujo actual.
+
+## 1.17.7 - 2026-04-08
+- UI/UX (Filtros): se corrige orden visual final según referencia y se ajusta tamaño/altura de chips de Cultivos para mayor legibilidad.
+- UI/UX (Filtros): iconos de Cultivos fijados con prioridad para 🍒 Cerezos y 🍇 Viña, manteniendo ambos modos (claro/oscuro).
+
+## 1.17.6 - 2026-04-08
+- UI/UX (Filtros): nueva disposición compacta en 3 filas (Cultivos/Tipo/Categoría, Cuartel/Faena/Meses, Métrica/Orden) y eliminación de búsqueda separada de Faena.
+- UI/UX (Filtros): Cultivos pasa a chips multiselección compactos con iconos (🍒 Cerezos, 🍇 Viña), shortcut de Costos indirectos y soporte multilinea para etiquetas largas.
+- UI/UX (Filtros): se agrega Cuartel multiselección buscable y Meses incorpora “Ninguno” (deselección total), manteniendo compatibilidad de IDs y flujo `applyFilters`.
+
+## 1.17.5 - 2026-04-08
+- UI/UX (Filtros): “Tipo de registro” (`#f_predio`) se mueve al primer lugar en la grilla primaria.
+- UI/UX (Filtros): se elimina duplicado de `#f_predio` en la grilla secundaria, sin cambios de lógica.
+
+## 1.17.4 - 2026-04-08
+- UI/UX (Dark mode): se restringe `dlh-ui-reference` al tema claro para evitar que pise tokens oscuros.
+- UI/UX (Dashboard): se ocultan visualmente “Fuente/Generado” en header y command center, manteniendo nodos para compatibilidad JS.
+
+## 1.17.3 - 2026-04-08
+- UI/UX (Dark mode): se eliminan fondos verde oscuro residuales en superficies del dashboard y se unifica a negro en tema oscuro.
+- UI/UX (Dark mode): main panel, filter panel, meta cards, form controls, badges y botones secundarios mantienen fondo negro; verde solo como acento.
+
+## 1.17.2 - 2026-04-08
+- UI/UX (Dark mode): todas las superficies principales del dashboard pasan a negro puro (`#000000`) sin tintes verdes en fondos.
+- UI/UX (Dark mode): panel principal, panel de filtros, meta cards, controles de formulario, badges y botones secundarios quedan con fondo negro en tema oscuro.
+- Compatibilidad: se mantienen acentos verdes para estados/énfasis, sin cambios en lógica funcional ni toggle/storage de tema.
+
+## 1.17.1 - 2026-04-08
+- UI/UX (Dark mode): fondo real negro (`--bg: #000000`) y superficies negro/casi negro para mejorar contraste global.
+- UI/UX (Dark mode): se preservan acentos verdes (`--primary`, `--accent` y relacionados) para mantener identidad visual.
+- UI/UX (Dark mode): componentes clave (panel principal, filtros, meta cards, badges, controles y botones secundarios) pasan a depender de tokens para evitar colores claros hardcodeados en estado oscuro.
+
+## 1.17.0 - 2026-04-02
+- Admin UI/UX (Ajustes): corregida la detección de sección activa para que, al guardar desde el final del formulario, no vuelva erróneamente a la primera sección.
+- Admin UI/UX (Base 24-25/Rentabilidad): añadida confirmación explícita antes de acciones sensibles de activación/reemplazo de base.
+- Compatibilidad: cambios solo en flujo visual/admin; sin alterar permisos, nonces, persistencia de opciones ni endpoints.
+
+## 1.16.0 - 2026-04-02
+- Admin UI/UX (Ajustes): se persiste la sección activa de la navegación interna para volver al mismo bloque tras guardar o recargar.
+- Compatibilidad: no se modifican opciones, permisos, nonces, endpoints ni lógica de persistencia; ajuste solo de flujo visual en admin.
+
+## 1.15.0 - 2026-04-02
+- UI/UX (Vista principal): el bloque de Rentabilidad se mueve inmediatamente debajo de la caja única de filtros para quedar siempre “arriba” en el flujo principal.
+- Compatibilidad: se mantiene la lógica actual de filtros globales y cálculos de rentabilidad; cambio solo de ubicación visual.
+
+## 1.14.0 - 2026-04-02
+- UI/UX (Vista principal): Rentabilidad en Resumen pasa a mostrarse siempre visible y en la parte superior del bloque principal.
+- UI/UX (Filtros): los filtros principales y secundarios se consolidan en una sola caja visual de filtros.
+- Compatibilidad: se mantiene la lógica de filtros/cálculos existente, sin cambios en persistencia ni endpoints.
+
+## 1.13.0 - 2026-04-01
+- UI/UX (Resumen > Rentabilidad): se eliminan los quick-filters propios del bloque de Rentabilidad para operar solo con los filtros globales del dashboard.
+- Compatibilidad: Rentabilidad mantiene ordenamiento de tabla y métricas, pero ya no aplica subfiltro local de cuartel.
+
+## 1.12.0 - 2026-04-01
+- UI/UX: el bloque de “Filtros unificados y navegación principal” adopta estilo visual tipo quick-filters (píldoras) como en Rentabilidad.
+- UI/UX: selects, búsqueda, dropdown de meses y acciones de toolbar se unifican en forma/altura/borde para una lectura más consistente.
+- Compatibilidad: cambio solo de estilo, sin modificar lógica de filtros ni cálculos.
+
+## 1.11.0 - 2026-04-01
+- UI/UX: la vista principal de Resumen pasa a layout de una sola columna para priorizar lectura lineal y reducir competencia visual lateral.
+- UI/UX: el panel complementario de Rentabilidad deja de usar comportamiento sticky dentro de Resumen para mantener flujo vertical consistente.
+- Compatibilidad: no se modifican cálculos, filtros ni lógica de datos.
+
+## 1.10.0 - 2026-04-01
+- UI/UX: se añade una capa visual estilo tablero ejecutivo (fondo claro, tarjetas más limpias, bordes suaves y jerarquía tipográfica más marcada) para aproximar la referencia solicitada.
+- UI/UX: la grilla de KPI pasa a distribución auto-fit para mejorar lectura y balance en desktop sin alterar cálculos ni filtros.
+- UI/UX: se refinan tabs, paneles y tabla de Resumen con estética más sobria y homogénea, manteniendo comportamiento existente.
+
+## 1.9.42 - 2026-04-01
+- UI/A11y: tabs principales ahora son navegables por teclado (Enter/Espacio/Flechas) y sincronizan `aria-selected` + `tabindex` para foco correcto.
+- UI/A11y: se agregan relaciones accesibles `aria-controls`/`aria-labelledby` entre tabs y paneles, sin cambiar lógica de vistas.
+- UI/A11y: dropdown de Meses expone estado con `aria-expanded` y foco visible reforzado en tabs/chips.
+
 ## 1.9.41 - 2026-03-31
 - UI/UX: refinados los KPI principales con estilo más compacto, jerarquía visual superior y metadatos contextuales por tarjeta.
 - UI/UX: mejorada la tabla Resumen con cabecera propia, badges de contexto, ranking visual por cuartel y mayor énfasis en la columna Total.
