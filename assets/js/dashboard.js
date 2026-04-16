@@ -664,7 +664,14 @@ function buildDetalle(){
       if(state.filtros.predio==="Solo Productivo" && cl!=="Productivo") return false;
       if(state.filtros.predio==="Solo Costos Indirectos" && cl!=="Indirectos") return false;
     }
-    if(state.filtros.sector!=="Todos" && strip(r.SECTOR||"")!==state.filtros.sector) return false;
+    const sectorFiltro = state.filtros.sector;
+    if(sectorFiltro!=="Todos"){
+      const sectorRow = strip(r.SECTOR||"");
+      const sectores = (Array.isArray(sectorFiltro) ? sectorFiltro : [sectorFiltro])
+        .filter(Boolean)
+        .filter(s => s !== '__COSTOS_INDIRECTOS__');
+      if(sectores.length && !sectores.includes(sectorRow)) return false;
+    }
     if(state.filtros.mes!=="Todos"){
       const fm = state.filtros.mes;
       if(Array.isArray(fm) && fm.length){
@@ -780,7 +787,15 @@ function buildComparativo(){
         ? predioClas(r)==="Productivo"
         : predioClas(r)==="Indirectos"));
     }
-    if(filtros.sector!=="Todos") out = out.filter(r => strip(r.SECTOR||"")===filtros.sector);
+    if(filtros.sector!=="Todos"){
+      const sectores = (Array.isArray(filtros.sector) ? filtros.sector : [filtros.sector])
+        .filter(Boolean)
+        .filter(s => s !== '__COSTOS_INDIRECTOS__');
+      if(sectores.length){
+        const sectorSet = new Set(sectores.map(s => strip(s)));
+        out = out.filter(r => sectorSet.has(strip(r.SECTOR||"")));
+      }
+    }
     if(filtros.nivel1!=="Todos") out = out.filter(r => strip(r.NIVEL_1||"")===filtros.nivel1);
     if(filtros.faena!=="Todas") out = out.filter(r => strip(r.FAENA||"")===filtros.faena);
     if(hideInv2425){
