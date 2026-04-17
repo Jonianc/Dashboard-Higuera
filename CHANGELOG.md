@@ -1,3 +1,9 @@
+## 1.22.0 - 2026-04-17
+- UI/UX (Dashboard filtros): se compacta la composición en una grilla alineada de 3 filas: `Cultivos/Tipo/Cuartel`, luego `Faena/Categoría/Meses`, y finalmente `Métrica/Orden/Acciones`.
+- UI/UX (Layout): Cuartel se reposiciona en la primera fila y se reduce ancho visual de Faena para mejorar balance horizontal.
+- UI/UX (Compactación): se reduce padding/espaciado vertical del contenedor de filtros para disminuir aire muerto sin tocar lógica funcional.
+- Compatibilidad: se mantiene intacta la sincronización de filtros y flujo `state.filtros` + `refreshAll()` + `clearFilterChip()`.
+
 ## 1.21.0 - 2026-04-17
 - UI/UX (Dashboard filtros): se reestructura la interfaz en 3 zonas para reducir densidad visual y mejorar jerarquía: filtros principales, filtros complementarios y bloque separado de acciones.
 - UI/UX (Meses): se elimina la visual de chips permanentes y se mantiene selector multiselección en dropdown con resumen compacto de selección en la etiqueta del botón.

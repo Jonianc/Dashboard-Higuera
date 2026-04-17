@@ -250,9 +250,9 @@
 }
 
 .dashboard-command{
-  padding:18px 20px;
+  padding:14px 16px;
   display:grid;
-  gap:14px;
+  gap:10px;
   background:linear-gradient(180deg, color-mix(in srgb, var(--surface) 94%, white) 0%, var(--surface) 100%);
 }
 .dashboard-command-top{
@@ -284,7 +284,7 @@
 }
 .dashboard-command h2{margin:0;font-size:24px;line-height:1.08;letter-spacing:-.03em}
 .dashboard-command p{margin:0;color:var(--muted);font-size:13px;line-height:1.45;max-width:760px}
-.filters-toolbar{display:grid;gap:10px;padding:14px;border:1px solid var(--border);border-radius:18px;background:color-mix(in srgb, var(--surface-2) 78%, white)}
+.filters-toolbar{display:grid;gap:8px;padding:10px 12px;border:1px solid var(--border);border-radius:16px;background:color-mix(in srgb, var(--surface-2) 78%, white)}
 .filters-toolbar--secondary{grid-template-columns:minmax(220px,.9fr) minmax(0,1.15fr) minmax(260px,.95fr);align-items:end}
 .filters-toolbar-copy{display:grid;gap:4px;align-content:start}
 .filters-toolbar-kicker{font-size:11px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--accent-strong)}
@@ -293,28 +293,32 @@
 .filters-master-actions--toolbar{align-self:end}
 .filters-master-grid{display:grid;gap:10px 12px;align-items:end}
 .filters-master-grid--primary,
-.filters-master-grid--secondary{grid-template-columns:repeat(12,minmax(0,1fr))}
+.filters-master-grid--secondary,
+.filters-master-grid--tertiary{grid-template-columns:repeat(12,minmax(0,1fr))}
 .filters-master-grid--secondary{margin-top:6px}
+.filters-master-grid--tertiary{margin-top:6px}
 .filters-master-grid--compact{
-  padding-top:8px;
+  padding-top:6px;
   border-top:1px dashed color-mix(in srgb, var(--border) 80%, transparent);
 }
 
 .filters-master-grid--primary .field-cultivo{grid-column:span 6}
 .filters-master-grid--primary .field-predio,
-.filters-master-grid--primary .field-cuartel,
-.filters-master-grid--primary .field-faena{grid-column:span 3}
+.filters-master-grid--primary .field-cuartel{grid-column:span 3}
 .filters-master-grid--primary .field-cultivo{max-width:100%}
 .filters-master-grid--primary .field-predio,
-.filters-master-grid--primary .field-cuartel,
-.filters-master-grid--primary .field-faena{max-width:320px}
-.filters-master-grid--secondary .field-categoria,
-.filters-master-grid--secondary .field-meses--premium{grid-column:span 4}
-.filters-master-grid--secondary .field-metrica,
-.filters-master-grid--secondary .field-orden{grid-column:span 2}
+.filters-master-grid--primary .field-cuartel{max-width:320px}
+.filters-master-grid--secondary .field-faena{grid-column:span 3;max-width:280px}
+.filters-master-grid--secondary .field-categoria{grid-column:span 4}
+.filters-master-grid--secondary .field-meses--premium{grid-column:span 5}
+.filters-master-grid--tertiary .field-metrica,
+.filters-master-grid--tertiary .field-orden{grid-column:span 3}
+.filters-master-grid--tertiary .filters-master-actions--toolbar{grid-column:span 6;justify-content:flex-end}
 .filters-master-grid--secondary .field label{font-size:11px}
 .filters-master-grid--secondary .field select,
 .filters-master-grid--secondary .field .mes-dropdown-btn{min-height:38px;padding:7px 10px;border-radius:12px}
+.filters-master-grid--tertiary .field label{font-size:11px}
+.filters-master-grid--tertiary .field select{min-height:38px;padding:7px 10px;border-radius:12px}
 
 .card,
 .kpi-card{
@@ -360,6 +364,7 @@
 .field-meses{align-content:start}
 .cultivo-chips{display:grid;grid-auto-flow:column;grid-auto-columns:max-content;gap:6px;overflow-x:auto;align-items:stretch}
 .filter-chip-group{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.field-predio .filter-chip-group{flex-wrap:nowrap;overflow-x:auto}
 .cultivo-chip{
   display:inline-flex;align-items:center;gap:6px;padding:7px 13px;border-radius:14px;border:1px solid var(--border);
   min-height:46px;background:var(--surface);color:var(--text);font-weight:700;font-size:28px;line-height:1.1;cursor:pointer;
@@ -387,7 +392,7 @@
 .cultivo-chip .multi{display:inline-block;line-height:1.1;white-space:normal}
 .cultivo-chip.is-compact{width:110px;justify-content:center}
 #dashboard-higuera-wrapper .filter-choice-chip{
-  display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:8px 12px;border-radius:999px;border:1px solid var(--border);
+  display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:7px 10px;border-radius:999px;border:1px solid var(--border);
   min-height:36px;background:var(--surface);color:var(--text);font-weight:600;font-size:12px;line-height:1.1;cursor:pointer;white-space:nowrap;
   transition:border-color .2s ease, border-width .2s ease, background-color .2s ease, color .2s ease, box-shadow .2s ease;
 }
@@ -455,13 +460,6 @@
 .kpi-value{font-size:26px;line-height:1.02;font-weight:800;color:var(--kpi-color);letter-spacing:-.03em}
 .active-filters-chips{display:flex;gap:8px;flex-wrap:wrap;min-height:28px}
 .active-filters-chips--premium{padding:0}
-.filters-actions-panel{
-  border:1px solid var(--border);
-  border-radius:14px;
-  padding:10px 12px;
-  background:color-mix(in srgb, var(--surface-2) 72%, transparent);
-}
-.filters-master-actions--separated{justify-content:flex-start}
 .filter-chip{
   display:inline-flex;
   align-items:center;
@@ -839,15 +837,17 @@ button.filter-chip:hover{border-color:var(--chip-active-border)}
   .filters-master-grid--primary .field-search,
   .filters-master-grid--primary .field-meses--premium{grid-column:auto}
   .filters-master-grid--secondary{grid-template-columns:repeat(4,minmax(0,1fr))}
-  .filters-master-grid--secondary .filters-master-actions--toolbar{grid-column:1 / -1;justify-content:flex-start}
+  .filters-master-grid--tertiary{grid-template-columns:repeat(4,minmax(0,1fr))}
+  .filters-master-grid--tertiary .filters-master-actions--toolbar{grid-column:1 / -1;justify-content:flex-start}
 }
 @media (max-width: 860px){
   .dashboard-command-meta,
   .kpi-grid,
   .tabs{grid-template-columns:repeat(4,minmax(0,1fr))}
   .filters-master-grid--secondary{grid-template-columns:repeat(4,minmax(0,1fr))}
+  .filters-master-grid--tertiary{grid-template-columns:repeat(4,minmax(0,1fr))}
   .filters-master-grid--secondary .field,
-  .filters-master-grid--secondary .filters-master-actions--toolbar{grid-column:auto}
+  .filters-master-grid--tertiary .field{grid-column:auto}
   .filters-master-actions--toolbar{justify-content:flex-start}
 }
 @media (max-width: 640px){
@@ -857,6 +857,7 @@ button.filter-chip:hover{border-color:var(--chip-active-border)}
   .dashboard-command-meta,
   .filters-master-grid--primary,
   .filters-master-grid--secondary,
+  .filters-master-grid--tertiary,
   .kpi-grid,
   .tabs{grid-template-columns:1fr}
   .filters-master-actions--toolbar > *{flex:1 1 100%}
