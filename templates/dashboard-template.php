@@ -100,6 +100,10 @@ if (!defined('ABSPATH')) {
                                 <button id="btnResetView" type="button">Restablecer vista</button>
                             </div>
                         </div>
+                        <div class="filters-active-panel" aria-label="Filtros activos">
+                            <span class="filters-active-label">Filtros activos</span>
+                            <section id="active-filters-chips" class="active-filters-chips active-filters-chips--premium"></section>
+                        </div>
                     </div>
                 </section>
 
@@ -117,11 +121,6 @@ if (!defined('ABSPATH')) {
                             <div id="rentabilidad-resumen" class="rentabilidad-resumen-table"></div>
                         </div>
                     </div>
-                </section>
-
-                <section class="dashboard-overview" aria-label="Resumen rápido y navegación">
-                    <section id="kpi-row" class="kpi-grid kpi-grid--premium"></section>
-                    <section id="active-filters-chips" class="active-filters-chips active-filters-chips--premium"></section>
                 </section>
 
                 <section class="dashboard-view-nav card" aria-label="Vistas principales del dashboard">

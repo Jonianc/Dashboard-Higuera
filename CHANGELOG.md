@@ -1,3 +1,9 @@
+## 1.23.0 - 2026-04-17
+- UI/UX (Dashboard filtros): se mueve el bloque de **Filtros activos** dentro de la caja de filtros para mantener estado y controles en una misma sección.
+- UI/UX (Acciones): se conservan y mantienen junto al bloque de filtros activos dentro del panel de filtros.
+- UI/UX (Simplificación): se elimina la fila de cards KPI (`Gasto total`, `Costo por hectárea`, `Cuarteles visibles`, `Meses seleccionados`) debajo de filtros para reducir ruido visual y scroll.
+- Compatibilidad: sin cambios en lógica de filtros ni en sincronización de `state.filtros`, `refreshAll()` y `clearFilterChip()`.
+
 ## 1.22.0 - 2026-04-17
 - UI/UX (Dashboard filtros): se compacta la composición en una grilla alineada de 3 filas: `Cultivos/Tipo/Cuartel`, luego `Faena/Categoría/Meses`, y finalmente `Métrica/Orden/Acciones`.
 - UI/UX (Layout): Cuartel se reposiciona en la primera fila y se reduce ancho visual de Faena para mejorar balance horizontal.
