@@ -1,3 +1,10 @@
+## 1.19.1 - 2026-04-17
+- Fix (Ajustes): se separan los settings groups por pantalla para evitar sobrescritura cruzada al guardar formularios parciales en `options.php`:
+  - `dlh_options_access`
+  - `dlh_options_data_api`
+  - `dlh_options_rentabilidad`
+- Compatibilidad: se mantienen intactos los nombres de options existentes; no hay migración de datos ni cambios de schema.
+
 ## 1.19.0 - 2026-04-17
 - Rentabilidad (Ajustes > Datos): se agrega bloque **1. Importación masiva** antes de la carga manual, con descarga de plantilla CSV UTF-8 (`Predio, Sector, Cuartel, Kilos`) e importación local sin librerías externas.
 - Rentabilidad (importador CSV): parser robusto con soporte de separador coma o punto y coma, validación por columnas obligatorias, kilos numérico, match por clave lógica (`Predio + Sector + Cuartel`) y detección de duplicados.
