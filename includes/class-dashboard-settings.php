@@ -84,6 +84,12 @@ class Dashboard_Higuera_Settings {
                 'addRow' => 'Agregar fila',
                 'recalculate' => 'Recalcular',
                 'saveChanges' => 'Guardar todo',
+                'importInvalidType' => 'Archivo inválido. Sube un CSV UTF-8.',
+                'importMissingHeaders' => 'Faltan columnas obligatorias en el CSV: Predio, Sector, Cuartel, Kilos.',
+                'importNoRows' => 'El CSV no contiene filas para procesar.',
+                'importPreviewReady' => 'Vista previa generada. Revisa el resumen y aplica solo filas válidas.',
+                'importApplied' => 'Importación aplicada sobre la capa manual actual.',
+                'importNothingToApply' => 'No hay filas válidas para aplicar.',
             ),
         ));
     }
@@ -529,8 +535,18 @@ class Dashboard_Higuera_Settings {
     public static function field_rentabilidad_manual_rows() {
         $saved_rows = array_values(self::get_rentabilidad_manual_rows_option());
         echo '<div class="dlh-rent-manual" data-dlh-rent-manual-builder>';
+        echo '<div class="dlh-rent-import" data-dlh-rent-import>';
+        echo '<div class="dlh-rent-import__head"><strong>1. Importación masiva</strong><p class="description">Importa kilos desde CSV UTF-8 usando clave <code>Predio + Sector + Cuartel</code>. Esta importación actualiza <code>Kilos</code> en la capa manual actual, sin crear fuentes paralelas.</p></div>';
+        echo '<div class="dlh-rent-import__actions">';
+        echo '<button type="button" class="button button-secondary" data-rent-download-template>Descargar plantilla CSV</button>';
+        echo '<label class="button button-secondary dlh-rent-import__upload"><input type="file" accept=".csv,text/csv" data-rent-import-file />Seleccionar CSV</label>';
+        echo '<button type="button" class="button button-primary" data-rent-apply-import disabled>Aplicar importación</button>';
+        echo '</div>';
+        echo '<div class="dlh-rent-import__summary" data-rent-import-summary></div>';
+        echo '<div class="dlh-rent-import__preview" data-rent-import-preview></div>';
+        echo '</div>';
         echo '<div class="dlh-rent-manual__intro">';
-        echo '<div><strong>Modo híbrido API + manual</strong><p class="description">Predio, sector, cuartel, hectáreas y costos se obtienen automáticamente desde la API 25-26 o, si falla, desde el CSV fallback del plugin. Aquí completas kilos e ingresos por cuartel y, si hace falta, puedes agregar filas manuales adicionales.</p></div>';
+        echo '<div><strong>2. Carga manual</strong><p class="description">Predio, sector, cuartel, hectáreas y costos se obtienen automáticamente desde la API 25-26 o, si falla, desde el CSV fallback del plugin. Aquí completas kilos e ingresos por cuartel y, si hace falta, puedes agregar filas manuales adicionales.</p></div>';
         echo '<div class="dlh-rent-manual__actions" data-dlh-rent-inline-actions><button type="button" class="button button-secondary" data-dlh-rent-refresh>Recargar catálogo</button></div>';
         echo '</div>';
         echo '<div class="dlh-rent-manual__helpers">';
@@ -560,6 +576,7 @@ class Dashboard_Higuera_Settings {
         $compare_rows = !empty($hybrid['compare_rows']) && is_array($hybrid['compare_rows']) ? array_slice($hybrid['compare_rows'], 0, 20) : array();
         $dashboard_total_costos = isset($hybrid['dashboard_total_costos']) ? (float) $hybrid['dashboard_total_costos'] : 0.0;
         echo '<div class="dlh-rent-diagnostics" data-dlh-rent-diagnostics-root>';
+        echo '<div class="dlh-rent-diagnostics__title"><strong>3. Estado / diagnóstico</strong></div>';
         echo '<div class="dlh-rent-diagnostics__grid">';
         echo '<article class="dlh-diag-card"><span class="dlh-diag-card__label">Archivo legacy detectado</span><strong>' . (!empty($status['source_exists']) ? 'Sí' : 'No') . '</strong><small>' . (!empty($status['source_path']) ? esc_html(basename((string) $status['source_path'])) : 'Sin base fuente legacy') . '</small></article>';
         echo '<article class="dlh-diag-card"><span class="dlh-diag-card__label">Fuente activa</span><strong>' . esc_html(ucfirst($mode)) . '</strong><small>' . esc_html($source_label) . '</small></article>';

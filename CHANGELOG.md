@@ -1,3 +1,9 @@
+## 1.19.0 - 2026-04-17
+- Rentabilidad (Ajustes > Datos): se agrega bloque **1. Importación masiva** antes de la carga manual, con descarga de plantilla CSV UTF-8 (`Predio, Sector, Cuartel, Kilos`) e importación local sin librerías externas.
+- Rentabilidad (importador CSV): parser robusto con soporte de separador coma o punto y coma, validación por columnas obligatorias, kilos numérico, match por clave lógica (`Predio + Sector + Cuartel`) y detección de duplicados.
+- Rentabilidad (preview y aplicación): nuevo resumen de resultados (`total filas`, `válidas`, `sin match`, `duplicadas`, `con error`) y acción para aplicar solo filas válidas, actualizando exclusivamente `kilos_reales` en la capa manual actual.
+- Compatibilidad: se mantiene la lógica de cálculo, persistencia y edición manual existentes; no se agregan nuevas dependencias ni fuentes paralelas.
+
 ## 1.18.2 - 2026-04-15
 - UX (Admin guardado por módulo): Acceso, Datos/API y Rentabilidad ahora muestran estado discreto por pantalla (`Sin cambios`, `Cambios sin guardar`, `Guardado correcto`).
 - UX (Admin acciones): cada pantalla editable muestra bloque claro de acciones con submit principal del módulo.
