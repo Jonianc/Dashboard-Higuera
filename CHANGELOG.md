@@ -1,3 +1,9 @@
+## 1.21.0 - 2026-04-17
+- UI/UX (Dashboard filtros): se reestructura la interfaz en 3 zonas para reducir densidad visual y mejorar jerarquía: filtros principales, filtros complementarios y bloque separado de acciones.
+- UI/UX (Meses): se elimina la visual de chips permanentes y se mantiene selector multiselección en dropdown con resumen compacto de selección en la etiqueta del botón.
+- UI/UX (Faena): se mantiene como select para reducir ruido visual en zona principal.
+- Compatibilidad: se mantiene sincronización con `state.filtros`, `refreshAll()` y `clearFilterChip()` sin cambios de persistencia ni backend.
+
 ## 1.20.0 - 2026-04-17
 - UI/UX (Dashboard filtros): se unifica patrón de chips en `/dashboard/` para **Tipo de registro** y **Meses**, reutilizando el comportamiento visual del patrón de Cultivos.
 - UI/UX (Dashboard filtros): **Categoría** y **Faena** ahora alternan entre chips y select según cantidad visible (umbral `<=12` chips, `>12` select), manteniendo compatibilidad.

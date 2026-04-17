@@ -278,12 +278,6 @@ function renderFilterChipGroup(container, options, selectedValues){
     return `<button type="button" class="filter-choice-chip ${active?'is-active':''}" data-value="${escapeHtml(opt.value)}" aria-pressed="${active?'true':'false'}" data-selected="${active?'true':'false'}"><span>${escapeHtml(opt.label)}</span></button>`;
   }).join('');
 }
-function normalizeMesSelection(){
-  const selMes = state.filtros.mes;
-  if(selMes === 'Todos') return [];
-  if(Array.isArray(selMes)) return selMes.slice();
-  return selMes ? [selMes] : [];
-}
 function formatStatusValue(value){
   const str = String(value || '').trim();
   return str ? str : '—';
@@ -417,8 +411,7 @@ function metricByKey(rows, keyAccessor){
 }
 function renderFaenaOptions(){
   const select = document.querySelector("#f_faena");
-  const chipWrap = document.querySelector('#f_faena_chips');
-  if(!select || !chipWrap) return;
+  if(!select) return;
   let options = faenaOptionsCache.slice();
   if(state.filtros.faena !== 'Todas' && !options.some(o => o.k === state.filtros.faena)){
     const selected = faenaOptionsCache.find(o => o.k === state.filtros.faena);
@@ -427,17 +420,6 @@ function renderFaenaOptions(){
   select.innerHTML = `<option${state.filtros.faena === 'Todas' ? ' selected' : ''}>Todas</option>` + options.map(o=>`<option${o.k===state.filtros.faena?' selected':''}>${o.k} — ${fmt(o.v)}</option>`).join('');
   if(!options.length){
     select.innerHTML += '<option disabled>Sin coincidencias</option>';
-  }
-  const useChips = options.length > 0 && options.length <= FILTER_CHIP_THRESHOLD;
-  if(useChips){
-    select.classList.add('hidden');
-    chipWrap.classList.remove('hidden');
-    const chipOptions = [{value:'Todas', label:'Todas'}].concat(options.map(o=>({value:o.k, label:o.k})));
-    renderFilterChipGroup(chipWrap, chipOptions, [state.filtros.faena]);
-  }else{
-    select.classList.remove('hidden');
-    chipWrap.classList.add('hidden');
-    chipWrap.innerHTML = '';
   }
 }
 function setupFaenaSearch(){
@@ -468,17 +450,6 @@ function renderCategoriaControl(arrN1){
     chips.classList.add('hidden');
     chips.innerHTML = '';
   }
-}
-function renderMesChips(meses){
-  const wrap = document.querySelector('#f_mes_chips');
-  if(!wrap) return;
-  const selected = normalizeMesSelection();
-  const options = [{value:'Todos', label:'Todos'}, {value:'__NONE__', label:'Ninguno'}]
-    .concat(meses.map(m=>({value:m, label:m})));
-  const selectedValues = state.filtros.mes === 'Todos'
-    ? ['Todos']
-    : (Array.isArray(state.filtros.mes) && !state.filtros.mes.length ? ['__NONE__'] : selected);
-  renderFilterChipGroup(wrap, options, selectedValues);
 }
 function populateCombos(){
   const rowsBase = state.data.filter(r=> (state.filtros.predio==="Todos")? true : (state.filtros.predio==="Solo Productivo" ? predioClas(r)==="Productivo" : predioClas(r)==="Indirectos"));
@@ -543,7 +514,6 @@ function populateCombos(){
   const orderMes = (a,b)=>{ const [ma,ya]=a.split('-'); const [mb,yb]=b.split('-'); const ia=MES_ABR.indexOf(ma); const ib=MES_ABR.indexOf(mb); const ya2=parseInt(ya,10)||0; const yb2=parseInt(yb,10)||0; if(ya2!==yb2) return ya2-yb2; return ia-ib; };
   meses.sort(orderMes);
   const selMes = state.filtros.mes;
-  renderMesChips(meses);
   const selArr = Array.isArray(selMes) ? selMes : (selMes && selMes!=="Todos" ? [selMes] : []);
   const allSelected = selMes==="Todos" || selArr.length===0;
   const container = document.querySelector("#f_mes");
@@ -561,8 +531,13 @@ function populateCombos(){
     labelBtn.innerHTML = 'Ninguno';
   }else if(selArr.length===1){
     labelBtn.innerHTML = selArr[0];
+  }else if(selArr.length<=2){
+    const extras = selArr.length - 2;
+    labelBtn.innerHTML = extras>0 ? `${selArr.slice(0,2).join(', ')} +${extras}` : selArr.join(', ');
+  }else if(selArr.length<=4){
+    labelBtn.innerHTML = `${selArr.slice(0,2).join(', ')} +${selArr.length-2}`;
   }else{
-    labelBtn.innerHTML = `${selArr.length} meses <span class="mes-count">${selArr.length}</span>`;
+    labelBtn.innerHTML = `${selArr.length} meses seleccionados <span class="mes-count">${selArr.length}</span>`;
   }
 }
 function buildResumen(){
@@ -1659,38 +1634,8 @@ function initDashboardFromRawCSV(raw){
       refreshAll();
     });
   }
-  const faenaWrap = document.querySelector('#f_faena_chips');
-  if(faenaWrap && faenaWrap.dataset.bound !== '1'){
-    faenaWrap.dataset.bound = '1';
-    faenaWrap.addEventListener('click', e=>{
-      const btn = e.target.closest('[data-value]');
-      if(!btn) return;
-      state.filtros.faena = btn.dataset.value || 'Todas';
-      refreshAll();
-    });
-  }
   document.querySelector("#f_metrica").onchange = e=>{ state.filtros.metrica=e.target.value; refreshAll(); };
-  
-  const mesChips = document.querySelector('#f_mes_chips');
-  if(mesChips && mesChips.dataset.bound !== '1'){
-    mesChips.dataset.bound = '1';
-    mesChips.addEventListener('click', e=>{
-      const btn = e.target.closest('[data-value]');
-      if(!btn) return;
-      const value = btn.dataset.value;
-      const current = normalizeMesSelection();
-      if(value === 'Todos'){
-        state.filtros.mes = 'Todos';
-      }else if(value === '__NONE__'){
-        state.filtros.mes = [];
-      }else{
-        const idx = current.indexOf(value);
-        if(idx >= 0) current.splice(idx,1); else current.push(value);
-        state.filtros.mes = current.length ? current : [];
-      }
-      refreshAll();
-    });
-  }
+
   // Event listener para dropdown de meses
   const mesDropdown = document.querySelector("#f_mes");
   const mesBtn = mesDropdown.querySelector('.mes-dropdown-btn');

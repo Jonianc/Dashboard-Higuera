@@ -294,23 +294,27 @@
 .filters-master-grid{display:grid;gap:10px 12px;align-items:end}
 .filters-master-grid--primary,
 .filters-master-grid--secondary{grid-template-columns:repeat(12,minmax(0,1fr))}
-.filters-master-grid--secondary{margin-top:2px}
+.filters-master-grid--secondary{margin-top:6px}
+.filters-master-grid--compact{
+  padding-top:8px;
+  border-top:1px dashed color-mix(in srgb, var(--border) 80%, transparent);
+}
 
 .filters-master-grid--primary .field-cultivo{grid-column:span 6}
 .filters-master-grid--primary .field-predio,
-.filters-master-grid--primary .field-categoria,
 .filters-master-grid--primary .field-cuartel,
-.filters-master-grid--primary .field-meses--premium{grid-column:span 3}
-.filters-master-grid--primary .field-faena{grid-column:span 6}
+.filters-master-grid--primary .field-faena{grid-column:span 3}
+.filters-master-grid--primary .field-cultivo{max-width:100%}
 .filters-master-grid--primary .field-predio,
-.filters-master-grid--primary .field-categoria,
 .filters-master-grid--primary .field-cuartel,
-.filters-master-grid--primary .field-meses--premium{max-width:320px}
-.filters-master-grid--primary .field-faena{max-width:100%}
+.filters-master-grid--primary .field-faena{max-width:320px}
+.filters-master-grid--secondary .field-categoria,
+.filters-master-grid--secondary .field-meses--premium{grid-column:span 4}
 .filters-master-grid--secondary .field-metrica,
-.filters-master-grid--secondary .field-orden,
-.filters-master-grid--secondary .filters-master-actions--toolbar{grid-column:span 4}
-.filters-master-grid--secondary .filters-master-actions--toolbar{justify-content:flex-end;align-self:end}
+.filters-master-grid--secondary .field-orden{grid-column:span 2}
+.filters-master-grid--secondary .field label{font-size:11px}
+.filters-master-grid--secondary .field select,
+.filters-master-grid--secondary .field .mes-dropdown-btn{min-height:38px;padding:7px 10px;border-radius:12px}
 
 .card,
 .kpi-card{
@@ -451,6 +455,13 @@
 .kpi-value{font-size:26px;line-height:1.02;font-weight:800;color:var(--kpi-color);letter-spacing:-.03em}
 .active-filters-chips{display:flex;gap:8px;flex-wrap:wrap;min-height:28px}
 .active-filters-chips--premium{padding:0}
+.filters-actions-panel{
+  border:1px solid var(--border);
+  border-radius:14px;
+  padding:10px 12px;
+  background:color-mix(in srgb, var(--surface-2) 72%, transparent);
+}
+.filters-master-actions--separated{justify-content:flex-start}
 .filter-chip{
   display:inline-flex;
   align-items:center;

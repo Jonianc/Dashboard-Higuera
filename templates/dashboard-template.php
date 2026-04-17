@@ -67,7 +67,6 @@ if (!defined('ABSPATH')) {
                         <div class="filters-master-grid filters-master-grid--primary">
                             <div class="field field-cultivo"><label for="f_cultivo">Cultivos</label><select id="f_cultivo" class="hidden"><option>Todos</option></select><div id="f_cultivo_chips" class="cultivo-chips" role="group" aria-label="Cultivos"></div></div>
                             <div class="field field-predio"><label for="f_predio">Tipo de registro</label><select id="f_predio" class="hidden"><option>Todos</option></select><div id="f_predio_chips" class="filter-chip-group" role="group" aria-label="Tipo de registro"></div></div>
-                            <div class="field field-categoria"><label for="f_n1">Categoría</label><select id="f_n1"><option>Todos</option></select><div id="f_n1_chips" class="filter-chip-group hidden" role="group" aria-label="Categoría"></div></div>
                             <div class="field field-cuartel">
                                 <label for="f_cuartel">Cuartel</label>
                                 <div id="f_cuartel" class="mes-dropdown">
@@ -78,26 +77,21 @@ if (!defined('ABSPATH')) {
                                     </div>
                                 </div>
                             </div>
-                            <div class="field field-faena"><label for="f_faena">Faena</label><select id="f_faena"><option>Todas</option></select><div id="f_faena_chips" class="filter-chip-group hidden" role="group" aria-label="Faena"></div></div>
+                            <div class="field field-faena"><label for="f_faena">Faena</label><select id="f_faena"><option>Todas</option></select></div>
+                        </div>
+                        <div class="filters-master-grid filters-master-grid--secondary filters-master-grid--compact">
+                            <div class="field field-categoria"><label for="f_n1">Categoría</label><select id="f_n1"><option>Todos</option></select><div id="f_n1_chips" class="filter-chip-group hidden" role="group" aria-label="Categoría"></div></div>
                             <div class="field field-meses field-meses--premium">
                                 <label for="f_mes">Meses</label>
-                                <div id="f_mes_chips" class="filter-chip-group" role="group" aria-label="Meses"></div>
-                                <div id="f_mes" class="mes-dropdown hidden">
+                                <div id="f_mes" class="mes-dropdown">
                                     <button type="button" class="mes-dropdown-btn" aria-haspopup="true" aria-expanded="false"><span class="mes-label">Todos</span><span class="arrow">▼</span></button>
                                     <div class="mes-dropdown-panel">
                                         <div class="mes-dropdown-item todos"><input type="checkbox" id="mes_todos" checked><label for="mes_todos">Seleccionar todos</label></div>
                                     </div>
                                 </div>
                             </div>
-                        </div>
-                        <div class="filters-master-grid filters-master-grid--secondary">
                             <div class="field field-metrica"><label for="f_metrica">Métrica</label><select id="f_metrica"><option value="VALOR">Gasto total</option><option value="COSTO_HA">Costo por hectárea</option></select></div>
                             <div class="field field-orden"><label for="f_orden">Orden</label><select id="f_orden"><option value="Desc">Descendente</option><option value="Asc">Ascendente</option></select></div>
-                            <div class="filters-master-actions filters-master-actions--toolbar">
-                                <button id="btnToggleInv2425" type="button">Ocultar INVERSIONES VARIAS</button>
-                                <button id="btnClearFilters" type="button">Limpiar filtros</button>
-                                <button id="btnResetView" type="button">Restablecer vista</button>
-                            </div>
                         </div>
                     </div>
                 </section>
@@ -121,6 +115,13 @@ if (!defined('ABSPATH')) {
                 <section class="dashboard-overview" aria-label="Resumen rápido y navegación">
                     <section id="kpi-row" class="kpi-grid kpi-grid--premium"></section>
                     <section id="active-filters-chips" class="active-filters-chips active-filters-chips--premium"></section>
+                    <section class="filters-actions-panel" aria-label="Acciones de filtros">
+                        <div class="filters-master-actions filters-master-actions--toolbar filters-master-actions--separated">
+                            <button id="btnToggleInv2425" type="button">Ocultar INVERSIONES VARIAS</button>
+                            <button id="btnClearFilters" type="button">Limpiar filtros</button>
+                            <button id="btnResetView" type="button">Restablecer vista</button>
+                        </div>
+                    </section>
                 </section>
 
                 <section class="dashboard-view-nav card" aria-label="Vistas principales del dashboard">
