@@ -1,3 +1,9 @@
+## 1.20.0 - 2026-04-17
+- UI/UX (Dashboard filtros): se unifica patrón de chips en `/dashboard/` para **Tipo de registro** y **Meses**, reutilizando el comportamiento visual del patrón de Cultivos.
+- UI/UX (Dashboard filtros): **Categoría** y **Faena** ahora alternan entre chips y select según cantidad visible (umbral `<=12` chips, `>12` select), manteniendo compatibilidad.
+- Compatibilidad: **Cuartel** mantiene dropdown multiselección con búsqueda; sin cambios de lógica en `state.filtros`, `refreshAll()` y `clearFilterChip()`.
+- UI/UX (Filtros activos): se homologa el estilo visual de chips activos con los chips principales.
+
 ## 1.19.1 - 2026-04-17
 - Fix (Ajustes): se separan los settings groups por pantalla para evitar sobrescritura cruzada al guardar formularios parciales en `options.php`:
   - `dlh_options_access`

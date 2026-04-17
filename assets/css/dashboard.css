@@ -355,6 +355,7 @@
 .field label{font-size:12px;font-weight:600;color:var(--muted)}
 .field-meses{align-content:start}
 .cultivo-chips{display:grid;grid-auto-flow:column;grid-auto-columns:max-content;gap:6px;overflow-x:auto;align-items:stretch}
+.filter-chip-group{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
 .cultivo-chip{
   display:inline-flex;align-items:center;gap:6px;padding:7px 13px;border-radius:14px;border:1px solid var(--border);
   min-height:46px;background:var(--surface);color:var(--text);font-weight:700;font-size:28px;line-height:1.1;cursor:pointer;
@@ -381,6 +382,24 @@
 }
 .cultivo-chip .multi{display:inline-block;line-height:1.1;white-space:normal}
 .cultivo-chip.is-compact{width:110px;justify-content:center}
+#dashboard-higuera-wrapper .filter-choice-chip{
+  display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:8px 12px;border-radius:999px;border:1px solid var(--border);
+  min-height:36px;background:var(--surface);color:var(--text);font-weight:600;font-size:12px;line-height:1.1;cursor:pointer;white-space:nowrap;
+  transition:border-color .2s ease, border-width .2s ease, background-color .2s ease, color .2s ease, box-shadow .2s ease;
+}
+#dashboard-higuera-wrapper .filter-choice-chip:hover{border-color:color-mix(in srgb, var(--primary) 52%, var(--border));}
+#dashboard-higuera-wrapper .filter-choice-chip.is-active,
+#dashboard-higuera-wrapper .filter-choice-chip[aria-pressed="true"],
+#dashboard-higuera-wrapper .filter-choice-chip[data-selected="true"]{
+  background:var(--chip-active-bg);
+  border-color:var(--chip-active-border);
+  color:var(--chip-active-text);
+  box-shadow:var(--chip-active-shadow);
+}
+.field-predio .filter-chip-group,
+.field-categoria .filter-chip-group,
+.field-faena .filter-chip-group,
+.field-meses .filter-chip-group{margin-top:2px}
 .field-cuartel .mes-dropdown-btn,
 .field-faena select{min-height:42px;padding:8px 12px}
 
@@ -438,15 +457,16 @@
   gap:8px;
   padding:7px 11px;
   border-radius:999px;
-  border:1px solid var(--border);
-  background:var(--surface-2);
-  color:var(--text);
+  border:1px solid var(--chip-active-border);
+  background:var(--chip-active-bg);
+  color:var(--chip-active-text);
   font-size:12px;
   font-weight:600;
+  box-shadow:var(--chip-active-shadow);
 }
 button.filter-chip{cursor:pointer}
-button.filter-chip:hover{border-color:var(--primary);background:color-mix(in srgb, var(--surface-2) 55%, var(--primary) 9%)}
-.filter-chip-remove{display:inline-flex;align-items:center;justify-content:center;width:18px;height:18px;border-radius:999px;background:var(--surface);color:var(--muted);font-size:13px;line-height:1}
+button.filter-chip:hover{border-color:var(--chip-active-border)}
+.filter-chip-remove{display:inline-flex;align-items:center;justify-content:center;width:18px;height:18px;border-radius:999px;background:color-mix(in srgb, var(--surface) 78%, transparent);color:var(--chip-active-text);font-size:13px;line-height:1}
 .filter-chip.is-muted{opacity:.7}
 
 .dashboard-view-nav{display:grid;gap:14px;padding:16px 18px}

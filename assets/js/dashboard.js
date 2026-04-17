@@ -266,6 +266,24 @@ const FILTER_CHIP_META = {
   faena: { stateKey:'faena', clearValue:'Todas' },
   mes: { stateKey:'mes', clearValue:'Todos' }
 };
+const FILTER_CHIP_THRESHOLD = 12;
+function escapeHtml(value){
+  return String(value ?? '').replace(/[&<>"']/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch] || ch));
+}
+function renderFilterChipGroup(container, options, selectedValues){
+  if(!container) return;
+  const selectedSet = new Set(selectedValues || []);
+  container.innerHTML = options.map(opt=>{
+    const active = selectedSet.has(opt.value);
+    return `<button type="button" class="filter-choice-chip ${active?'is-active':''}" data-value="${escapeHtml(opt.value)}" aria-pressed="${active?'true':'false'}" data-selected="${active?'true':'false'}"><span>${escapeHtml(opt.label)}</span></button>`;
+  }).join('');
+}
+function normalizeMesSelection(){
+  const selMes = state.filtros.mes;
+  if(selMes === 'Todos') return [];
+  if(Array.isArray(selMes)) return selMes.slice();
+  return selMes ? [selMes] : [];
+}
 function formatStatusValue(value){
   const str = String(value || '').trim();
   return str ? str : '—';
@@ -399,7 +417,8 @@ function metricByKey(rows, keyAccessor){
 }
 function renderFaenaOptions(){
   const select = document.querySelector("#f_faena");
-  if(!select) return;
+  const chipWrap = document.querySelector('#f_faena_chips');
+  if(!select || !chipWrap) return;
   let options = faenaOptionsCache.slice();
   if(state.filtros.faena !== 'Todas' && !options.some(o => o.k === state.filtros.faena)){
     const selected = faenaOptionsCache.find(o => o.k === state.filtros.faena);
@@ -409,14 +428,63 @@ function renderFaenaOptions(){
   if(!options.length){
     select.innerHTML += '<option disabled>Sin coincidencias</option>';
   }
+  const useChips = options.length > 0 && options.length <= FILTER_CHIP_THRESHOLD;
+  if(useChips){
+    select.classList.add('hidden');
+    chipWrap.classList.remove('hidden');
+    const chipOptions = [{value:'Todas', label:'Todas'}].concat(options.map(o=>({value:o.k, label:o.k})));
+    renderFilterChipGroup(chipWrap, chipOptions, [state.filtros.faena]);
+  }else{
+    select.classList.remove('hidden');
+    chipWrap.classList.add('hidden');
+    chipWrap.innerHTML = '';
+  }
 }
 function setupFaenaSearch(){
   return;
+}
+function renderPredioChips(){
+  const wrap = document.querySelector('#f_predio_chips');
+  if(!wrap) return;
+  const options = [
+    {value:'Todos', label:'Todos'},
+    {value:'Solo Productivo', label:'Solo Productivo'},
+    {value:'Solo Costos Indirectos', label:'Solo Costos Indirectos'}
+  ];
+  renderFilterChipGroup(wrap, options, [state.filtros.predio]);
+}
+function renderCategoriaControl(arrN1){
+  const select = document.querySelector('#f_n1');
+  const chips = document.querySelector('#f_n1_chips');
+  if(!select || !chips) return;
+  const useChips = arrN1.length > 0 && arrN1.length <= FILTER_CHIP_THRESHOLD;
+  if(useChips){
+    select.classList.add('hidden');
+    chips.classList.remove('hidden');
+    const options = [{value:'Todos', label:'Todos'}].concat(arrN1.map(o=>({value:o.k, label:o.k})));
+    renderFilterChipGroup(chips, options, [state.filtros.nivel1]);
+  }else{
+    select.classList.remove('hidden');
+    chips.classList.add('hidden');
+    chips.innerHTML = '';
+  }
+}
+function renderMesChips(meses){
+  const wrap = document.querySelector('#f_mes_chips');
+  if(!wrap) return;
+  const selected = normalizeMesSelection();
+  const options = [{value:'Todos', label:'Todos'}, {value:'__NONE__', label:'Ninguno'}]
+    .concat(meses.map(m=>({value:m, label:m})));
+  const selectedValues = state.filtros.mes === 'Todos'
+    ? ['Todos']
+    : (Array.isArray(state.filtros.mes) && !state.filtros.mes.length ? ['__NONE__'] : selected);
+  renderFilterChipGroup(wrap, options, selectedValues);
 }
 function populateCombos(){
   const rowsBase = state.data.filter(r=> (state.filtros.predio==="Todos")? true : (state.filtros.predio==="Solo Productivo" ? predioClas(r)==="Productivo" : predioClas(r)==="Indirectos"));
   const sectores = Array.from(new Set(rowsBase.map(r=>strip(r.SECTOR)||"Sin dato"))).sort((a,b)=>a.localeCompare(b,'es'));
   document.querySelector("#f_cultivo").innerHTML = `<option>Todos</option>` + sectores.map(s=>`<option${s===state.filtros.sector?' selected':''}>${s}</option>`).join('');
+  renderPredioChips();
   const cultivoWrap = document.querySelector('#f_cultivo_chips');
   if(cultivoWrap){
     const selected = state.filtros.sector==="Todos" ? [] : (Array.isArray(state.filtros.sector) ? state.filtros.sector : [state.filtros.sector]);
@@ -451,6 +519,7 @@ function populateCombos(){
   });
   const arrN1 = metricByKey(n1Rows, r=>strip(r.NIVEL_1)||"—").sort((a,b)=> (state.filtros.orden==="Desc"? (b.v-a.v):(a.v-b.v)));
   document.querySelector("#f_n1").innerHTML = `<option>Todos</option>` + arrN1.map(o=>`<option${o.k===state.filtros.nivel1?' selected':''}>${o.k} — ${fmt(o.v)}</option>`).join('');
+  renderCategoriaControl(arrN1);
   const arrFa = metricByKey(n1Rows, r=>strip(r.FAENA)||"—").sort((a,b)=> (state.filtros.orden==="Desc"? (b.v-a.v):(a.v-b.v)));
   faenaOptionsCache = arrFa.slice();
   renderFaenaOptions();
@@ -474,6 +543,7 @@ function populateCombos(){
   const orderMes = (a,b)=>{ const [ma,ya]=a.split('-'); const [mb,yb]=b.split('-'); const ia=MES_ABR.indexOf(ma); const ib=MES_ABR.indexOf(mb); const ya2=parseInt(ya,10)||0; const yb2=parseInt(yb,10)||0; if(ya2!==yb2) return ya2-yb2; return ia-ib; };
   meses.sort(orderMes);
   const selMes = state.filtros.mes;
+  renderMesChips(meses);
   const selArr = Array.isArray(selMes) ? selMes : (selMes && selMes!=="Todos" ? [selMes] : []);
   const allSelected = selMes==="Todos" || selArr.length===0;
   const container = document.querySelector("#f_mes");
@@ -1536,6 +1606,17 @@ function initDashboardFromRawCSV(raw){
     if(state.filtros.predio === "Solo Costos Indirectos") state.filtros.sector = "Todos";
     refreshAll();
   };
+  const predioWrap = document.querySelector('#f_predio_chips');
+  if(predioWrap && predioWrap.dataset.bound !== '1'){
+    predioWrap.dataset.bound = '1';
+    predioWrap.addEventListener('click', e=>{
+      const btn = e.target.closest('[data-value]');
+      if(!btn) return;
+      state.filtros.predio = btn.dataset.value || 'Todos';
+      if(state.filtros.predio === 'Solo Costos Indirectos') state.filtros.sector = 'Todos';
+      refreshAll();
+    });
+  }
   const cultivoWrap = document.querySelector('#f_cultivo_chips');
   if(cultivoWrap && cultivoWrap.dataset.bound !== '1'){
     cultivoWrap.dataset.bound = '1';
@@ -1568,8 +1649,48 @@ function initDashboardFromRawCSV(raw){
   };
   document.querySelector("#f_n1").onchange = e=>{ state.filtros.nivel1 = e.target.value.split(' — ')[0]; refreshAll(); };
   document.querySelector("#f_faena").onchange = e=>{ state.filtros.faena = e.target.value.split(' — ')[0]; refreshAll(); };
+  const categoriaWrap = document.querySelector('#f_n1_chips');
+  if(categoriaWrap && categoriaWrap.dataset.bound !== '1'){
+    categoriaWrap.dataset.bound = '1';
+    categoriaWrap.addEventListener('click', e=>{
+      const btn = e.target.closest('[data-value]');
+      if(!btn) return;
+      state.filtros.nivel1 = btn.dataset.value || 'Todos';
+      refreshAll();
+    });
+  }
+  const faenaWrap = document.querySelector('#f_faena_chips');
+  if(faenaWrap && faenaWrap.dataset.bound !== '1'){
+    faenaWrap.dataset.bound = '1';
+    faenaWrap.addEventListener('click', e=>{
+      const btn = e.target.closest('[data-value]');
+      if(!btn) return;
+      state.filtros.faena = btn.dataset.value || 'Todas';
+      refreshAll();
+    });
+  }
   document.querySelector("#f_metrica").onchange = e=>{ state.filtros.metrica=e.target.value; refreshAll(); };
   
+  const mesChips = document.querySelector('#f_mes_chips');
+  if(mesChips && mesChips.dataset.bound !== '1'){
+    mesChips.dataset.bound = '1';
+    mesChips.addEventListener('click', e=>{
+      const btn = e.target.closest('[data-value]');
+      if(!btn) return;
+      const value = btn.dataset.value;
+      const current = normalizeMesSelection();
+      if(value === 'Todos'){
+        state.filtros.mes = 'Todos';
+      }else if(value === '__NONE__'){
+        state.filtros.mes = [];
+      }else{
+        const idx = current.indexOf(value);
+        if(idx >= 0) current.splice(idx,1); else current.push(value);
+        state.filtros.mes = current.length ? current : [];
+      }
+      refreshAll();
+    });
+  }
   // Event listener para dropdown de meses
   const mesDropdown = document.querySelector("#f_mes");
   const mesBtn = mesDropdown.querySelector('.mes-dropdown-btn');
