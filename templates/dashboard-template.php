@@ -43,11 +43,11 @@ if (!defined('ABSPATH')) {
         $dlh_title = $dlh_use_custom_header ? (string) $dlh_header['title'] : 'Dashboard — Agrícola La Higuera';
         $dlh_subtitle = $dlh_use_custom_header ? (string) $dlh_header['subtitle'] : 'Temporada 2025–2026';
         $dlh_logo_height = (int) $dlh_header['logo_height'];
-        if ($dlh_logo_height < 16) {
-            $dlh_logo_height = 16;
+        if ($dlh_logo_height < 20) {
+            $dlh_logo_height = 20;
         }
-        if ($dlh_logo_height > 120) {
-            $dlh_logo_height = 120;
+        if ($dlh_logo_height > 48) {
+            $dlh_logo_height = 48;
         }
         $dlh_header_classes = 'dlh-header';
         if ($dlh_use_custom_header) {
@@ -61,18 +61,20 @@ if (!defined('ABSPATH')) {
         ?>
         <header class="<?php echo esc_attr($dlh_header_classes); ?>">
             <div class="dlh-header-main">
-                <?php if ($dlh_show_logo) : ?>
-                    <div class="dlh-header-brand">
+                <div class="dlh-header-brand">
+                    <?php if ($dlh_show_logo) : ?>
                         <img src="<?php echo esc_url($dlh_header['logo_url']); ?>" alt="<?php echo esc_attr((string) $dlh_header['logo_alt']); ?>" class="dlh-header-logo" height="<?php echo esc_attr((string) $dlh_logo_height); ?>">
+                    <?php endif; ?>
+                    <div class="dlh-header-copy">
+                        <?php if ($dlh_show_title) : ?>
+                            <h1><?php echo esc_html($dlh_title); ?></h1>
+                        <?php endif; ?>
+                        <div class="subtitle">
+                            <?php if ($dlh_show_subtitle) : ?><span><?php echo esc_html($dlh_subtitle); ?></span><?php endif; ?>
+                            <span class="hidden">· Fuente: <span class="badge" id="srcChip">Inicializando...</span></span>
+                            <span class="hidden">· Generado: <span id="gen">—</span></span>
+                        </div>
                     </div>
-                <?php endif; ?>
-                <?php if ($dlh_show_title) : ?>
-                    <h1><?php echo esc_html($dlh_title); ?></h1>
-                <?php endif; ?>
-                <div class="subtitle">
-                    <?php if ($dlh_show_subtitle) : ?><span><?php echo esc_html($dlh_subtitle); ?></span><?php endif; ?>
-                    <span class="hidden">· Fuente: <span class="badge" id="srcChip">Inicializando...</span></span>
-                    <span class="hidden">· Generado: <span id="gen">—</span></span>
                 </div>
             </div>
             <div class="dlh-header-actions">

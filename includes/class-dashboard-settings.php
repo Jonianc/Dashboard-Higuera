@@ -517,7 +517,7 @@ class Dashboard_Higuera_Settings {
     }
 
     public static function field_standalone_header_logo_url() {
-        self::render_icon_uploader('dlh_standalone_header_logo_url', 'Logo de header standalone');
+        self::render_icon_uploader('dlh_standalone_header_logo_url', 'Logo de header standalone', 'Se mostrará en el header standalone junto al título/subtítulo cuando esté activo.');
     }
 
     public static function field_standalone_header_logo_alt() {
@@ -527,11 +527,14 @@ class Dashboard_Higuera_Settings {
 
     public static function field_standalone_header_logo_height() {
         $val = (int) get_option('dlh_standalone_header_logo_height', 44);
-        if ($val < 16) {
-            $val = 16;
+        if ($val < 20) {
+            $val = 20;
         }
-        echo '<input type="number" name="dlh_standalone_header_logo_height" value="' . esc_attr((string) $val) . '" class="small-text" min="16" max="120" step="1" />';
-        echo '<p class="description">Rango recomendado: 24 a 72 px.</p>';
+        if ($val > 48) {
+            $val = 48;
+        }
+        echo '<input type="number" name="dlh_standalone_header_logo_height" value="' . esc_attr((string) $val) . '" class="small-text" min="20" max="48" step="1" />';
+        echo '<p class="description">Rango recomendado: 24 a 40 px. Límite: 20 a 48 px.</p>';
     }
 
     public static function field_standalone_header_show_title() {
@@ -650,7 +653,7 @@ class Dashboard_Higuera_Settings {
         echo '<p class="description">Ordena con las flechas. El valor se guarda internamente sin que tengas que editar números manuales.</p>';
     }
 
-    private static function render_icon_uploader($option_name, $title) {
+    private static function render_icon_uploader($option_name, $title, $description = 'Se usará en los chips rápidos del bloque Rentabilidad.') {
         $value = (string) get_option($option_name, '');
         $has_image = trim($value) !== '';
         echo '<div class="dlh-icon-uploader" data-dlh-icon-uploader>'; 
@@ -664,7 +667,7 @@ class Dashboard_Higuera_Settings {
         echo '</div>';
         echo '<div class="dlh-icon-uploader__meta">';
         echo '<strong>' . esc_html($title) . '</strong>';
-        echo '<p class="description">Se usará en los chips rápidos del bloque Rentabilidad.</p>';
+        echo '<p class="description">' . esc_html($description) . '</p>';
         echo '<div class="dlh-icon-uploader__actions">';
         echo '<button type="button" class="button button-secondary" data-dlh-icon-select>Seleccionar imagen</button>';
         echo '<button type="button" class="button button-link-delete" data-dlh-icon-remove' . ($has_image ? '' : ' style="display:none;"') . '>Quitar</button>';
@@ -803,11 +806,11 @@ class Dashboard_Higuera_Settings {
 
     public static function sanitize_logo_height_px($input) {
         $value = absint($input);
-        if ($value < 16) {
-            $value = 16;
+        if ($value < 20) {
+            $value = 20;
         }
-        if ($value > 120) {
-            $value = 120;
+        if ($value > 48) {
+            $value = 48;
         }
         return $value;
     }

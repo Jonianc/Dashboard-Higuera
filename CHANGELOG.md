@@ -1,3 +1,9 @@
+## 1.26.0 - 2026-04-20
+- UI/UX (Header standalone): se compacta la composición a bloque horizontal único (logo + título/subtítulo a la izquierda, acciones a la derecha) para evitar separación vertical y exceso de altura.
+- UI/UX (Header standalone): se ajusta alineación vertical y responsive de brand/actions para mantener equilibrio visual en mobile sin romper toggle de tema ni botón `Cerrar acceso`.
+- Ajustes (Acceso): se corrige ayuda del campo `Logo header` para referenciar el header standalone (se elimina mención errónea a chips de Rentabilidad).
+- Validación: alto de logo acotado a clamp seguro `20–48px` (recomendado `24–40px`) en sanitización y render.
+
 ## 1.25.0 - 2026-04-20
 - Admin (Acceso): nueva sección **Header standalone** con opciones para activar header personalizado, logo opcional (uploader/alt/alto), título/subtítulo, sticky y visibilidad de botón `Cerrar acceso`.
 - Standalone: el template consume la configuración del header desde ajustes con defaults y lectura centralizada en helpers del standalone.

@@ -44,11 +44,11 @@ class Dashboard_Higuera_Standalone {
             'show_logout' => get_option('dlh_standalone_header_show_logout', $defaults['show_logout']) === '1' ? '1' : '0',
         );
 
-        if ($settings['logo_height'] < 16) {
-            $settings['logo_height'] = 16;
+        if ($settings['logo_height'] < 20) {
+            $settings['logo_height'] = 20;
         }
-        if ($settings['logo_height'] > 120) {
-            $settings['logo_height'] = 120;
+        if ($settings['logo_height'] > 48) {
+            $settings['logo_height'] = 48;
         }
         return $settings;
     }
