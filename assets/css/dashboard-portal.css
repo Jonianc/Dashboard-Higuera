@@ -1,0 +1,199 @@
+.dlh-portal-page{
+  margin:0;
+  min-height:100vh;
+  background:radial-gradient(1200px 700px at 15% -10%, #f7f0e7 0%, #f2ede4 45%, #ece6db 100%);
+  color:#2f3a34;
+  font-family:Inter,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+}
+
+.dlh-portal-shell{
+  min-height:100vh;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding:24px;
+}
+
+.dlh-portal{
+  width:100%;
+  max-width:460px;
+  background:#fdfbf7;
+  border:1px solid #ddd6ca;
+  border-radius:20px;
+  padding:28px;
+  box-shadow:0 14px 34px rgba(47,58,52,.08);
+}
+
+.dlh-portal-head h1{
+  margin:0;
+  font-size:30px;
+  line-height:1.1;
+  letter-spacing:-.02em;
+}
+
+.dlh-portal-head p{
+  margin:10px 0 0;
+  color:#6e7b74;
+  font-size:15px;
+  line-height:1.55;
+}
+
+.dlh-portal-error{
+  margin-top:16px;
+  border:1px solid #cf9da0;
+  background:#fbebec;
+  color:#7f2f35;
+  border-radius:12px;
+  padding:10px 12px;
+  font-size:14px;
+  line-height:1.4;
+}
+
+.dlh-portal-field{
+  margin-top:18px;
+}
+
+.dlh-portal-field label{
+  display:block;
+  margin-bottom:8px;
+  color:#3c4c45;
+  font-size:14px;
+  font-weight:600;
+}
+
+.dlh-portal-password-wrap{
+  display:flex;
+  align-items:center;
+  gap:10px;
+}
+
+.dlh-portal-password-wrap input{
+  width:100%;
+  height:50px;
+  padding:0 14px;
+  border-radius:12px;
+  border:1px solid #d2c9bc;
+  background:#fff;
+  color:#2f3a34;
+  outline:0;
+  transition:border-color .2s ease, box-shadow .2s ease;
+}
+
+.dlh-portal-password-wrap input:focus{
+  border-color:#5e8b7e;
+  box-shadow:0 0 0 3px rgba(94,139,126,.22);
+}
+
+.dlh-portal-toggle{
+  height:50px;
+  min-width:94px;
+  padding:0 12px;
+  border:1px solid #d2c9bc;
+  border-radius:12px;
+  background:#f3eee6;
+  color:#2f3a34;
+  font-size:13px;
+  font-weight:600;
+  cursor:pointer;
+}
+
+.dlh-portal-toggle:hover{
+  border-color:#5e8b7e;
+}
+
+.dlh-portal-submit{
+  width:100%;
+  height:50px;
+  margin-top:16px;
+  border:1px solid #4f7a5a;
+  border-radius:12px;
+  background:linear-gradient(180deg,#5e8b7e 0%, #4f7a5a 100%);
+  color:#fff;
+  font-size:15px;
+  font-weight:700;
+  cursor:pointer;
+  transition:opacity .2s ease, transform .06s ease;
+}
+
+.dlh-portal-submit:hover{
+  opacity:.96;
+}
+
+.dlh-portal-submit:active{
+  transform:translateY(1px);
+}
+
+.dlh-portal-submit[disabled]{
+  opacity:.75;
+  cursor:wait;
+}
+
+.dlh-portal-meta{
+  margin-top:12px;
+  color:#6e7b74;
+  font-size:12px;
+  line-height:1.5;
+}
+
+.dlh-portal-bar{
+  position:sticky;
+  top:10px;
+  z-index:80;
+  display:flex;
+  justify-content:flex-end;
+  padding:0 14px;
+}
+
+.dlh-portal-logout{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  min-height:38px;
+  padding:8px 14px;
+  border-radius:999px;
+  border:1px solid #ddd6ca;
+  background:#fdfbf7;
+  color:#2f3a34;
+  text-decoration:none;
+  font-size:13px;
+  font-weight:600;
+  box-shadow:0 8px 18px rgba(47,58,52,.06);
+}
+
+.dlh-portal-logout:hover{
+  border-color:#5e8b7e;
+  color:#2f3a34;
+}
+
+@media (max-width:640px){
+  .dlh-portal-shell{
+    align-items:flex-start;
+    padding:18px;
+  }
+
+  .dlh-portal{
+    margin-top:20px;
+    border-radius:16px;
+    padding:22px;
+  }
+
+  .dlh-portal-head h1{
+    font-size:26px;
+  }
+
+  .dlh-portal-password-wrap{
+    flex-direction:column;
+    align-items:stretch;
+    gap:8px;
+  }
+
+  .dlh-portal-toggle{
+    width:100%;
+  }
+
+  .dlh-portal-bar{
+    position:static;
+    justify-content:flex-start;
+    padding:12px 18px 0;
+  }
+}

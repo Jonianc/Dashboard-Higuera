@@ -1,3 +1,10 @@
+## 1.24.0 - 2026-04-20
+- UI/UX (Portal standalone): se rediseña el portal con contraseña con estética clara alineada al dashboard light y mejor jerarquía visual (título, mensaje, campo, CTA y meta de sesión).
+- UI/UX (Portal standalone): se agrega toggle de mostrar/ocultar contraseña y se mantiene feedback de estado de envío (`Validando...`) sin alterar la lógica de autenticación.
+- UI/UX (Portal standalone): se mueve CSS/JS inline a assets dedicados (`assets/css/dashboard-portal.css` y `assets/js/dashboard-portal.js`).
+- UI/UX (Sesión): se ajusta el estilo de `Cerrar acceso` para integrarlo visualmente con el layout general y mejorar consistencia responsive.
+- Compatibilidad: sin cambios en nonce, POST, validación, cookie, expiración ni flujo de logout.
+
 ## 1.23.0 - 2026-04-17
 - UI/UX (Dashboard filtros): se mueve el bloque de **Filtros activos** dentro de la caja de filtros para mantener estado y controles en una misma sección.
 - UI/UX (Acciones): se conservan y mantienen junto al bloque de filtros activos dentro del panel de filtros.
