@@ -98,6 +98,49 @@
     });
   }
 
+  function toggleStandaloneHeaderFields(){
+    var enabled = document.querySelector('input[name="dlh_standalone_header_enabled"]');
+    if(!enabled){ return; }
+
+    var rowShowLogo = document.querySelector('input[name="dlh_standalone_header_show_logo"]');
+    rowShowLogo = rowShowLogo ? rowShowLogo.closest('tr') : null;
+    var rowLogoUrl = document.querySelector('input[name="dlh_standalone_header_logo_url"]');
+    rowLogoUrl = rowLogoUrl ? rowLogoUrl.closest('tr') : null;
+    var rowLogoAlt = document.querySelector('input[name="dlh_standalone_header_logo_alt"]');
+    rowLogoAlt = rowLogoAlt ? rowLogoAlt.closest('tr') : null;
+    var rowLogoHeight = document.querySelector('input[name="dlh_standalone_header_logo_height"]');
+    rowLogoHeight = rowLogoHeight ? rowLogoHeight.closest('tr') : null;
+    var rowShowTitle = document.querySelector('input[name="dlh_standalone_header_show_title"]');
+    rowShowTitle = rowShowTitle ? rowShowTitle.closest('tr') : null;
+    var rowTitle = document.querySelector('input[name="dlh_standalone_header_title"]');
+    rowTitle = rowTitle ? rowTitle.closest('tr') : null;
+    var rowShowSubtitle = document.querySelector('input[name="dlh_standalone_header_show_subtitle"]');
+    rowShowSubtitle = rowShowSubtitle ? rowShowSubtitle.closest('tr') : null;
+    var rowSubtitle = document.querySelector('input[name="dlh_standalone_header_subtitle"]');
+    rowSubtitle = rowSubtitle ? rowSubtitle.closest('tr') : null;
+    var rowSticky = document.querySelector('input[name="dlh_standalone_header_sticky"]');
+    rowSticky = rowSticky ? rowSticky.closest('tr') : null;
+    var rowShowLogout = document.querySelector('input[name="dlh_standalone_header_show_logout"]');
+    rowShowLogout = rowShowLogout ? rowShowLogout.closest('tr') : null;
+
+    var showHeaderFields = enabled.checked;
+    [rowShowLogo, rowShowTitle, rowShowSubtitle, rowSticky, rowShowLogout].forEach(function(row){
+      if(row){ row.style.display = showHeaderFields ? '' : 'none'; }
+    });
+
+    var logoEnabled = document.querySelector('input[name="dlh_standalone_header_show_logo"]');
+    var showLogoFields = showHeaderFields && !!logoEnabled && logoEnabled.checked;
+    [rowLogoUrl, rowLogoAlt, rowLogoHeight].forEach(function(row){
+      if(row){ row.style.display = showLogoFields ? '' : 'none'; }
+    });
+
+    var titleEnabled = document.querySelector('input[name="dlh_standalone_header_show_title"]');
+    if(rowTitle){ rowTitle.style.display = (showHeaderFields && !!titleEnabled && titleEnabled.checked) ? '' : 'none'; }
+
+    var subtitleEnabled = document.querySelector('input[name="dlh_standalone_header_show_subtitle"]');
+    if(rowSubtitle){ rowSubtitle.style.display = (showHeaderFields && !!subtitleEnabled && subtitleEnabled.checked) ? '' : 'none'; }
+  }
+
   function renderApiTestResults(payload){
     var out = byId('dlh-test-api-results');
     if(!out){ return; }
@@ -1525,6 +1568,14 @@
 
     var portalEnabled = document.querySelector('input[name="dlh_password_portal_enabled"]');
     if(portalEnabled){ portalEnabled.addEventListener('change', togglePasswordPortalFields); }
+    var headerEnabled = document.querySelector('input[name="dlh_standalone_header_enabled"]');
+    if(headerEnabled){ headerEnabled.addEventListener('change', toggleStandaloneHeaderFields); }
+    var headerShowLogo = document.querySelector('input[name="dlh_standalone_header_show_logo"]');
+    if(headerShowLogo){ headerShowLogo.addEventListener('change', toggleStandaloneHeaderFields); }
+    var headerShowTitle = document.querySelector('input[name="dlh_standalone_header_show_title"]');
+    if(headerShowTitle){ headerShowTitle.addEventListener('change', toggleStandaloneHeaderFields); }
+    var headerShowSubtitle = document.querySelector('input[name="dlh_standalone_header_show_subtitle"]');
+    if(headerShowSubtitle){ headerShowSubtitle.addEventListener('change', toggleStandaloneHeaderFields); }
 
     bindRentCardOrdering();
     bindIconUploaders();
@@ -1535,6 +1586,7 @@
     validateApiUrl();
     validatePowerBiFormula();
     togglePasswordPortalFields();
+    toggleStandaloneHeaderFields();
     bindApiTest();
     initModuleSaveState();
 

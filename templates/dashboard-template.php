@@ -19,16 +19,66 @@ if (!defined('ABSPATH')) {
     </div>
 
     <div id="dashboard-higuera-content" style="display:none;">
-        <header class="dlh-header">
+        <?php
+        $dlh_is_standalone_ctx = !empty($dlh_is_standalone);
+        $dlh_header_defaults = array(
+            'enabled' => '0',
+            'show_logo' => '0',
+            'logo_url' => '',
+            'logo_alt' => 'Logo Agrícola La Higuera',
+            'logo_height' => 44,
+            'show_title' => '1',
+            'title' => 'Dashboard — Agrícola La Higuera',
+            'show_subtitle' => '1',
+            'subtitle' => 'Temporada 2025–2026',
+            'sticky' => '1',
+            'show_logout' => '1',
+        );
+        $dlh_header_raw = isset($dlh_standalone_header_settings) && is_array($dlh_standalone_header_settings) ? $dlh_standalone_header_settings : array();
+        $dlh_header = array_replace($dlh_header_defaults, $dlh_header_raw);
+        $dlh_use_custom_header = $dlh_is_standalone_ctx && $dlh_header['enabled'] === '1';
+        $dlh_show_logo = $dlh_use_custom_header && $dlh_header['show_logo'] === '1' && trim((string) $dlh_header['logo_url']) !== '';
+        $dlh_show_title = !$dlh_use_custom_header || $dlh_header['show_title'] === '1';
+        $dlh_show_subtitle = !$dlh_use_custom_header || $dlh_header['show_subtitle'] === '1';
+        $dlh_title = $dlh_use_custom_header ? (string) $dlh_header['title'] : 'Dashboard — Agrícola La Higuera';
+        $dlh_subtitle = $dlh_use_custom_header ? (string) $dlh_header['subtitle'] : 'Temporada 2025–2026';
+        $dlh_logo_height = (int) $dlh_header['logo_height'];
+        if ($dlh_logo_height < 16) {
+            $dlh_logo_height = 16;
+        }
+        if ($dlh_logo_height > 120) {
+            $dlh_logo_height = 120;
+        }
+        $dlh_header_classes = 'dlh-header';
+        if ($dlh_use_custom_header) {
+            $dlh_header_classes .= ' dlh-header--standalone-custom';
+            if ($dlh_header['sticky'] !== '1') {
+                $dlh_header_classes .= ' dlh-header--not-sticky';
+            }
+        }
+        $dlh_logout_url = isset($dlh_standalone_logout_url) ? (string) $dlh_standalone_logout_url : '';
+        $dlh_show_logout = $dlh_use_custom_header && $dlh_header['show_logout'] === '1' && $dlh_logout_url !== '';
+        ?>
+        <header class="<?php echo esc_attr($dlh_header_classes); ?>">
             <div class="dlh-header-main">
-                <h1>Dashboard — Agrícola La Higuera</h1>
+                <?php if ($dlh_show_logo) : ?>
+                    <div class="dlh-header-brand">
+                        <img src="<?php echo esc_url($dlh_header['logo_url']); ?>" alt="<?php echo esc_attr((string) $dlh_header['logo_alt']); ?>" class="dlh-header-logo" height="<?php echo esc_attr((string) $dlh_logo_height); ?>">
+                    </div>
+                <?php endif; ?>
+                <?php if ($dlh_show_title) : ?>
+                    <h1><?php echo esc_html($dlh_title); ?></h1>
+                <?php endif; ?>
                 <div class="subtitle">
-                    <span>Temporada 2025–2026</span>
+                    <?php if ($dlh_show_subtitle) : ?><span><?php echo esc_html($dlh_subtitle); ?></span><?php endif; ?>
                     <span class="hidden">· Fuente: <span class="badge" id="srcChip">Inicializando...</span></span>
                     <span class="hidden">· Generado: <span id="gen">—</span></span>
                 </div>
             </div>
             <div class="dlh-header-actions">
+                <?php if ($dlh_show_logout) : ?>
+                    <a href="<?php echo esc_url($dlh_logout_url); ?>" class="dlh-portal-logout">Cerrar acceso</a>
+                <?php endif; ?>
                 <button id="themeToggle" class="theme-toggle" type="button" aria-label="Cambiar entre modo claro y oscuro" aria-pressed="false">
                     <span class="theme-toggle-track"><span class="theme-toggle-knob"></span></span>
                     <span id="themeToggleText" class="theme-toggle-text">Claro</span>

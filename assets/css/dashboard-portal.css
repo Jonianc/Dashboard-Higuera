@@ -135,35 +135,6 @@
   line-height:1.5;
 }
 
-.dlh-portal-bar{
-  position:sticky;
-  top:10px;
-  z-index:80;
-  display:flex;
-  justify-content:flex-end;
-  padding:0 14px;
-}
-
-.dlh-portal-logout{
-  display:inline-flex;
-  align-items:center;
-  justify-content:center;
-  min-height:38px;
-  padding:8px 14px;
-  border-radius:999px;
-  border:1px solid #ddd6ca;
-  background:#fdfbf7;
-  color:#2f3a34;
-  text-decoration:none;
-  font-size:13px;
-  font-weight:600;
-  box-shadow:0 8px 18px rgba(47,58,52,.06);
-}
-
-.dlh-portal-logout:hover{
-  border-color:#5e8b7e;
-  color:#2f3a34;
-}
 
 @media (max-width:640px){
   .dlh-portal-shell{
@@ -191,9 +162,4 @@
     width:100%;
   }
 
-  .dlh-portal-bar{
-    position:static;
-    justify-content:flex-start;
-    padding:12px 18px 0;
-  }
 }

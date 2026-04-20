@@ -226,6 +226,91 @@ class Dashboard_Higuera_Settings {
 
         add_settings_field('dlh_password_portal_message', 'Mensaje portal', array(__CLASS__, 'field_password_portal_message'), self::PAGE_ACCESS, 'dlh_section_access');
 
+        // --- Sección: Header standalone ---
+        add_settings_section(
+            'dlh_section_standalone_header',
+            'Header standalone',
+            array(__CLASS__, 'section_standalone_header_cb'),
+            self::PAGE_ACCESS
+        );
+
+        register_setting(self::OPTION_GROUP_ACCESS, 'dlh_standalone_header_enabled', array(
+            'type'              => 'string',
+            'sanitize_callback' => array(__CLASS__, 'sanitize_checkbox'),
+            'default'           => '0',
+        ));
+        add_settings_field('dlh_standalone_header_enabled', 'Activar header personalizado', array(__CLASS__, 'field_standalone_header_enabled'), self::PAGE_ACCESS, 'dlh_section_standalone_header');
+
+        register_setting(self::OPTION_GROUP_ACCESS, 'dlh_standalone_header_show_logo', array(
+            'type'              => 'string',
+            'sanitize_callback' => array(__CLASS__, 'sanitize_checkbox'),
+            'default'           => '0',
+        ));
+        add_settings_field('dlh_standalone_header_show_logo', 'Mostrar logo', array(__CLASS__, 'field_standalone_header_show_logo'), self::PAGE_ACCESS, 'dlh_section_standalone_header');
+
+        register_setting(self::OPTION_GROUP_ACCESS, 'dlh_standalone_header_logo_url', array(
+            'type'              => 'string',
+            'sanitize_callback' => 'esc_url_raw',
+            'default'           => '',
+        ));
+        add_settings_field('dlh_standalone_header_logo_url', 'Logo header', array(__CLASS__, 'field_standalone_header_logo_url'), self::PAGE_ACCESS, 'dlh_section_standalone_header');
+
+        register_setting(self::OPTION_GROUP_ACCESS, 'dlh_standalone_header_logo_alt', array(
+            'type'              => 'string',
+            'sanitize_callback' => 'sanitize_text_field',
+            'default'           => 'Logo Agrícola La Higuera',
+        ));
+        add_settings_field('dlh_standalone_header_logo_alt', 'Alt logo', array(__CLASS__, 'field_standalone_header_logo_alt'), self::PAGE_ACCESS, 'dlh_section_standalone_header');
+
+        register_setting(self::OPTION_GROUP_ACCESS, 'dlh_standalone_header_logo_height', array(
+            'type'              => 'integer',
+            'sanitize_callback' => array(__CLASS__, 'sanitize_logo_height_px'),
+            'default'           => 44,
+        ));
+        add_settings_field('dlh_standalone_header_logo_height', 'Alto logo (px)', array(__CLASS__, 'field_standalone_header_logo_height'), self::PAGE_ACCESS, 'dlh_section_standalone_header');
+
+        register_setting(self::OPTION_GROUP_ACCESS, 'dlh_standalone_header_show_title', array(
+            'type'              => 'string',
+            'sanitize_callback' => array(__CLASS__, 'sanitize_checkbox'),
+            'default'           => '1',
+        ));
+        add_settings_field('dlh_standalone_header_show_title', 'Mostrar título', array(__CLASS__, 'field_standalone_header_show_title'), self::PAGE_ACCESS, 'dlh_section_standalone_header');
+
+        register_setting(self::OPTION_GROUP_ACCESS, 'dlh_standalone_header_title', array(
+            'type'              => 'string',
+            'sanitize_callback' => 'sanitize_text_field',
+            'default'           => 'Dashboard — Agrícola La Higuera',
+        ));
+        add_settings_field('dlh_standalone_header_title', 'Título editable', array(__CLASS__, 'field_standalone_header_title'), self::PAGE_ACCESS, 'dlh_section_standalone_header');
+
+        register_setting(self::OPTION_GROUP_ACCESS, 'dlh_standalone_header_show_subtitle', array(
+            'type'              => 'string',
+            'sanitize_callback' => array(__CLASS__, 'sanitize_checkbox'),
+            'default'           => '1',
+        ));
+        add_settings_field('dlh_standalone_header_show_subtitle', 'Mostrar subtítulo', array(__CLASS__, 'field_standalone_header_show_subtitle'), self::PAGE_ACCESS, 'dlh_section_standalone_header');
+
+        register_setting(self::OPTION_GROUP_ACCESS, 'dlh_standalone_header_subtitle', array(
+            'type'              => 'string',
+            'sanitize_callback' => 'sanitize_text_field',
+            'default'           => 'Temporada 2025–2026',
+        ));
+        add_settings_field('dlh_standalone_header_subtitle', 'Subtítulo editable', array(__CLASS__, 'field_standalone_header_subtitle'), self::PAGE_ACCESS, 'dlh_section_standalone_header');
+
+        register_setting(self::OPTION_GROUP_ACCESS, 'dlh_standalone_header_sticky', array(
+            'type'              => 'string',
+            'sanitize_callback' => array(__CLASS__, 'sanitize_checkbox'),
+            'default'           => '1',
+        ));
+        add_settings_field('dlh_standalone_header_sticky', 'Header sticky', array(__CLASS__, 'field_standalone_header_sticky'), self::PAGE_ACCESS, 'dlh_section_standalone_header');
+
+        register_setting(self::OPTION_GROUP_ACCESS, 'dlh_standalone_header_show_logout', array(
+            'type'              => 'string',
+            'sanitize_callback' => array(__CLASS__, 'sanitize_checkbox'),
+            'default'           => '1',
+        ));
+        add_settings_field('dlh_standalone_header_show_logout', 'Mostrar botón “Cerrar acceso” en header', array(__CLASS__, 'field_standalone_header_show_logout'), self::PAGE_ACCESS, 'dlh_section_standalone_header');
+
         // --- Sección: Assets ---
         add_settings_section(
             'dlh_section_assets',
@@ -336,6 +421,10 @@ class Dashboard_Higuera_Settings {
         echo '<p>Controla quién puede ver el dashboard en la URL standalone y, opcionalmente, agrega una capa de contraseña.</p>';
     }
 
+    public static function section_standalone_header_cb() {
+        echo '<p>Configura el header visual del standalone sin afectar la lógica de acceso ni el flujo del dashboard.</p>';
+    }
+
     public static function section_assets_cb() {
         echo '<p>Activa o desactiva la carga del CSS y JavaScript del dashboard.</p>';
     }
@@ -415,6 +504,64 @@ class Dashboard_Higuera_Settings {
     public static function field_password_portal_message() {
         $val = get_option('dlh_password_portal_message', 'Ingresa la contraseña para continuar.');
         echo '<input type="text" name="dlh_password_portal_message" value="' . esc_attr($val) . '" class="large-text" />';
+    }
+
+    public static function field_standalone_header_enabled() {
+        $val = get_option('dlh_standalone_header_enabled', '0');
+        echo '<label><input type="checkbox" name="dlh_standalone_header_enabled" value="1" ' . checked($val, '1', false) . '> Activar configuración de header standalone</label>';
+    }
+
+    public static function field_standalone_header_show_logo() {
+        $val = get_option('dlh_standalone_header_show_logo', '0');
+        echo '<label><input type="checkbox" name="dlh_standalone_header_show_logo" value="1" ' . checked($val, '1', false) . '> Mostrar logo en header</label>';
+    }
+
+    public static function field_standalone_header_logo_url() {
+        self::render_icon_uploader('dlh_standalone_header_logo_url', 'Logo de header standalone');
+    }
+
+    public static function field_standalone_header_logo_alt() {
+        $val = get_option('dlh_standalone_header_logo_alt', 'Logo Agrícola La Higuera');
+        echo '<input type="text" name="dlh_standalone_header_logo_alt" value="' . esc_attr($val) . '" class="regular-text" />';
+    }
+
+    public static function field_standalone_header_logo_height() {
+        $val = (int) get_option('dlh_standalone_header_logo_height', 44);
+        if ($val < 16) {
+            $val = 16;
+        }
+        echo '<input type="number" name="dlh_standalone_header_logo_height" value="' . esc_attr((string) $val) . '" class="small-text" min="16" max="120" step="1" />';
+        echo '<p class="description">Rango recomendado: 24 a 72 px.</p>';
+    }
+
+    public static function field_standalone_header_show_title() {
+        $val = get_option('dlh_standalone_header_show_title', '1');
+        echo '<label><input type="checkbox" name="dlh_standalone_header_show_title" value="1" ' . checked($val, '1', false) . '> Mostrar título</label>';
+    }
+
+    public static function field_standalone_header_title() {
+        $val = get_option('dlh_standalone_header_title', 'Dashboard — Agrícola La Higuera');
+        echo '<input type="text" name="dlh_standalone_header_title" value="' . esc_attr($val) . '" class="large-text" />';
+    }
+
+    public static function field_standalone_header_show_subtitle() {
+        $val = get_option('dlh_standalone_header_show_subtitle', '1');
+        echo '<label><input type="checkbox" name="dlh_standalone_header_show_subtitle" value="1" ' . checked($val, '1', false) . '> Mostrar subtítulo</label>';
+    }
+
+    public static function field_standalone_header_subtitle() {
+        $val = get_option('dlh_standalone_header_subtitle', 'Temporada 2025–2026');
+        echo '<input type="text" name="dlh_standalone_header_subtitle" value="' . esc_attr($val) . '" class="large-text" />';
+    }
+
+    public static function field_standalone_header_sticky() {
+        $val = get_option('dlh_standalone_header_sticky', '1');
+        echo '<label><input type="checkbox" name="dlh_standalone_header_sticky" value="1" ' . checked($val, '1', false) . '> Header sticky</label>';
+    }
+
+    public static function field_standalone_header_show_logout() {
+        $val = get_option('dlh_standalone_header_show_logout', '1');
+        echo '<label><input type="checkbox" name="dlh_standalone_header_show_logout" value="1" ' . checked($val, '1', false) . '> Mostrar botón Cerrar acceso en header</label>';
     }
 
     public static function field_load_assets() {
@@ -652,6 +799,17 @@ class Dashboard_Higuera_Settings {
 
     public static function sanitize_checkbox($input) {
         return $input ? '1' : '0';
+    }
+
+    public static function sanitize_logo_height_px($input) {
+        $value = absint($input);
+        if ($value < 16) {
+            $value = 16;
+        }
+        if ($value > 120) {
+            $value = 120;
+        }
+        return $value;
     }
 
 

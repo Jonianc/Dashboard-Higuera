@@ -1,3 +1,9 @@
+## 1.25.0 - 2026-04-20
+- Admin (Acceso): nueva sección **Header standalone** con opciones para activar header personalizado, logo opcional (uploader/alt/alto), título/subtítulo, sticky y visibilidad de botón `Cerrar acceso`.
+- Standalone: el template consume la configuración del header desde ajustes con defaults y lectura centralizada en helpers del standalone.
+- UI/UX (Standalone): `Cerrar acceso` pasa a renderizarse dentro del header (condicional por ajuste), eliminando la barra separada.
+- Compatibilidad: se mantiene intacta la lógica de portal, nonce, POST, validación, cookie, expiración, logout y toggle de tema.
+
 ## 1.24.0 - 2026-04-20
 - UI/UX (Portal standalone): se rediseña el portal con contraseña con estética clara alineada al dashboard light y mejor jerarquía visual (título, mensaje, campo, CTA y meta de sesión).
 - UI/UX (Portal standalone): se agrega toggle de mostrar/ocultar contraseña y se mantiene feedback de estado de envío (`Validando...`) sin alterar la lógica de autenticación.

@@ -12,6 +12,47 @@ if (!defined('WPINC')) {
 
 class Dashboard_Higuera_Standalone {
 
+    private static function get_standalone_header_defaults() {
+        return array(
+            'enabled' => '0',
+            'show_logo' => '0',
+            'logo_url' => '',
+            'logo_alt' => 'Logo Agrícola La Higuera',
+            'logo_height' => 44,
+            'show_title' => '1',
+            'title' => 'Dashboard — Agrícola La Higuera',
+            'show_subtitle' => '1',
+            'subtitle' => 'Temporada 2025–2026',
+            'sticky' => '1',
+            'show_logout' => '1',
+        );
+    }
+
+    public static function get_standalone_header_settings() {
+        $defaults = self::get_standalone_header_defaults();
+        $settings = array(
+            'enabled' => get_option('dlh_standalone_header_enabled', $defaults['enabled']) === '1' ? '1' : '0',
+            'show_logo' => get_option('dlh_standalone_header_show_logo', $defaults['show_logo']) === '1' ? '1' : '0',
+            'logo_url' => esc_url_raw((string) get_option('dlh_standalone_header_logo_url', $defaults['logo_url'])),
+            'logo_alt' => sanitize_text_field((string) get_option('dlh_standalone_header_logo_alt', $defaults['logo_alt'])),
+            'logo_height' => (int) get_option('dlh_standalone_header_logo_height', $defaults['logo_height']),
+            'show_title' => get_option('dlh_standalone_header_show_title', $defaults['show_title']) === '1' ? '1' : '0',
+            'title' => sanitize_text_field((string) get_option('dlh_standalone_header_title', $defaults['title'])),
+            'show_subtitle' => get_option('dlh_standalone_header_show_subtitle', $defaults['show_subtitle']) === '1' ? '1' : '0',
+            'subtitle' => sanitize_text_field((string) get_option('dlh_standalone_header_subtitle', $defaults['subtitle'])),
+            'sticky' => get_option('dlh_standalone_header_sticky', $defaults['sticky']) === '1' ? '1' : '0',
+            'show_logout' => get_option('dlh_standalone_header_show_logout', $defaults['show_logout']) === '1' ? '1' : '0',
+        );
+
+        if ($settings['logo_height'] < 16) {
+            $settings['logo_height'] = 16;
+        }
+        if ($settings['logo_height'] > 120) {
+            $settings['logo_height'] = 120;
+        }
+        return $settings;
+    }
+
     /**
      * Validar acceso según ajustes configurados (public/logged_in/role).
      *
@@ -244,7 +285,6 @@ class Dashboard_Higuera_Standalone {
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="robots" content="noindex, nofollow">
     <title><?php echo esc_html($title); ?></title>
-    <link rel="stylesheet" href="<?php echo esc_url($portal_css_url); ?>">
 </head>
 <body class="dlh-portal-page">
     <main class="dlh-portal-shell" aria-label="Portal de acceso">
@@ -286,9 +326,13 @@ class Dashboard_Higuera_Standalone {
         $plugin_url = DASHBOARD_HIGUERA_PLUGIN_URL;
         $version    = DASHBOARD_HIGUERA_VERSION;
         $css_url    = $plugin_url . 'assets/css/dashboard.css?ver=' . $version;
-        $portal_css_url = $plugin_url . 'assets/css/dashboard-portal.css?ver=' . $version;
         $js_url     = $plugin_url . 'assets/js/dashboard.js?ver=' . $version;
         $rest_nonce = wp_create_nonce('wp_rest');
+        $header_settings = self::get_standalone_header_settings();
+        $logout_url = '';
+        if (self::is_password_portal_enabled()) {
+            $logout_url = add_query_arg('dlh_portal_logout', '1', home_url('/' . self::get_slug() . '/'));
+        }
 
         // URLs de datos
         $csv2526_url = rest_url('dashboard-higuera/v1/csv/2025-26');
@@ -320,6 +364,9 @@ class Dashboard_Higuera_Standalone {
         $lang    = get_language_attributes();
 
         // Capturar el template del dashboard
+        $dlh_is_standalone = true;
+        $dlh_standalone_header_settings = $header_settings;
+        $dlh_standalone_logout_url = $logout_url;
         ob_start();
         include DASHBOARD_HIGUERA_PLUGIN_DIR . 'templates/dashboard-template.php';
         $dashboard_html = ob_get_clean();
@@ -332,7 +379,6 @@ class Dashboard_Higuera_Standalone {
     <meta name="robots" content="noindex, nofollow">
     <title>Dashboard — Agrícola La Higuera</title>
     <link rel="stylesheet" href="<?php echo esc_url($css_url); ?>">
-    <link rel="stylesheet" href="<?php echo esc_url($portal_css_url); ?>">
     <style>
         /* Standalone: reset completo */
         *, *::before, *::after { box-sizing: border-box; }
@@ -374,11 +420,6 @@ class Dashboard_Higuera_Standalone {
     </style>
 </head>
 <body>
-    <?php if (self::is_password_portal_enabled()) : ?>
-        <div class="dlh-portal-bar" role="region" aria-label="Sesión portal">
-            <a href="<?php echo esc_url(add_query_arg('dlh_portal_logout', '1', home_url('/' . self::get_slug() . '/'))); ?>" class="dlh-portal-logout">Cerrar acceso</a>
-        </div>
-    <?php endif; ?>
     <?php echo $dashboard_html; ?>
     <script>
         var dashboardHigueraData = {
