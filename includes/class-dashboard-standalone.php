@@ -274,9 +274,12 @@ class Dashboard_Higuera_Standalone {
         $lang = get_language_attributes();
         $title = get_option('dlh_password_portal_title', 'Acceso al Dashboard');
         $message = get_option('dlh_password_portal_message', 'Ingresa la contraseña para continuar.');
-        $version = DASHBOARD_HIGUERA_VERSION;
-        $portal_css_url = DASHBOARD_HIGUERA_PLUGIN_URL . 'assets/css/dashboard-portal.css?ver=' . $version;
-        $portal_js_url = DASHBOARD_HIGUERA_PLUGIN_URL . 'assets/js/dashboard-portal.js?ver=' . $version;
+        $portal_css_path = DASHBOARD_HIGUERA_PLUGIN_DIR . 'assets/css/dashboard-portal.css';
+        $portal_js_path = DASHBOARD_HIGUERA_PLUGIN_DIR . 'assets/js/dashboard-portal.js';
+        $portal_css_ver = file_exists($portal_css_path) ? (string) filemtime($portal_css_path) : DASHBOARD_HIGUERA_VERSION;
+        $portal_js_ver = file_exists($portal_js_path) ? (string) filemtime($portal_js_path) : DASHBOARD_HIGUERA_VERSION;
+        $portal_css_url = DASHBOARD_HIGUERA_PLUGIN_URL . 'assets/css/dashboard-portal.css?ver=' . rawurlencode($portal_css_ver);
+        $portal_js_url = DASHBOARD_HIGUERA_PLUGIN_URL . 'assets/js/dashboard-portal.js?ver=' . rawurlencode($portal_js_ver);
         ?>
 <!DOCTYPE html>
 <html <?php echo $lang; ?>>
@@ -285,6 +288,7 @@ class Dashboard_Higuera_Standalone {
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="robots" content="noindex, nofollow">
     <title><?php echo esc_html($title); ?></title>
+    <link rel="stylesheet" href="<?php echo esc_url($portal_css_url); ?>">
 </head>
 <body class="dlh-portal-page">
     <main class="dlh-portal-shell" aria-label="Portal de acceso">

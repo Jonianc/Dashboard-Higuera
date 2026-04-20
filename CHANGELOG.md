@@ -1,3 +1,8 @@
+## 1.26.1 - 2026-04-20
+- Fix (Portal standalone): se restaura la carga explícita de `assets/css/dashboard-portal.css` en `output_password_portal()` para evitar portal sin estilos.
+- Cache busting (Portal): CSS/JS del portal ahora usan versionado por `filemtime()` con fallback a `DASHBOARD_HIGUERA_VERSION`.
+- Compatibilidad: sin cambios en flujo de nonce, POST, validación, cookie, expiración ni logout del portal.
+
 ## 1.26.0 - 2026-04-20
 - UI/UX (Header standalone): se compacta la composición a bloque horizontal único (logo + título/subtítulo a la izquierda, acciones a la derecha) para evitar separación vertical y exceso de altura.
 - UI/UX (Header standalone): se ajusta alineación vertical y responsive de brand/actions para mantener equilibrio visual en mobile sin romper toggle de tema ni botón `Cerrar acceso`.
