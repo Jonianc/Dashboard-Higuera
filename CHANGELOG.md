@@ -1,3 +1,9 @@
+## 1.28.2 - 2026-04-29
+- Admin (Rentabilidad): nueva sección visible "Base comparativa rentabilidad 24-25" en Ajustes > Rentabilidad.
+- Flujo 24-25: se separa en dos pasos reales: `Prevalidar archivo` y `Activar base 24-25` (activación no automática tras subir).
+- Diagnóstico 24-25: se exponen nombre/fecha, columnas reconocidas/faltantes, filas leídas/útiles/ignoradas y métricas clave (ingresos, costos, resultado, costo/kg, ingreso/kg).
+- Resumen: acceso rápido `Cargar rentabilidad 24-25` apuntando a Ajustes > Rentabilidad.
+
 ## 1.28.1 - 2026-04-29
 - Fix (Standalone): se agrega `csvRentabilidad2425Url` a `dashboardHigueraData` para cargar comparativo 24-25 en `/dashboard/`.
 - Fix (Normalización 24-25): se ignoran filas resumen `PREDIO=COSTOS`, `PREDIO=TOTAL COSTOS` y `CUARTEL=TOTAL COSTOS`; `COSTOS INDIRECTOS` sigue válido.

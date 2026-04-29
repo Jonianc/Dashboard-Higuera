@@ -359,6 +359,8 @@ class Dashboard_Higuera_Import {
         update_option('dlh_rentabilidad_2425_file_meta', array('original_name'=>$upload['name'],'stored_name'=>basename($target_source),'size'=>(int)$upload['size'],'uploaded_at'=>current_time('mysql'),'source'=>'admin_upload','extension'=>$upload['ext']));
         $analysis['path'] = $target_source;
         $analysis['format'] = $upload['ext'];
+        $normalized = self::build_normalized_rentabilidad_csv($analysis);
+        @file_put_contents(trailingslashit(self::get_upload_dir()) . 'temporada-rentabilidad-2024-25.prevalidated.csv', $normalized);
         return $analysis;
     }
 
@@ -406,6 +408,11 @@ class Dashboard_Higuera_Import {
             'auto_activated' => 1,
         ));
         self::redirect_with_notice('success', $success_message);
+    }
+
+    public static function get_rentabilidad_2425_prevalidation_summary() {
+        $data = get_option('dlh_rentabilidad_2425_prevalidation', array());
+        return is_array($data) ? $data : array();
     }
 
     private static function get_rentabilidad_file_meta($source_path = null) {
@@ -1402,7 +1409,7 @@ class Dashboard_Higuera_Import {
             $source = isset($analysis['path']) ? $analysis['path'] : self::resolve_rent_source_path();
             self::activate_rentabilidad_analysis($analysis, $source, 'Base de rentabilidad cargada, validada y activada correctamente.');
         }
-        if ($action === 'upload_validate_rentabilidad_2425') {
+        if ($action === 'prevalidate_rentabilidad_2425_upload' || $action === 'upload_validate_rentabilidad_2425') {
             $upload = self::get_uploaded_rentabilidad_2425_file();
             if (is_wp_error($upload)) {
                 self::redirect_with_notice('error', $upload->get_error_message());
@@ -1412,7 +1419,51 @@ class Dashboard_Higuera_Import {
                 self::redirect_with_notice('error', $analysis->get_error_message());
             }
             $source = isset($analysis['path']) ? $analysis['path'] : self::resolve_rent_2425_source_path();
-            self::activate_rentabilidad_2425_analysis($analysis, $source, 'Base comparativa rentabilidad 24-25 cargada, validada y activada correctamente.');
+            $normalized = self::build_normalized_rentabilidad_csv($analysis);
+            $diag = self::analyze_rentabilidad_csv_content($normalized);
+            $recognized = !empty($analysis['recognized_columns']) ? (array) $analysis['recognized_columns'] : array();
+            $expected = self::get_rentabilidad_expected_keys();
+            $missing = array_values(array_diff($expected, $recognized));
+            update_option('dlh_rentabilidad_2425_prevalidation', array(
+                'file_name' => basename((string) $source),
+                'uploaded_at' => current_time('mysql'),
+                'recognized_columns' => $recognized,
+                'missing_columns' => $missing,
+                'rows_read' => !empty($analysis['records']) ? count((array) $analysis['records']) : 0,
+                'rows_valid' => !empty($analysis['valid_rows']) ? (int) $analysis['valid_rows'] : 0,
+                'rows_ignored' => max(0, (!empty($analysis['records']) ? count((array) $analysis['records']) : 0) - (!empty($analysis['valid_rows']) ? (int) $analysis['valid_rows'] : 0)),
+                'totals' => !empty($diag['totals']) && is_array($diag['totals']) ? $diag['totals'] : array(),
+                'ready' => 1,
+            ));
+            self::redirect_with_notice('success', 'Base comparativa rentabilidad 24-25 prevalidada correctamente. Usa el botón de activar para publicar.');
+        }
+
+        if ($action === 'activate_rentabilidad_2425_validated') {
+            $pre = get_option('dlh_rentabilidad_2425_prevalidation', array());
+            if (empty($pre['ready'])) {
+                self::redirect_with_notice('error', 'Primero debes prevalidar un archivo de rentabilidad 24-25.');
+            }
+            $pre_file = trailingslashit(self::get_upload_dir()) . 'temporada-rentabilidad-2024-25.prevalidated.csv';
+            if (!file_exists($pre_file)) {
+                self::redirect_with_notice('error', 'No existe archivo prevalidado para activar.');
+            }
+            $content = self::read_file_utf8($pre_file);
+            if (is_wp_error($content) || trim((string) $content) === '') {
+                self::redirect_with_notice('error', 'No se pudo leer el archivo prevalidado.');
+            }
+            $written = file_put_contents(self::get_rent_2425_target_path(), (string) $content);
+            if ($written === false) {
+                self::redirect_with_notice('error', 'No se pudo activar la base comparativa rentabilidad 24-25.');
+            }
+            update_option('dlh_last_validation_rentabilidad_2425', array(
+                'time' => current_time('mysql'),
+                'source' => !empty($pre['file_name']) ? (string) $pre['file_name'] : 'prevalidated.csv',
+                'rows' => !empty($pre['rows_valid']) ? (int) $pre['rows_valid'] : 0,
+                'recognized_columns' => !empty($pre['recognized_columns']) ? (array) $pre['recognized_columns'] : array(),
+                'format' => 'csv',
+                'auto_activated' => 0,
+            ));
+            self::redirect_with_notice('success', 'Base comparativa rentabilidad 24-25 activada correctamente.');
         }
 
         if ($action === 'validate_rentabilidad' || $action === 'activate_rentabilidad') {

@@ -403,6 +403,7 @@ class Dashboard_Higuera_Settings {
             'default'           => array(),
         ));
         add_settings_field('dlh_rentabilidad_manual_rows', 'Carga manual complementaria', array(__CLASS__, 'field_rentabilidad_manual_rows'), self::PAGE_RENTABILIDAD, 'dlh_section_rentabilidad');
+        add_settings_field('dlh_rentabilidad_2425_base', 'Base comparativa rentabilidad 24-25', array(__CLASS__, 'field_rentabilidad_2425_base'), self::PAGE_RENTABILIDAD, 'dlh_section_rentabilidad');
         add_settings_field('dlh_rentabilidad_diagnostics', 'Diagnóstico de rentabilidad', array(__CLASS__, 'field_rentabilidad_diagnostics'), self::PAGE_RENTABILIDAD, 'dlh_section_rentabilidad');
 
     }
@@ -777,6 +778,41 @@ class Dashboard_Higuera_Settings {
             echo '</div>';
         }
         echo '</div>';
+        echo '</div>';
+    }
+
+    public static function field_rentabilidad_2425_base() {
+        $pre = Dashboard_Higuera_Import::get_rentabilidad_2425_prevalidation_summary();
+        $totals = !empty($pre['totals']) && is_array($pre['totals']) ? $pre['totals'] : array();
+        echo '<div class="dlh-rent-2425-upload">';
+        echo '<form method="post" enctype="multipart/form-data" action="' . esc_url(admin_url('admin.php?page=' . Dashboard_Higuera_Import::SUBMENU_SLUG)) . '">';
+        wp_nonce_field('dlh_base_2425_action');
+        echo '<input type="hidden" name="dlh_import_action" value="prevalidate_rentabilidad_2425_upload" />';
+        echo '<input type="file" name="dlh_rentabilidad_2425_file" accept=".csv,.xlsx" required />';
+        echo '<p><button type="submit" class="button button-secondary">Prevalidar archivo</button></p>';
+        echo '</form>';
+        echo '<form method="post" action="' . esc_url(admin_url('admin.php?page=' . Dashboard_Higuera_Import::SUBMENU_SLUG)) . '">';
+        wp_nonce_field('dlh_base_2425_action');
+        echo '<input type="hidden" name="dlh_import_action" value="activate_rentabilidad_2425_validated" />';
+        echo '<p><button type="submit" class="button button-primary"' . (empty($pre['ready']) ? ' disabled' : '') . '>Activar base 24-25</button></p>';
+        echo '</form>';
+        echo '<p class="description">Fuente: <code>uploads/dashboard-higuera/base-rentabilidad-2024-25.csv/xlsx</code> · Activo: <code>uploads/dashboard-higuera/temporada-rentabilidad-2024-25.csv</code>.</p>';
+        if (!empty($pre)) {
+            echo '<ul>';
+            echo '<li><strong>Nombre archivo:</strong> ' . esc_html((string) ($pre['file_name'] ?? '—')) . '</li>';
+            echo '<li><strong>Fecha de carga:</strong> ' . esc_html((string) ($pre['uploaded_at'] ?? '—')) . '</li>';
+            echo '<li><strong>Columnas reconocidas:</strong> ' . esc_html(implode(', ', (array) ($pre['recognized_columns'] ?? array()))) . '</li>';
+            echo '<li><strong>Columnas faltantes:</strong> ' . esc_html(implode(', ', (array) ($pre['missing_columns'] ?? array()))) . '</li>';
+            echo '<li><strong>Filas leídas:</strong> ' . esc_html(number_format_i18n((int) ($pre['rows_read'] ?? 0))) . '</li>';
+            echo '<li><strong>Filas útiles:</strong> ' . esc_html(number_format_i18n((int) ($pre['rows_valid'] ?? 0))) . '</li>';
+            echo '<li><strong>Filas ignoradas:</strong> ' . esc_html(number_format_i18n((int) ($pre['rows_ignored'] ?? 0))) . '</li>';
+            echo '<li><strong>Ingresos totales:</strong> $' . esc_html(number_format_i18n((float) ($totals['total_ingresos'] ?? 0), 0)) . '</li>';
+            echo '<li><strong>Costos totales:</strong> $' . esc_html(number_format_i18n((float) ($totals['total_costos'] ?? 0), 0)) . '</li>';
+            echo '<li><strong>Resultado recalculado:</strong> $' . esc_html(number_format_i18n((float) ($totals['resultado'] ?? 0), 0)) . '</li>';
+            echo '<li><strong>Costo/kg:</strong> ' . esc_html(number_format_i18n((float) ($totals['costo_kilo'] ?? 0), 3)) . '</li>';
+            echo '<li><strong>Ingreso/kg:</strong> ' . esc_html(number_format_i18n((float) ($totals['ingresos_kilo'] ?? 0), 3)) . '</li>';
+            echo '</ul>';
+        }
         echo '</div>';
     }
 
@@ -1200,6 +1236,7 @@ class Dashboard_Higuera_Settings {
                 <a class="button" href="<?php echo esc_url($access_url); ?>">Ir a Acceso</a>
                 <a class="button" href="<?php echo esc_url($data_api_url); ?>">Ir a Datos/API</a>
                 <a class="button" href="<?php echo esc_url($rentabilidad_url); ?>">Ir a Rentabilidad</a>
+                <a class="button" href="<?php echo esc_url($rentabilidad_url); ?>">Cargar rentabilidad 24-25</a>
                 <a class="button" href="<?php echo esc_url($base_2425_url); ?>">Ir a Base 24-25</a>
             </div>
         </div>
