@@ -403,7 +403,6 @@ class Dashboard_Higuera_Settings {
             'default'           => array(),
         ));
         add_settings_field('dlh_rentabilidad_manual_rows', 'Carga manual complementaria', array(__CLASS__, 'field_rentabilidad_manual_rows'), self::PAGE_RENTABILIDAD, 'dlh_section_rentabilidad');
-        add_settings_field('dlh_rentabilidad_2425_base', 'Base comparativa rentabilidad 24-25', array(__CLASS__, 'field_rentabilidad_2425_base'), self::PAGE_RENTABILIDAD, 'dlh_section_rentabilidad');
         add_settings_field('dlh_rentabilidad_diagnostics', 'Diagnóstico de rentabilidad', array(__CLASS__, 'field_rentabilidad_diagnostics'), self::PAGE_RENTABILIDAD, 'dlh_section_rentabilidad');
 
     }
@@ -1295,13 +1294,20 @@ class Dashboard_Higuera_Settings {
         if (!current_user_can('manage_options')) {
             return;
         }
-        self::render_settings_page_form(
+        echo '<div class="wrap dlh-settings-page" data-dlh-settings-saved="' . (isset($_GET['settings-updated']) ? '1' : '0') . '">';
+        self::render_header(
             'Rentabilidad — Dashboard Higuera',
-            'Configura cards, íconos, carga manual complementaria y diagnóstico del bloque Rentabilidad.',
-            self::PAGE_RENTABILIDAD,
-            self::OPTION_GROUP_RENTABILIDAD,
-            'Guardar ajustes de Rentabilidad',
-            'Este módulo mantiene el builder/workspace y diagnóstico de rentabilidad sin alterar la persistencia actual.'
+            'Configura cards, íconos, carga manual complementaria y diagnóstico del bloque Rentabilidad.'
         );
+        echo '<div class="dlh-card">';
+        echo '<h2>Base comparativa rentabilidad 24-25</h2>';
+        self::field_rentabilidad_2425_base();
+        echo '</div>';
+        echo '<form method="post" action="options.php" class="dlh-settings-form" data-dlh-edit-form>';
+        settings_fields(self::OPTION_GROUP_RENTABILIDAD);
+        do_settings_sections(self::PAGE_RENTABILIDAD);
+        echo '<div class="dlh-settings-actions">';
+        submit_button('Guardar ajustes de Rentabilidad', 'primary', 'submit', false);
+        echo '</div></form></div>';
     }
 }

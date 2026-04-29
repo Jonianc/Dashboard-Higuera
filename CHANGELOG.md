@@ -1,3 +1,10 @@
+## 1.28.3 - 2026-04-29
+- Fix (Admin Rentabilidad): la card "Base comparativa rentabilidad 24-25" se renderiza fuera del formulario `options.php` para evitar formularios anidados.
+- Fix (Flujo 24-25): prevalidación y activación quedan en formularios POST separados (`prevalidate_rentabilidad_2425_upload` y `activate_rentabilidad_2425_validated`).
+- Fix (Endpoint 24-25): `get_rentabilidad_2425_csv_content()` sirve solo `temporada-rentabilidad-2024-25.csv` activo; sin fallback a fuente/prevalidado.
+- Fix (Diagnóstico): `rows_valid` usa filas del CSV normalizado y `rows_ignored` se calcula contra registros originales.
+- Cleanup (Base 24-25): se elimina bloque duplicado de rentabilidad 24-25 con texto "Validar y activar".
+
 ## 1.28.2 - 2026-04-29
 - Admin (Rentabilidad): nueva sección visible "Base comparativa rentabilidad 24-25" en Ajustes > Rentabilidad.
 - Flujo 24-25: se separa en dos pasos reales: `Prevalidar archivo` y `Activar base 24-25` (activación no automática tras subir).

@@ -1424,14 +1424,16 @@ class Dashboard_Higuera_Import {
             $recognized = !empty($analysis['recognized_columns']) ? (array) $analysis['recognized_columns'] : array();
             $expected = self::get_rentabilidad_expected_keys();
             $missing = array_values(array_diff($expected, $recognized));
+            $normalized_rows = !empty($diag['rows']) ? (int) $diag['rows'] : 0;
+            $records_rows = !empty($analysis['records']) ? count((array) $analysis['records']) : 0;
             update_option('dlh_rentabilidad_2425_prevalidation', array(
                 'file_name' => basename((string) $source),
                 'uploaded_at' => current_time('mysql'),
                 'recognized_columns' => $recognized,
                 'missing_columns' => $missing,
-                'rows_read' => !empty($analysis['records']) ? count((array) $analysis['records']) : 0,
-                'rows_valid' => !empty($analysis['valid_rows']) ? (int) $analysis['valid_rows'] : 0,
-                'rows_ignored' => max(0, (!empty($analysis['records']) ? count((array) $analysis['records']) : 0) - (!empty($analysis['valid_rows']) ? (int) $analysis['valid_rows'] : 0)),
+                'rows_read' => $records_rows,
+                'rows_valid' => $normalized_rows,
+                'rows_ignored' => max(0, $records_rows - $normalized_rows),
                 'totals' => !empty($diag['totals']) && is_array($diag['totals']) ? $diag['totals'] : array(),
                 'ready' => 1,
             ));
@@ -2023,15 +2025,7 @@ class Dashboard_Higuera_Import {
                 return (string) $content;
             }
         }
-        $source = self::resolve_rent_2425_source_path();
-        if (!$source) {
-            return new WP_Error('rent_2425_missing', 'No existe base comparativa de rentabilidad 24-25.');
-        }
-        $analysis = self::analyze_rentabilidad_source($source);
-        if (is_wp_error($analysis)) {
-            return $analysis;
-        }
-        return self::build_normalized_rentabilidad_csv($analysis);
+        return new WP_Error('rent_2425_missing', 'No existe base comparativa de rentabilidad 24-25 activada.');
     }
 
     private static function parse_rent_number($value) {
@@ -2545,28 +2539,6 @@ class Dashboard_Higuera_Import {
                                     <strong>Automática después de validar</strong>
                                 </div>
                             </div>
-                        </div>
-                    </section>
-
-                    <section class="dlh-card dlh-card--accent">
-                        <div class="dlh-card__header">
-                            <div>
-                                <h2>Base comparativa rentabilidad 24-25</h2>
-                                <p>Sube CSV/XLSX para temporada histórica de rentabilidad. Se valida y activa en archivo separado.</p>
-                            </div>
-                            <span class="dlh-pill is-strong">Comparativo</span>
-                        </div>
-                        <div class="dlh-upload-panel">
-                            <form method="post" enctype="multipart/form-data" class="dlh-upload-form">
-                                <?php wp_nonce_field('dlh_base_2425_action'); ?>
-                                <input type="hidden" name="dlh_import_action" value="upload_validate_rentabilidad_2425" />
-                                <label for="dlh-rentabilidad-2425-file" class="dlh-field-label">Archivo comparativo rentabilidad 24-25</label>
-                                <input type="file" id="dlh-rentabilidad-2425-file" name="dlh_rentabilidad_2425_file" accept=".csv,.xlsx" class="dlh-file-input" />
-                                <p class="description">Fuente: <code>base-rentabilidad-2024-25.csv/xlsx</code> · Activo: <code>temporada-rentabilidad-2024-25.csv</code>.</p>
-                                <div class="dlh-action-row">
-                                    <button type="submit" class="button button-primary">Validar y activar comparativa 24-25</button>
-                                </div>
-                            </form>
                         </div>
                     </section>
 
