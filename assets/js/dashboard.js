@@ -2206,7 +2206,7 @@ function buildCSVFromApi(rows, opts){
   return linesOut.join("\n");
 }
 function showTab(id){ 
-  $$('.tab').forEach(t=>{
+  $$('.dashboard-main-tabs .tab[data-tab]').forEach(t=>{
     const active = t.dataset.tab===id;
     t.classList.toggle('active', active);
     t.setAttribute('aria-selected', active ? 'true' : 'false');
@@ -2223,7 +2223,7 @@ function showTab(id){
   if(id==='comparativo') buildComparativo();
 }
 function bindRentabilidadTabs(){
-  const tabs = $$('.rent-tabs .tab');
+  const tabs = $$('.rent-tabs .tab[data-rent-tab]');
   if(!tabs.length) return;
   tabs.forEach(tab=>{
     tab.onclick = async ()=>{
@@ -2241,7 +2241,7 @@ function bindRentabilidadTabs(){
     metric.addEventListener('change', ()=>renderRentabilidadResumen());
   }
 }
-$$('.tab').forEach((t, idx, tabs)=>{
+$$('.dashboard-main-tabs .tab[data-tab]').forEach((t, idx, tabs)=>{
   t.onclick = ()=> showTab(t.dataset.tab);
   t.addEventListener('keydown', (e)=>{
     if(e.key === 'Enter' || e.key === ' '){

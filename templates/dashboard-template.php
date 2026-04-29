@@ -200,7 +200,7 @@ if (!defined('ABSPATH')) {
                         </div>
                         <p>Cambia entre resumen operativo, comparativo histórico, gráficos y detalle sin perder filtros.</p>
                     </div>
-                    <div class="tabs tabs--elevated" role="tablist" aria-label="Vistas del dashboard">
+                    <div class="tabs tabs--elevated dashboard-main-tabs" role="tablist" aria-label="Vistas del dashboard">
                     <div id="tab-resumen" class="tab active" data-tab="resumen" role="tab" tabindex="0" aria-selected="true" aria-controls="panel-resumen">Resumen</div>
                     <div id="tab-comparativo" class="tab" data-tab="comparativo" role="tab" tabindex="-1" aria-selected="false" aria-controls="panel-comparativo">Comparativo 24-25 vs 25-26</div>
                     <div id="tab-graficos" class="tab" data-tab="graficos" role="tab" tabindex="-1" aria-selected="false" aria-controls="panel-graficos">Gráficos</div>

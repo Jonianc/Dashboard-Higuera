@@ -1,3 +1,9 @@
+## 1.28.5 - 2026-04-29
+- Fix (Tabs): se separa el alcance de tabs principales vs tabs internas de Rentabilidad para evitar conflicto de clase `.tab`.
+- Template: el contenedor de tabs principales agrega clase `dashboard-main-tabs`.
+- JS: `showTab()` y bind global ahora operan solo sobre `.dashboard-main-tabs .tab[data-tab]`.
+- JS: `bindRentabilidadTabs()` mantiene manejo independiente para `.rent-tabs .tab[data-rent-tab]`.
+
 ## 1.28.4 - 2026-04-29
 - Fix (Flujo admin 24-25): formularios de prevalidación/activación agregan `dlh_return_to` para volver a Ajustes > Rentabilidad.
 - Fix (Redirect notice): `redirect_with_notice()` respeta `dlh_return_to` validado por `wp_validate_redirect()` y mantiene query args de notice.
