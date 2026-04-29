@@ -1517,11 +1517,20 @@ class Dashboard_Higuera_Import {
     }
 
     private static function redirect_with_notice($type, $message) {
-        $url = add_query_arg(array(
+        $fallback = add_query_arg(array(
             'page' => self::SUBMENU_SLUG,
             'dlh_notice_type' => $type,
             'dlh_notice' => rawurlencode($message),
         ), admin_url('admin.php'));
+        $return_to = '';
+        if (!empty($_POST['dlh_return_to'])) {
+            $return_to = esc_url_raw((string) wp_unslash($_POST['dlh_return_to']));
+        }
+        $base = $return_to !== '' ? wp_validate_redirect($return_to, $fallback) : $fallback;
+        $url = add_query_arg(array(
+            'dlh_notice_type' => $type,
+            'dlh_notice' => rawurlencode($message),
+        ), $base);
         wp_safe_redirect($url);
         exit;
     }
@@ -2140,6 +2149,10 @@ class Dashboard_Higuera_Import {
                 $totals['hectareas'] += self::parse_rent_number($row[$map['hectareas']]);
             }
         }
+        $totals['ingresos_kilo'] = $totals['kilos_reales'] > 0 ? ($totals['total_ingresos'] / $totals['kilos_reales']) : 0.0;
+        $totals['costo_kilo'] = $totals['kilos_reales'] > 0 ? ($totals['total_costos'] / $totals['kilos_reales']) : 0.0;
+        $totals['ingreso_hectarea'] = $totals['hectareas'] > 0 ? ($totals['total_ingresos'] / $totals['hectareas']) : 0.0;
+        $totals['costo_hectarea'] = $totals['hectareas'] > 0 ? ($totals['total_costos'] / $totals['hectareas']) : 0.0;
 
         return array(
             'rows' => $row_count,

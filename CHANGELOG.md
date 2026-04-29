@@ -1,3 +1,9 @@
+## 1.28.4 - 2026-04-29
+- Fix (Flujo admin 24-25): formularios de prevalidación/activación agregan `dlh_return_to` para volver a Ajustes > Rentabilidad.
+- Fix (Redirect notice): `redirect_with_notice()` respeta `dlh_return_to` validado por `wp_validate_redirect()` y mantiene query args de notice.
+- Fix (Rentabilidad settings): `render_page_rentabilidad()` ahora muestra notices `dlh_notice_type/dlh_notice`.
+- Fix (Diagnóstico totales): `analyze_rentabilidad_csv_content()` calcula `ingresos_kilo`, `costo_kilo`, `ingreso_hectarea` y `costo_hectarea` en `totals`.
+
 ## 1.28.3 - 2026-04-29
 - Fix (Admin Rentabilidad): la card "Base comparativa rentabilidad 24-25" se renderiza fuera del formulario `options.php` para evitar formularios anidados.
 - Fix (Flujo 24-25): prevalidación y activación quedan en formularios POST separados (`prevalidate_rentabilidad_2425_upload` y `activate_rentabilidad_2425_validated`).

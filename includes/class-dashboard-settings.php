@@ -787,12 +787,14 @@ class Dashboard_Higuera_Settings {
         echo '<form method="post" enctype="multipart/form-data" action="' . esc_url(admin_url('admin.php?page=' . Dashboard_Higuera_Import::SUBMENU_SLUG)) . '">';
         wp_nonce_field('dlh_base_2425_action');
         echo '<input type="hidden" name="dlh_import_action" value="prevalidate_rentabilidad_2425_upload" />';
+        echo '<input type="hidden" name="dlh_return_to" value="' . esc_attr(admin_url('admin.php?page=' . self::PAGE_RENTABILIDAD)) . '" />';
         echo '<input type="file" name="dlh_rentabilidad_2425_file" accept=".csv,.xlsx" required />';
         echo '<p><button type="submit" class="button button-secondary">Prevalidar archivo</button></p>';
         echo '</form>';
         echo '<form method="post" action="' . esc_url(admin_url('admin.php?page=' . Dashboard_Higuera_Import::SUBMENU_SLUG)) . '">';
         wp_nonce_field('dlh_base_2425_action');
         echo '<input type="hidden" name="dlh_import_action" value="activate_rentabilidad_2425_validated" />';
+        echo '<input type="hidden" name="dlh_return_to" value="' . esc_attr(admin_url('admin.php?page=' . self::PAGE_RENTABILIDAD)) . '" />';
         echo '<p><button type="submit" class="button button-primary"' . (empty($pre['ready']) ? ' disabled' : '') . '>Activar base 24-25</button></p>';
         echo '</form>';
         echo '<p class="description">Fuente: <code>uploads/dashboard-higuera/base-rentabilidad-2024-25.csv/xlsx</code> · Activo: <code>uploads/dashboard-higuera/temporada-rentabilidad-2024-25.csv</code>.</p>';
@@ -1299,6 +1301,10 @@ class Dashboard_Higuera_Settings {
             'Rentabilidad — Dashboard Higuera',
             'Configura cards, íconos, carga manual complementaria y diagnóstico del bloque Rentabilidad.'
         );
+        if (!empty($_GET['dlh_notice'])) {
+            $notice_type = !empty($_GET['dlh_notice_type']) && $_GET['dlh_notice_type'] === 'error' ? 'error' : 'success';
+            echo '<div class="notice notice-' . esc_attr($notice_type) . ' is-dismissible"><p>' . esc_html(rawurldecode((string) wp_unslash($_GET['dlh_notice']))) . '</p></div>';
+        }
         echo '<div class="dlh-card">';
         echo '<h2>Base comparativa rentabilidad 24-25</h2>';
         self::field_rentabilidad_2425_base();
