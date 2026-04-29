@@ -105,6 +105,18 @@ class Dashboard_Higuera_Import {
         return trailingslashit(self::get_upload_dir()) . 'temporada-rentabilidad.csv';
     }
 
+    private static function get_rent_2425_source_csv_path() {
+        return trailingslashit(self::get_upload_dir()) . 'base-rentabilidad-2024-25.csv';
+    }
+
+    private static function get_rent_2425_source_xlsx_path() {
+        return trailingslashit(self::get_upload_dir()) . 'base-rentabilidad-2024-25.xlsx';
+    }
+
+    public static function get_rent_2425_target_path() {
+        return trailingslashit(self::get_upload_dir()) . 'temporada-rentabilidad-2024-25.csv';
+    }
+
     public static function get_rent_source_path() {
         return self::resolve_rent_source_path();
     }
@@ -190,6 +202,18 @@ class Dashboard_Higuera_Import {
             return $csv;
         }
 
+        return null;
+    }
+
+    private static function resolve_rent_2425_source_path() {
+        $csv = self::get_rent_2425_source_csv_path();
+        $xlsx = self::get_rent_2425_source_xlsx_path();
+        if (file_exists($xlsx)) {
+            return $xlsx;
+        }
+        if (file_exists($csv)) {
+            return $csv;
+        }
         return null;
     }
 
@@ -1619,37 +1643,25 @@ class Dashboard_Higuera_Import {
     }
 
     private static function build_rentabilidad_canonical_row($row, $map) {
-        $predio = self::get_rent_cell_value($row, $map, 'predio');
-        $sector = self::get_rent_cell_value($row, $map, 'sector');
-        $especie = self::get_rent_cell_value($row, $map, 'especie');
-        $variedad = self::get_rent_cell_value($row, $map, 'variedad');
-        $cuartel = self::get_rent_cell_value($row, $map, 'cuartel');
+        $predio = trim((string) self::get_rent_cell_value($row, $map, 'predio'));
+        $sector = trim((string) self::get_rent_cell_value($row, $map, 'sector'));
+        $especie = trim((string) self::get_rent_cell_value($row, $map, 'especie'));
+        $variedad = trim((string) self::get_rent_cell_value($row, $map, 'variedad'));
+        $cuartel = trim((string) self::get_rent_cell_value($row, $map, 'cuartel'));
+        if (strtoupper($cuartel) === 'TOTAL COSTOS') {
+            return null;
+        }
 
         $hectareas = self::parse_rent_number(self::get_rent_cell_value($row, $map, 'hectareas'));
         $kilos = self::parse_rent_number(self::get_rent_cell_value($row, $map, 'kilos_reales'));
         $ingresos = self::parse_rent_number(self::get_rent_cell_value($row, $map, 'total_ingresos'));
         $costos = self::parse_rent_number(self::get_rent_cell_value($row, $map, 'total_costos'));
-        $resultado = self::parse_rent_number(self::get_rent_cell_value($row, $map, 'resultado'));
-        if ($resultado == 0.0 && ($ingresos != 0.0 || $costos != 0.0)) {
-            $resultado = $ingresos - $costos;
-        }
+        $resultado = $ingresos - $costos;
 
-        $ingreso_hectarea = self::parse_rent_number(self::get_rent_cell_value($row, $map, 'ingreso_hectarea'));
-        if ($ingreso_hectarea == 0.0 && $hectareas > 0) {
-            $ingreso_hectarea = $ingresos / $hectareas;
-        }
-        $costo_hectarea = self::parse_rent_number(self::get_rent_cell_value($row, $map, 'costo_hectarea'));
-        if ($costo_hectarea == 0.0 && $hectareas > 0) {
-            $costo_hectarea = $costos / $hectareas;
-        }
-        $ingresos_kilo = self::parse_rent_number(self::get_rent_cell_value($row, $map, 'ingresos_kilo'));
-        if ($ingresos_kilo == 0.0 && $kilos > 0) {
-            $ingresos_kilo = $ingresos / $kilos;
-        }
-        $costo_kilo = self::parse_rent_number(self::get_rent_cell_value($row, $map, 'costo_kilo'));
-        if ($costo_kilo == 0.0 && $kilos > 0) {
-            $costo_kilo = $costos / $kilos;
-        }
+        $ingreso_hectarea = $hectareas > 0 ? $ingresos / $hectareas : 0.0;
+        $costo_hectarea = $hectareas > 0 ? $costos / $hectareas : 0.0;
+        $ingresos_kilo = $kilos > 0 ? $ingresos / $kilos : 0.0;
+        $costo_kilo = $kilos > 0 ? $costos / $kilos : 0.0;
 
         return array(
             $predio,
@@ -1851,6 +1863,9 @@ class Dashboard_Higuera_Import {
         $map = isset($analysis['column_map']) && is_array($analysis['column_map']) ? $analysis['column_map'] : array();
         foreach ((array) $analysis['records'] as $row) {
             $normalized_row = self::build_rentabilidad_canonical_row((array) $row, $map);
+            if ($normalized_row === null) {
+                continue;
+            }
             if (
                 trim((string) $normalized_row[0]) === '' &&
                 trim((string) $normalized_row[1]) === '' &&
@@ -1864,6 +1879,25 @@ class Dashboard_Higuera_Import {
         $csv = stream_get_contents($fp);
         fclose($fp);
         return $csv;
+    }
+
+    public static function get_rentabilidad_2425_csv_content() {
+        $active = self::get_rent_2425_target_path();
+        if (file_exists($active) && is_readable($active) && filesize($active) > 0) {
+            $content = self::read_file_utf8($active);
+            if (!is_wp_error($content) && trim((string) $content) !== '') {
+                return (string) $content;
+            }
+        }
+        $source = self::resolve_rent_2425_source_path();
+        if (!$source) {
+            return new WP_Error('rent_2425_missing', 'No existe base comparativa de rentabilidad 24-25.');
+        }
+        $analysis = self::analyze_rentabilidad_source($source);
+        if (is_wp_error($analysis)) {
+            return $analysis;
+        }
+        return self::build_normalized_rentabilidad_csv($analysis);
     }
 
     private static function parse_rent_number($value) {

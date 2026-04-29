@@ -201,6 +201,9 @@ function ingestCSV2425(raw){
 let comp2425 = {rows:[], supMap:{}};
 let comp2425Status = 'idle';
 let comp2425ErrorReason = '';
+let rentabilidadDataActual = [];
+let rentabilidadData2425 = [];
+let rentabilidadComparativoStatus = 'idle';
 let rentabilidadData = [];
 let rentabilidadStatus = 'idle';
 let rentabilidadErrorReason = '';
@@ -1217,6 +1220,7 @@ async function ensureRentabilidadData(){
       const inlineRows = ingestRentabilidadCSV(inlineRaw);
       if(inlineRows.length){
         rentabilidadData = inlineRows;
+        rentabilidadDataActual = inlineRows.slice();
         rentabilidadStatus = 'ready';
         rentabilidadErrorReason = '';
         return;
@@ -1250,6 +1254,7 @@ async function ensureRentabilidadData(){
       try{ raw = JSON.parse(t); }catch(e){}
     }
     rentabilidadData = ingestRentabilidadCSV(raw);
+    rentabilidadDataActual = rentabilidadData.slice();
     rentabilidadStatus = rentabilidadData.length ? 'ready' : 'empty';
     rentabilidadErrorReason = '';
   }catch(e){
@@ -1258,6 +1263,58 @@ async function ensureRentabilidadData(){
     rentabilidadErrorReason = e && e.message ? e.message : 'Error desconocido al leer rentabilidad.';
     rentabilidadData = [];
   }
+}
+async function ensureRentabilidadComparativo2425(){
+  if(rentabilidadComparativoStatus === 'ready' || rentabilidadComparativoStatus === 'loading') return;
+  const url = (typeof dashboardHigueraData !== 'undefined' && dashboardHigueraData.csvRentabilidad2425Url) ? dashboardHigueraData.csvRentabilidad2425Url : '';
+  if(!url){ rentabilidadComparativoStatus = 'error'; return; }
+  rentabilidadComparativoStatus = 'loading';
+  try{
+    const resp = await fetch(url, {credentials:'same-origin'});
+    if(!resp.ok) throw new Error('HTTP ' + resp.status);
+    const raw = await resp.text();
+    rentabilidadData2425 = ingestRentabilidadCSV(raw);
+    rentabilidadComparativoStatus = 'ready';
+  }catch(e){
+    rentabilidadData2425 = [];
+    rentabilidadComparativoStatus = 'error';
+  }
+}
+function renderRentabilidadComparativo(rows25){
+  const tableWrap = document.getElementById('rentabilidad-resumen');
+  const metricSel = document.getElementById('rent-metrica');
+  if(!tableWrap || !metricSel) return;
+  const mapMetric = {
+    resultado:['RESULTADO','RESULTADO'],
+    ingresos:['TOTAL_INGRESOS','TOTAL_INGRESOS'],
+    costos:['TOTAL_COSTOS','TOTAL_COSTOS'],
+    kilos:['KILOS_REALES','KILOS_REALES'],
+    ingreso_kg:['INGRESOS_KILO','INGRESOS_KILO'],
+    costo_kg:['COSTO_KILO','COSTO_KILO'],
+    ingreso_ha:['INGRESO_HECTAREA','INGRESO_HECTAREA'],
+    costo_ha:['COSTO_HECTAREA','COSTO_HECTAREA']
+  };
+  const keys = mapMetric[metricSel.value] || mapMetric.resultado;
+  const g24 = new Map(), g25 = new Map();
+  rentabilidadData2425.forEach(r=>{ const k=strip(r.CUARTEL)||'Sin cuartel'; g24.set(k,(g24.get(k)||0)+(Number(r[keys[0]])||0)); });
+  rows25.forEach(r=>{ const k=strip(r.CUARTEL)||'Sin cuartel'; g25.set(k,(g25.get(k)||0)+(Number(r[keys[1]])||0)); });
+  const all = Array.from(new Set([...g24.keys(), ...g25.keys()])).sort((a,b)=>a.localeCompare(b,'es'));
+  const totals24 = {res:0,costoKg:0,costos:0,kilos:0}, totals25={res:0,costoKg:0,costos:0,kilos:0};
+  rentabilidadData2425.forEach(r=>{totals24.res+=(r.RESULTADO||0);totals24.costos+=(r.TOTAL_COSTOS||0);totals24.kilos+=(r.KILOS_REALES||0);});
+  rows25.forEach(r=>{totals25.res+=(r.RESULTADO||0);totals25.costos+=(r.TOTAL_COSTOS||0);totals25.kilos+=(r.KILOS_REALES||0);});
+  totals24.costoKg = totals24.kilos>0?totals24.costos/totals24.kilos:0; totals25.costoKg = totals25.kilos>0?totals25.costos/totals25.kilos:0;
+  const diffRes = totals25.res - totals24.res;
+  const diffPct = totals24.res!==0 ? (diffRes/totals24.res) : 0;
+  document.getElementById('rentabilidad-cards').innerHTML = `
+  <article class="rent-card"><div class="rent-card-label">Resultado 24-25</div><div class="rent-card-value">${fmt(totals24.res)}</div></article>
+  <article class="rent-card"><div class="rent-card-label">Resultado 25-26</div><div class="rent-card-value">${fmt(totals25.res)}</div></article>
+  <article class="rent-card"><div class="rent-card-label">Diferencia $</div><div class="rent-card-value">${fmt(diffRes)}</div></article>
+  <article class="rent-card"><div class="rent-card-label">Diferencia %</div><div class="rent-card-value">${pctFmt(diffPct)}</div></article>
+  <article class="rent-card"><div class="rent-card-label">Costo/kg 24-25</div><div class="rent-card-value">${fmt(totals24.costoKg)}</div></article>
+  <article class="rent-card"><div class="rent-card-label">Costo/kg 25-26</div><div class="rent-card-value">${fmt(totals25.costoKg)}</div></article>`;
+  tableWrap.innerHTML = `<table class="dense-table resumen-table rent-table"><thead><tr><th>Cuartel</th><th>24-25</th><th>25-26</th><th>Diferencia</th><th>% Dif.</th></tr></thead><tbody>${
+    all.map(k=>{const v24=g24.get(k)||0;const v25=g25.get(k)||0;const d=v25-v24;const p=v24!==0?d/v24:0;return `<tr><td>${k}</td><td>${fmt(v24)}</td><td>${fmt(v25)}</td><td>${fmt(d)}</td><td>${pctFmt(p)}</td></tr>`;}).join('')
+  }</tbody></table>`;
 }
 function applyRentabilidadFilters(){
   let rows = rentabilidadData.slice();
@@ -1338,6 +1395,11 @@ function renderRentabilidadResumen(){
   }
 
   const rows = applyRentabilidadFilters();
+  const activeRentTab = document.querySelector('.rent-tabs .tab.active')?.dataset?.rentTab || 'resumen';
+  if(activeRentTab === 'comparativo'){
+    renderRentabilidadComparativo(rows);
+    return;
+  }
   const config = getRentabilidadCardConfig();
   cardsWrap.innerHTML = config.filter(([,cfg])=>String(cfg.enabled) === '1' || cfg.enabled === 1).map(([key,cfg])=>{
     const value = getRentMetricValue(rows, key);
@@ -2140,6 +2202,25 @@ function showTab(id){
   setDenseMode(id);
   if(id==='comparativo') buildComparativo();
 }
+function bindRentabilidadTabs(){
+  const tabs = $$('.rent-tabs .tab');
+  if(!tabs.length) return;
+  tabs.forEach(tab=>{
+    tab.onclick = async ()=>{
+      tabs.forEach(t=>t.classList.remove('active'));
+      tab.classList.add('active');
+      const isComp = tab.dataset.rentTab === 'comparativo';
+      const controls = document.getElementById('rentabilidad-comparativo-controls');
+      if(controls) controls.classList.toggle('hidden', !isComp);
+      if(isComp){ await ensureRentabilidadComparativo2425(); }
+      renderRentabilidadResumen();
+    };
+  });
+  const metric = document.getElementById('rent-metrica');
+  if(metric){
+    metric.addEventListener('change', ()=>renderRentabilidadResumen());
+  }
+}
 $$('.tab').forEach((t, idx, tabs)=>{
   t.onclick = ()=> showTab(t.dataset.tab);
   t.addEventListener('keydown', (e)=>{
@@ -2159,6 +2240,7 @@ $$('.tab').forEach((t, idx, tabs)=>{
     }
   });
 });
+bindRentabilidadTabs();
 document.addEventListener('click', (e)=>{
   const chipBtn = e.target.closest('.filter-chip[data-chip-key]');
   if(chipBtn){

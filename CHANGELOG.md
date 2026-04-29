@@ -1,3 +1,9 @@
+## 1.28.0 - 2026-04-29
+- Rentabilidad: nuevo endpoint REST `dashboard-higuera/v1/csv/rentabilidad/2024-25` para base histórica comparativa.
+- Importación/normalización rentabilidad: soporte de rutas `base-rentabilidad-2024-25.(csv|xlsx)` y salida activa `uploads/dashboard-higuera/temporada-rentabilidad-2024-25.csv`.
+- Normalización rentabilidad: se ignora fila `TOTAL COSTOS`, se conservan filas indirectas y se recalculan siempre `RESULTADO`, `/ha` y `/kg` desde ingresos/costos.
+- Dashboard: se agrega comparativo de rentabilidad por cuartel (24-25 vs 25-26) con tabs, selector de métrica, cards resumen y tabla `24-25 | 25-26 | Diferencia | %`.
+
 ## 1.27.1 - 2026-04-24
 - UI/UX (Dashboard filtros): se ajusta la jerarquia final a bloques verticales full-width para `Tipo de registro`, `Cultivo` y `Cuartel`.
 - UI/UX (Filtros): `Categoria` queda separada del bloque principal y `Faena / Meses` pasan a una fila secundaria independiente.

@@ -3,7 +3,7 @@
  * Plugin Name: Dashboard La Higuera
  * Plugin URI: https://github.com/Jonianc/Dashboard-Higuera
  * Description: Dashboard interactivo para visualizar datos de costos y faenas de Agrícola La Higuera
- * Version: 1.27.1
+ * Version: 1.28.0
  * Author: Agrícola La Higuera S.A.
  * Author URI: https://lahiguera.cl
  * License: GPL v2 or later
@@ -18,7 +18,7 @@ if (!defined('WPINC')) {
 }
 
 // Definir constantes del plugin
-define('DASHBOARD_HIGUERA_VERSION', '1.27.1');
+define('DASHBOARD_HIGUERA_VERSION', '1.28.0');
 define('DASHBOARD_HIGUERA_PLUGIN_DIR', plugin_dir_path(__FILE__));
 define('DASHBOARD_HIGUERA_PLUGIN_URL', plugin_dir_url(__FILE__));
 
@@ -171,6 +171,7 @@ class Dashboard_La_Higuera {
                 'last2425Updated' => $last_2425_updated,
                 'debug' => $debug,
                 'csvRentabilidadUrl' => rest_url('dashboard-higuera/v1/csv/rentabilidad'),
+                'csvRentabilidad2425Url' => rest_url('dashboard-higuera/v1/csv/rentabilidad/2024-25'),
                 'csvRentabilidadDiagnosticsUrl' => rest_url('dashboard-higuera/v1/csv/rentabilidad-diagnostics'),
                 'rentabilidadCsvInline' => $rentabilidad_inline_csv,
                 'rentabilidadStatus' => array(
@@ -246,6 +247,11 @@ class Dashboard_La_Higuera {
         register_rest_route('dashboard-higuera/v1', '/csv/rentabilidad-diagnostics', array(
             'methods' => 'GET',
             'callback' => array($this, 'serve_csv_rentabilidad_diagnostics'),
+            'permission_callback' => array($this, 'rest_can_access_csv')
+        ));
+        register_rest_route('dashboard-higuera/v1', '/csv/rentabilidad/2024-25', array(
+            'methods' => 'GET',
+            'callback' => array($this, 'serve_csv_rentabilidad_2425'),
             'permission_callback' => array($this, 'rest_can_access_csv')
         ));
         // Ruta para CSV 2024-25
@@ -487,6 +493,19 @@ class Dashboard_La_Higuera {
             'content_error' => !empty($status['content_error']) ? (string) $status['content_error'] : '',
             'diagnostics' => !empty($status['diagnostics']) && is_array($status['diagnostics']) ? $status['diagnostics'] : array(),
         );
+    }
+
+    public function serve_csv_rentabilidad_2425() {
+        $content = Dashboard_Higuera_Import::get_rentabilidad_2425_csv_content();
+        if (is_wp_error($content)) {
+            return new WP_Error('rent_2425_csv_unavailable', $content->get_error_message(), array('status' => 404));
+        }
+
+        nocache_headers();
+        header('Content-Type: text/csv; charset=utf-8');
+        header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+        echo $content;
+        exit;
     }
 
     public function serve_csv_2425() {

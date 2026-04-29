@@ -166,6 +166,25 @@ if (!defined('ABSPATH')) {
                         </div>
                     </div>
                     <div id="rentabilidadCollapseBody" class="rent-panel-body">
+                        <div class="tabs tabs--elevated rent-tabs" role="tablist" aria-label="Vista rentabilidad">
+                            <div id="tab-rent-resumen" class="tab active" data-rent-tab="resumen">Resumen actual</div>
+                            <div id="tab-rent-comparativo" class="tab" data-rent-tab="comparativo">Comparativo temporadas</div>
+                        </div>
+                        <div id="rentabilidad-comparativo-controls" class="comp-toolbar hidden">
+                            <div class="comp-control">
+                                <label class="comp-control-label" for="rent-metrica">Métrica</label>
+                                <select id="rent-metrica">
+                                    <option value="resultado">Resultado</option>
+                                    <option value="ingresos">Ingresos</option>
+                                    <option value="costos">Costos</option>
+                                    <option value="kilos">Kilos</option>
+                                    <option value="ingreso_kg">Ingreso/kg</option>
+                                    <option value="costo_kg">Costo/kg</option>
+                                    <option value="ingreso_ha">Ingreso/ha</option>
+                                    <option value="costo_ha">Costo/ha</option>
+                                </select>
+                            </div>
+                        </div>
                         <div id="rentabilidad-cards" class="rentabilidad-cards"></div>
                         <div class="table-wrap rent-table-wrap">
                             <div id="rentabilidad-resumen" class="rentabilidad-resumen-table"></div>
