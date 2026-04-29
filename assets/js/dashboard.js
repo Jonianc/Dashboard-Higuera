@@ -1604,7 +1604,7 @@ function refreshAll(){
   renderResumenSignals();
   renderActiveFilterChips();
   renderRentabilidadResumen();
-  const activeTab = document.querySelector('.tab.active');
+  const activeTab = document.querySelector('.dashboard-main-tabs .tab.active[data-tab]');
   if(activeTab && activeTab.dataset.tab==='comparativo') buildComparativo();
 }
 async function ensureComparativo2425Data(){

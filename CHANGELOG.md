@@ -1,3 +1,6 @@
+## 1.28.6 - 2026-04-29
+- Fix (Tabs refresh): `refreshAll()` ahora detecta tab activa solo en `.dashboard-main-tabs .tab.active[data-tab]` para evitar conflicto con tabs internas de Rentabilidad.
+
 ## 1.28.5 - 2026-04-29
 - Fix (Tabs): se separa el alcance de tabs principales vs tabs internas de Rentabilidad para evitar conflicto de clase `.tab`.
 - Template: el contenedor de tabs principales agrega clase `dashboard-main-tabs`.
