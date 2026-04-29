@@ -30,7 +30,8 @@ class Dashboard_Higuera_Import {
     }
 
     public static function enqueue_assets($hook) {
-        if ($hook !== 'dashboard_page_' . self::SUBMENU_SLUG) {
+        $current_page = isset($_GET['page']) ? sanitize_key(wp_unslash($_GET['page'])) : '';
+        if ($current_page !== self::SUBMENU_SLUG) {
             return;
         }
 
@@ -54,6 +55,8 @@ class Dashboard_Higuera_Import {
                 'noFile' => 'Ningún archivo seleccionado',
                 'chooseFile' => 'Selecciona un CSV o XLSX para rentabilidad.',
                 'selected' => 'Archivo listo para validar y activar',
+                'confirmActivate2425' => 'Se activará la base 24-25 vigente. ¿Deseas continuar?',
+                'confirmActivateRentabilidad' => 'Se validará y activará la base de rentabilidad reemplazando la activa. ¿Deseas continuar?',
             ),
         ));
     }

@@ -235,7 +235,7 @@ function predioClas(row){
 }
 const state = {
   data: [], supMap: {},
-  filtros: {predio:"Todos", sector:"Todos", nivel1:"Todos", faena:"Todas", metrica:"VALOR", mes:"Todos", orden:"Desc"},
+  filtros: {predio:"Todos", sector:"Todos", cuartel:"Todos", nivel1:"Todos", faena:"Todas", metrica:"VALOR", mes:"Todos", orden:"Desc"},
   detalle: {nivel1:"Todos", metrica:"VALOR", orden:"Desc"},
   comparativo: {ordenBy:"v25"}
 };
@@ -258,6 +258,65 @@ const comparativoOrdenLabels = {
   diff: 'Diferencia (Δ)',
   pct: 'Diferencia %'
 };
+const FILTER_CHIP_META = {
+  predio: { stateKey:'predio', clearValue:'Todos' },
+  sector: { stateKey:'sector', clearValue:'Todos' },
+  cuartel: { stateKey:'cuartel', clearValue:'Todos' },
+  nivel1: { stateKey:'nivel1', clearValue:'Todos' },
+  faena: { stateKey:'faena', clearValue:'Todas' },
+  mes: { stateKey:'mes', clearValue:'Todos' }
+};
+const FILTER_CHIP_THRESHOLD = 12;
+function escapeHtml(value){
+  return String(value ?? '').replace(/[&<>"']/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch] || ch));
+}
+function renderFilterChipGroup(container, options, selectedValues){
+  if(!container) return;
+  const selectedSet = new Set(selectedValues || []);
+  container.innerHTML = options.map(opt=>{
+    const active = selectedSet.has(opt.value);
+    return `<button type="button" class="filter-choice-chip ${active?'is-active':''}" data-value="${escapeHtml(opt.value)}" aria-pressed="${active?'true':'false'}" data-selected="${active?'true':'false'}"><span>${escapeHtml(opt.label)}</span></button>`;
+  }).join('');
+}
+function getSelectedCultivos(){
+  if(state.filtros.sector === 'Todos') return [];
+  return (Array.isArray(state.filtros.sector) ? state.filtros.sector : [state.filtros.sector])
+    .filter(Boolean)
+    .filter(s => s !== '__COSTOS_INDIRECTOS__');
+}
+function renderCuartelChips(rowsBase){
+  const field = document.querySelector('.field-cuartel');
+  const box = document.querySelector('#f_cuartel');
+  const chipsWrap = document.querySelector('#f_cuartel_chips');
+  if(!field || !box || !chipsWrap) return;
+  const selectedCultivos = getSelectedCultivos();
+  const shouldShow = selectedCultivos.length > 0;
+  field.classList.toggle('hidden', !shouldShow);
+  if(!shouldShow){
+    state.filtros.cuartel = 'Todos';
+    box.dataset.value = 'Todos';
+    chipsWrap.innerHTML = '';
+    return;
+  }
+  const availableRows = rowsBase.filter(r=>{
+    const sector = strip(r.SECTOR||'') || 'Sin dato';
+    return selectedCultivos.includes(sector);
+  });
+  const cuarteles = Array.from(new Set(availableRows.map(r=>strip(r.CUARTEL)||'—')))
+    .filter(Boolean)
+    .sort((a,b)=>a.localeCompare(b,'es'));
+  const selected = state.filtros.cuartel === 'Todos'
+    ? []
+    : (Array.isArray(state.filtros.cuartel) ? state.filtros.cuartel : [state.filtros.cuartel]).filter(Boolean);
+  const validSelected = selected.filter(c=>cuarteles.includes(c));
+  if(selected.length !== validSelected.length){
+    state.filtros.cuartel = validSelected.length ? validSelected : 'Todos';
+  }
+  const activeSelected = state.filtros.cuartel === 'Todos' ? [] : validSelected;
+  const options = [{value:'Todos', label:'Todos'}].concat(cuarteles.map(c=>({value:c, label:c})));
+  renderFilterChipGroup(chipsWrap, options, state.filtros.cuartel === 'Todos' ? ['Todos'] : activeSelected);
+  box.dataset.value = state.filtros.cuartel === 'Todos' ? 'Todos' : activeSelected.join('|');
+}
 function formatStatusValue(value){
   const str = String(value || '').trim();
   return str ? str : '—';
@@ -265,7 +324,7 @@ function formatStatusValue(value){
 function formatComparativoMeses(){
   const fm = state.filtros?.mes;
   if(fm==="Todos" || !fm) return 'Todos';
-  if(Array.isArray(fm)) return fm.length ? fm.join(', ') : 'Todos';
+  if(Array.isArray(fm)) return fm.length ? fm.join(', ') : 'Ninguno';
   return String(fm);
 }
 function formatComparativoOrden(){
@@ -334,7 +393,20 @@ function applyFilters(){
   if(state.filtros.predio!=="Todos"){
     rows = rows.filter(r => (state.filtros.predio==="Solo Productivo"? predioClas(r)==="Productivo": predioClas(r)==="Indirectos"));
   }
-  if(state.filtros.sector!=="Todos") rows = rows.filter(r => strip(r.SECTOR||"")===state.filtros.sector);
+  const selectedSectores = state.filtros.sector==="Todos"
+    ? []
+    : (Array.isArray(state.filtros.sector) ? state.filtros.sector : [state.filtros.sector]).filter(Boolean).filter(s => s !== '__COSTOS_INDIRECTOS__');
+  if(selectedSectores.length){
+    rows = rows.filter(r=>{
+      const sector = strip(r.SECTOR||"") || "Sin dato";
+      return selectedSectores.includes(sector);
+    });
+  }
+  if(state.filtros.cuartel!=="Todos"){
+    const cuarteles = Array.isArray(state.filtros.cuartel) ? state.filtros.cuartel : [state.filtros.cuartel];
+    if(!cuarteles.length) return [];
+    rows = rows.filter(r => cuarteles.includes(strip(r.CUARTEL||"") || "—"));
+  }
   if(state.filtros.nivel1!=="Todos") rows = rows.filter(r => strip(r.NIVEL_1||"")===state.filtros.nivel1);
   if(state.filtros.faena!=="Todas") rows = rows.filter(r => strip(r.FAENA||"")===state.filtros.faena);
   if(hideInv2425) rows = rows.filter(r => !isInversionFaena(r.FAENA));
@@ -342,6 +414,8 @@ function applyFilters(){
     const fm = state.filtros.mes;
     if(Array.isArray(fm) && fm.length){
       rows = rows.filter(r => fm.includes(r.MES_STR));
+    }else if(Array.isArray(fm) && !fm.length){
+      rows = [];
     }else if(fm && fm!=="Todos"){
       rows = rows.filter(r => r.MES_STR===fm);
     }
@@ -376,10 +450,8 @@ function metricByKey(rows, keyAccessor){
 }
 function renderFaenaOptions(){
   const select = document.querySelector("#f_faena");
-  const search = document.querySelector("#f_faena_search");
   if(!select) return;
-  const term = strip(search?.value || "").toLowerCase();
-  let options = !term ? faenaOptionsCache.slice() : faenaOptionsCache.filter(o => String(o.k || '').toLowerCase().includes(term));
+  let options = faenaOptionsCache.slice();
   if(state.filtros.faena !== 'Todas' && !options.some(o => o.k === state.filtros.faena)){
     const selected = faenaOptionsCache.find(o => o.k === state.filtros.faena);
     if(selected) options = [selected].concat(options);
@@ -390,16 +462,65 @@ function renderFaenaOptions(){
   }
 }
 function setupFaenaSearch(){
-  const input = document.querySelector('#f_faena_search');
-  if(!input || input.dataset.bound === '1') return;
-  input.dataset.bound = '1';
-  input.addEventListener('input', ()=> renderFaenaOptions());
-  input.addEventListener('search', ()=> renderFaenaOptions());
+  return;
+}
+function renderPredioChips(){
+  const wrap = document.querySelector('#f_predio_chips');
+  if(!wrap) return;
+  const options = [
+    {value:'Todos', label:'Todos'},
+    {value:'Solo Productivo', label:'Solo Productivo'},
+    {value:'Solo Costos Indirectos', label:'Solo Costos Indirectos'}
+  ];
+  renderFilterChipGroup(wrap, options, [state.filtros.predio]);
+}
+function renderCategoriaControl(arrN1){
+  const select = document.querySelector('#f_n1');
+  const chips = document.querySelector('#f_n1_chips');
+  if(!select || !chips) return;
+  const useChips = arrN1.length > 0 && arrN1.length <= FILTER_CHIP_THRESHOLD;
+  if(useChips){
+    select.classList.add('hidden');
+    chips.classList.remove('hidden');
+    const options = [{value:'Todos', label:'Todos'}].concat(arrN1.map(o=>({value:o.k, label:o.k})));
+    renderFilterChipGroup(chips, options, [state.filtros.nivel1]);
+  }else{
+    select.classList.remove('hidden');
+    chips.classList.add('hidden');
+    chips.innerHTML = '';
+  }
 }
 function populateCombos(){
   const rowsBase = state.data.filter(r=> (state.filtros.predio==="Todos")? true : (state.filtros.predio==="Solo Productivo" ? predioClas(r)==="Productivo" : predioClas(r)==="Indirectos"));
   const sectores = Array.from(new Set(rowsBase.map(r=>strip(r.SECTOR)||"Sin dato"))).sort((a,b)=>a.localeCompare(b,'es'));
   document.querySelector("#f_cultivo").innerHTML = `<option>Todos</option>` + sectores.map(s=>`<option${s===state.filtros.sector?' selected':''}>${s}</option>`).join('');
+  renderPredioChips();
+  const cultivoWrap = document.querySelector('#f_cultivo_chips');
+  if(cultivoWrap){
+    const selected = state.filtros.sector==="Todos" ? [] : (Array.isArray(state.filtros.sector) ? state.filtros.sector : [state.filtros.sector]);
+    const selectedSectores = selected.filter(s => s !== '__COSTOS_INDIRECTOS__');
+    const priority = ['CEREZOS','OTROS CULTIVOS','VIÑA'];
+    const byUpper = new Map(sectores.map(s=>[String(s||'').toUpperCase(), s]));
+    const orderedSectores = [
+      ...priority.filter(k=>byUpper.has(k)).map(k=>byUpper.get(k)),
+      ...sectores.filter(s=>{
+        const upper = String(s||'').toUpperCase();
+        return upper !== 'COSTOS INDIRECTOS' && !priority.includes(upper);
+      })
+    ];
+    const chips = [
+      {k:'Todos', label:'Todos', icon:'🌱'},
+      ...orderedSectores.map(s=>({k:s, label:s, icon:/cerez/i.test(s)?'🍒':(/[vV][ií]?[ñn]a/i.test(s)?'🍇':'🌿')})),
+      {k:'__COSTOS_INDIRECTOS__', label:'Costos indirectos', icon:'🏷️', multiline:true}
+    ];
+    cultivoWrap.innerHTML = chips.map(ch=>{
+      const active = ch.k==='Todos'
+        ? selectedSectores.length===0 && state.filtros.predio!=="Solo Costos Indirectos"
+        : (ch.k==='__COSTOS_INDIRECTOS__' ? state.filtros.predio==="Solo Costos Indirectos" : selectedSectores.includes(ch.k));
+      const multiline = ch.multiline || /otros cultivos/i.test(ch.label) || /costos indirectos/i.test(ch.label);
+      return `<button type="button" class="cultivo-chip ${active?'is-active':''} ${multiline?'is-compact':''}" data-cultivo="${ch.k}" data-selected="${active?'true':'false'}" aria-pressed="${active?'true':'false'}"><span>${ch.icon}</span><span class="${multiline?'multi':''}">${ch.label}</span></button>`;
+    }).join('');
+  }
   const n1Rows = rowsBase.filter(r=>{
     const fm = state.filtros.mes;
     if(fm==="Todos") return true;
@@ -408,9 +529,28 @@ function populateCombos(){
   });
   const arrN1 = metricByKey(n1Rows, r=>strip(r.NIVEL_1)||"—").sort((a,b)=> (state.filtros.orden==="Desc"? (b.v-a.v):(a.v-b.v)));
   document.querySelector("#f_n1").innerHTML = `<option>Todos</option>` + arrN1.map(o=>`<option${o.k===state.filtros.nivel1?' selected':''}>${o.k} — ${fmt(o.v)}</option>`).join('');
+  renderCategoriaControl(arrN1);
   const arrFa = metricByKey(n1Rows, r=>strip(r.FAENA)||"—").sort((a,b)=> (state.filtros.orden==="Desc"? (b.v-a.v):(a.v-b.v)));
   faenaOptionsCache = arrFa.slice();
   renderFaenaOptions();
+  const cuarteles = Array.from(new Set(n1Rows.map(r=>strip(r.CUARTEL)||"—"))).filter(Boolean).sort((a,b)=>a.localeCompare(b,'es'));
+  const cuartelBox = document.querySelector('#f_cuartel');
+  if(cuartelBox){
+    const panel = cuartelBox.querySelector('.mes-dropdown-panel');
+    const labelBtnCu = cuartelBox.querySelector('.mes-label');
+    if(panel && labelBtnCu){
+      const existingSearch = panel.querySelector('#cuartel_search');
+      const term = strip(existingSearch?.value || '').toLowerCase();
+      const filtered = !term ? cuarteles : cuarteles.filter(c=>c.toLowerCase().includes(term));
+      const selected = state.filtros.cuartel==="Todos" ? [] : (Array.isArray(state.filtros.cuartel) ? state.filtros.cuartel : [state.filtros.cuartel]);
+      panel.innerHTML = `<div class="mes-dropdown-item todos"><input type="checkbox" id="cuartel_todos" ${state.filtros.cuartel==="Todos"?'checked':''}><label for="cuartel_todos">Seleccionar todos</label></div>
+        <div class="mes-dropdown-item"><input type="search" id="cuartel_search" placeholder="Buscar cuartel" value="${term}"></div>` +
+        filtered.map(c=>`<div class="mes-dropdown-item"><input type="checkbox" id="cuartel_${c.replace(/[^a-zA-Z0-9_-]/g,'_')}" data-cuartel="${c}" ${state.filtros.cuartel==="Todos" || selected.includes(c)?'checked':''}><label for="cuartel_${c.replace(/[^a-zA-Z0-9_-]/g,'_')}">${c}</label></div>`).join('');
+      if(state.filtros.cuartel==="Todos") labelBtnCu.textContent = 'Todos';
+      else labelBtnCu.innerHTML = `${selected.length} cuarteles <span class="mes-count">${selected.length}</span>`;
+    }
+  }
+  renderCuartelChips(rowsBase);
   
   const meses = Array.from(new Set(state.data.map(r=>r.MES_STR))).filter(Boolean);
   const orderMes = (a,b)=>{ const [ma,ya]=a.split('-'); const [mb,yb]=b.split('-'); const ia=MES_ABR.indexOf(ma); const ib=MES_ABR.indexOf(mb); const ya2=parseInt(ya,10)||0; const yb2=parseInt(yb,10)||0; if(ya2!==yb2) return ya2-yb2; return ia-ib; };
@@ -423,16 +563,23 @@ function populateCombos(){
   const labelBtn = container.querySelector('.mes-label');
   
   // Generar checkboxes
-  panel.innerHTML = `<div class="mes-dropdown-item todos"><input type="checkbox" id="mes_todos" ${allSelected?'checked':''}><label for="mes_todos">Seleccionar todos</label></div>` +
+  panel.innerHTML = `<div class="mes-dropdown-item todos"><input type="checkbox" id="mes_todos" ${allSelected?'checked':''}><label for="mes_todos">Seleccionar todos</label></div><div class="mes-dropdown-item"><input type="checkbox" id="mes_none" ${Array.isArray(selMes)&&!selMes.length?'checked':''}><label for="mes_none">Ninguno</label></div>` +
     meses.map(m=>`<div class="mes-dropdown-item"><input type="checkbox" id="mes_${m}" data-mes="${m}" ${allSelected || selArr.includes(m)?'checked':''}><label for="mes_${m}">${m}</label></div>`).join('');
   
   // Actualizar label del botón
   if(allSelected){
     labelBtn.innerHTML = 'Todos';
+  }else if(Array.isArray(selMes) && !selMes.length){
+    labelBtn.innerHTML = 'Ninguno';
   }else if(selArr.length===1){
     labelBtn.innerHTML = selArr[0];
+  }else if(selArr.length<=2){
+    const extras = selArr.length - 2;
+    labelBtn.innerHTML = extras>0 ? `${selArr.slice(0,2).join(', ')} +${extras}` : selArr.join(', ');
+  }else if(selArr.length<=4){
+    labelBtn.innerHTML = `${selArr.slice(0,2).join(', ')} +${selArr.length-2}`;
   }else{
-    labelBtn.innerHTML = `${selArr.length} meses <span class="mes-count">${selArr.length}</span>`;
+    labelBtn.innerHTML = `${selArr.length} meses seleccionados <span class="mes-count">${selArr.length}</span>`;
   }
 }
 function buildResumen(){
@@ -604,7 +751,14 @@ function buildDetalle(){
       if(state.filtros.predio==="Solo Productivo" && cl!=="Productivo") return false;
       if(state.filtros.predio==="Solo Costos Indirectos" && cl!=="Indirectos") return false;
     }
-    if(state.filtros.sector!=="Todos" && strip(r.SECTOR||"")!==state.filtros.sector) return false;
+    const sectorFiltro = state.filtros.sector;
+    if(sectorFiltro!=="Todos"){
+      const sectorRow = strip(r.SECTOR||"");
+      const sectores = (Array.isArray(sectorFiltro) ? sectorFiltro : [sectorFiltro])
+        .filter(Boolean)
+        .filter(s => s !== '__COSTOS_INDIRECTOS__');
+      if(sectores.length && !sectores.includes(sectorRow)) return false;
+    }
     if(state.filtros.mes!=="Todos"){
       const fm = state.filtros.mes;
       if(Array.isArray(fm) && fm.length){
@@ -720,7 +874,15 @@ function buildComparativo(){
         ? predioClas(r)==="Productivo"
         : predioClas(r)==="Indirectos"));
     }
-    if(filtros.sector!=="Todos") out = out.filter(r => strip(r.SECTOR||"")===filtros.sector);
+    if(filtros.sector!=="Todos"){
+      const sectores = (Array.isArray(filtros.sector) ? filtros.sector : [filtros.sector])
+        .filter(Boolean)
+        .filter(s => s !== '__COSTOS_INDIRECTOS__');
+      if(sectores.length){
+        const sectorSet = new Set(sectores.map(s => strip(s)));
+        out = out.filter(r => sectorSet.has(strip(r.SECTOR||"")));
+      }
+    }
     if(filtros.nivel1!=="Todos") out = out.filter(r => strip(r.NIVEL_1||"")===filtros.nivel1);
     if(filtros.faena!=="Todas") out = out.filter(r => strip(r.FAENA||"")===filtros.faena);
     if(hideInv2425){
@@ -1099,9 +1261,25 @@ async function ensureRentabilidadData(){
 }
 function applyRentabilidadFilters(){
   let rows = rentabilidadData.slice();
-  const activeSector = state.filtros.sector !== 'Todos' ? state.filtros.sector : 'Todos';
-  if(activeSector !== 'Todos') rows = rows.filter(r => strip(r.SECTOR) === activeSector);
-  if(rentabilidadState.cuartel !== 'Todos') rows = rows.filter(r => strip(r.CUARTEL) === rentabilidadState.cuartel);
+  const isIndirectoRent = (row)=>{
+    const values = [row.PREDIO, row.CUARTEL, row.SECTOR].map(v => strip(v||'').toUpperCase());
+    return values.some(v => v === 'COSTOS INDIRECTOS');
+  };
+  if(state.filtros.predio === 'Solo Productivo'){
+    rows = rows.filter(r => !isIndirectoRent(r));
+  }else if(state.filtros.predio === 'Solo Costos Indirectos'){
+    rows = rows.filter(r => isIndirectoRent(r));
+  }
+  const selectedSectores = state.filtros.sector === 'Todos'
+    ? []
+    : (Array.isArray(state.filtros.sector) ? state.filtros.sector : [state.filtros.sector]).filter(Boolean).filter(s => s !== '__COSTOS_INDIRECTOS__');
+  if(selectedSectores.length){
+    rows = rows.filter(r => selectedSectores.includes(strip(r.SECTOR)||'Sin dato'));
+  }
+  if(state.filtros.cuartel !== 'Todos'){
+    const selectedCuarteles = Array.isArray(state.filtros.cuartel) ? state.filtros.cuartel : [state.filtros.cuartel];
+    rows = rows.filter(r => selectedCuarteles.includes(strip(r.CUARTEL||'') || '—'));
+  }
   return rows;
 }
 function getRentMetricValue(rows, key){
@@ -1139,26 +1317,22 @@ function renderRentabilidadResumen(){
   const block = document.getElementById('rentabilidad-resumen-block');
   const cardsWrap = document.getElementById('rentabilidad-cards');
   const tableWrap = document.getElementById('rentabilidad-resumen');
-  const quickWrap = document.getElementById('rentabilidad-quick-filters');
-  if(!block || !cardsWrap || !tableWrap || !quickWrap) return;
+  if(!block || !cardsWrap || !tableWrap) return;
   block.classList.remove('hidden');
 
   if(rentabilidadStatus === 'loading'){
     cardsWrap.innerHTML = '';
-    quickWrap.innerHTML = '';
     tableWrap.innerHTML = getRentEmptyStateHTML('Cargando base de rentabilidad…', 'is-loading');
     return;
   }
   if(rentabilidadStatus === 'error'){
     cardsWrap.innerHTML = '';
-    quickWrap.innerHTML = '';
     const reason = rentabilidadErrorReason ? ` Detalle: ${rentabilidadErrorReason}` : '';
     tableWrap.innerHTML = getRentEmptyStateHTML('No se pudo leer la base activa o la base fuente de rentabilidad. Revisa Ajustes > Rentabilidad o Base 24-25.' + reason, 'is-error');
     return;
   }
   if(!rentabilidadData.length){
     cardsWrap.innerHTML = '';
-    quickWrap.innerHTML = '';
     tableWrap.innerHTML = getRentEmptyStateHTML('Todavía no hay datos renderizables para rentabilidad. El bloque queda disponible como apoyo del resumen.', 'is-empty');
     return;
   }
@@ -1170,23 +1344,6 @@ function renderRentabilidadResumen(){
     const cls = key === 'resultado' ? (value >= 0 ? 'is-positive' : 'is-negative') : '';
     return `<article class="rent-card ${cls}"><div class="rent-card-label">${cfg.label}</div><div class="rent-card-value">${fmt(value)}</div></article>`;
   }).join('');
-  const icons = (typeof dashboardHigueraData !== 'undefined' && dashboardHigueraData.rentabilidadIcons) ? dashboardHigueraData.rentabilidadIcons : {};
-  const sectorIcon = icons.sector ? `<img src="${icons.sector}" alt="" />` : '<span class="rent-chip-icon">▦</span>';
-  const cuartelIcon = icons.cuartel ? `<img src="${icons.cuartel}" alt="" />` : '<span class="rent-chip-icon">◫</span>';
-  const sectors = Array.from(new Set(rentabilidadData.map(r=>strip(r.SECTOR)).filter(Boolean))).sort((a,b)=>a.localeCompare(b,'es'));
-  const activeSector = state.filtros.sector !== 'Todos' ? state.filtros.sector : 'Todos';
-  const cuarteles = Array.from(new Set(rentabilidadData.filter(r => activeSector === 'Todos' || strip(r.SECTOR) === activeSector).map(r=>strip(r.CUARTEL)).filter(Boolean))).sort((a,b)=>a.localeCompare(b,'es'));
-  quickWrap.innerHTML = `
-    <div class="rent-quick-group">
-      <span class="rent-quick-title">${sectorIcon}<span>Sector</span></span>
-      <div class="rent-quick-list">${['Todos', ...sectors].map(sec=>`<button type="button" class="rent-chip ${sec===activeSector?'is-active':''}" data-rent-sector="${sec}">${sectorIcon}<span>${sec}</span></button>`).join('')}</div>
-    </div>
-    <div class="rent-quick-group">
-      <span class="rent-quick-title">${cuartelIcon}<span>Cuartel</span></span>
-      <div class="rent-quick-list">${['Todos', ...cuarteles].map(cu=>`<button type="button" class="rent-chip ${cu===rentabilidadState.cuartel?'is-active':''}" data-rent-cuartel="${cu}">${cuartelIcon}<span>${cu}</span></button>`).join('')}</div>
-    </div>`;
-  quickWrap.querySelectorAll('[data-rent-sector]').forEach(btn=>btn.addEventListener('click', ()=>{ state.filtros.sector = btn.dataset.rentSector; rentabilidadState.cuartel = 'Todos'; syncFilterInputsWithState(); refreshAll(); }));
-  quickWrap.querySelectorAll('[data-rent-cuartel]').forEach(btn=>btn.addEventListener('click', ()=>{ rentabilidadState.cuartel = btn.dataset.rentCuartel; refreshAll(); }));
   const grouped = new Map();
   rows.forEach(r=>{
     const key = strip(r.CUARTEL) || 'Sin cuartel';
@@ -1273,11 +1430,18 @@ function renderActiveFilterChips(){
   if(!wrap) return;
   const chips = [];
   if(state.filtros.predio !== 'Todos') chips.push({ key:'predio', value: state.filtros.predio, text:`Tipo de registro: ${state.filtros.predio}` });
-  if(state.filtros.sector !== 'Todos') chips.push({ key:'sector', value: state.filtros.sector, text:`Cultivo: ${state.filtros.sector}` });
+  if(state.filtros.sector !== 'Todos'){
+    const sectorTxt = Array.isArray(state.filtros.sector) ? (state.filtros.sector.length ? state.filtros.sector.join(', ') : 'Ninguno') : state.filtros.sector;
+    chips.push({ key:'sector', value: sectorTxt, text:`Cultivo: ${sectorTxt}` });
+  }
+  if(state.filtros.cuartel !== 'Todos'){
+    const cuTxt = Array.isArray(state.filtros.cuartel) ? (state.filtros.cuartel.length ? state.filtros.cuartel.join(', ') : 'Ninguno') : state.filtros.cuartel;
+    chips.push({ key:'cuartel', value: cuTxt, text:`Cuartel: ${cuTxt}` });
+  }
   if(state.filtros.nivel1 !== 'Todos') chips.push({ key:'nivel1', value: state.filtros.nivel1, text:`Categoría: ${state.filtros.nivel1}` });
   if(state.filtros.faena !== 'Todas') chips.push({ key:'faena', value: state.filtros.faena, text:`Faena: ${state.filtros.faena}` });
   if(state.filtros.mes !== 'Todos'){
-    const mesValue = Array.isArray(state.filtros.mes) ? state.filtros.mes.join(', ') : state.filtros.mes;
+    const mesValue = Array.isArray(state.filtros.mes) ? (state.filtros.mes.length ? state.filtros.mes.join(', ') : 'Ninguno') : state.filtros.mes;
     chips.push({ key:'mes', value: mesValue, text:`Meses: ${mesValue}` });
   }
   if(hideInv2425) chips.push({ key:'hideInv2425', value:'ocultas', text:'Inversiones varias: ocultas' });
@@ -1308,18 +1472,18 @@ function clearFilterChip(key){
 function syncFilterInputsWithState(){
   const predio = document.querySelector('#f_predio');
   const cultivo = document.querySelector('#f_cultivo');
+  const cuartel = document.querySelector('#f_cuartel');
   const categoria = document.querySelector('#f_n1');
   const faena = document.querySelector('#f_faena');
-  const faenaSearch = document.querySelector('#f_faena_search');
   const metrica = document.querySelector('#f_metrica');
   const orden = document.querySelector('#f_orden');
   const dN1 = document.querySelector('#d_n1');
   const dMetrica = document.querySelector('#d_metrica');
   const dOrden = document.querySelector('#d_orden');
   if(predio) predio.value = state.filtros.predio;
-  if(cultivo) cultivo.value = state.filtros.sector;
+  if(cultivo) cultivo.value = Array.isArray(state.filtros.sector) ? 'Todos' : state.filtros.sector;
+  if(cuartel) cuartel.dataset.value = Array.isArray(state.filtros.cuartel) ? state.filtros.cuartel.join('|') : String(state.filtros.cuartel||'Todos');
   if(categoria) categoria.value = state.filtros.nivel1;
-  if(faenaSearch) faenaSearch.value = '';
   if(faena) faena.value = state.filtros.faena;
   if(metrica) metrica.value = state.filtros.metrica;
   if(orden) orden.value = state.filtros.orden;
@@ -1332,6 +1496,7 @@ function syncFilterInputsWithState(){
 function clearFilters(resetView){
   state.filtros.predio = 'Todos';
   state.filtros.sector = 'Todos';
+  state.filtros.cuartel = 'Todos';
   state.filtros.nivel1 = 'Todos';
   state.filtros.faena = 'Todas';
   state.filtros.metrica = 'VALOR';
@@ -1341,7 +1506,6 @@ function clearFilters(resetView){
   state.detalle.metrica = 'VALOR';
   state.detalle.orden = 'Desc';
   state.comparativo.ordenBy = 'v25';
-  rentabilidadState.cuartel = 'Todos';
   rentabilidadState.sortBy = 'resultado';
   rentabilidadState.sortDir = 'desc';
   syncFilterInputsWithState();
@@ -1454,21 +1618,97 @@ function initDashboardFromRawCSV(raw){
   document.querySelector("#d_orden").innerHTML = `<option value="Desc">Descendente</option><option value="Asc">Ascendente</option>`;
   setupFaenaSearch();
   refreshAll();
-  document.querySelector("#f_predio").onchange = e=>{ state.filtros.predio=e.target.value; refreshAll(); };
-  document.querySelector("#f_cultivo").onchange = e=>{ state.filtros.sector = e.target.value; refreshAll(); };
+  document.querySelector("#f_predio").onchange = e=>{
+    state.filtros.predio = e.target.value;
+    if(state.filtros.predio === "Solo Costos Indirectos"){
+      state.filtros.sector = "Todos";
+      state.filtros.cuartel = "Todos";
+    }
+    refreshAll();
+  };
+  const predioWrap = document.querySelector('#f_predio_chips');
+  if(predioWrap && predioWrap.dataset.bound !== '1'){
+    predioWrap.dataset.bound = '1';
+    predioWrap.addEventListener('click', e=>{
+      const btn = e.target.closest('[data-value]');
+      if(!btn) return;
+      state.filtros.predio = btn.dataset.value || 'Todos';
+      if(state.filtros.predio === 'Solo Costos Indirectos'){
+        state.filtros.sector = 'Todos';
+        state.filtros.cuartel = 'Todos';
+      }
+      refreshAll();
+    });
+  }
+  const cultivoWrap = document.querySelector('#f_cultivo_chips');
+  if(cultivoWrap && cultivoWrap.dataset.bound !== '1'){
+    cultivoWrap.dataset.bound = '1';
+    cultivoWrap.addEventListener('click', e=>{
+      const btn = e.target.closest('[data-cultivo]');
+      if(!btn) return;
+      const key = btn.dataset.cultivo;
+      if(key === 'Todos'){
+        state.filtros.predio = 'Todos';
+        state.filtros.sector = 'Todos';
+        state.filtros.cuartel = 'Todos';
+      }else if(key === '__COSTOS_INDIRECTOS__'){
+        const isActive = state.filtros.predio === 'Solo Costos Indirectos';
+        state.filtros.predio = isActive ? 'Todos' : 'Solo Costos Indirectos';
+        state.filtros.sector = 'Todos';
+        state.filtros.cuartel = 'Todos';
+      }else{
+        if(state.filtros.predio === 'Solo Costos Indirectos') state.filtros.predio = 'Todos';
+        const selected = state.filtros.sector==="Todos" ? [] : (Array.isArray(state.filtros.sector) ? state.filtros.sector.slice() : [state.filtros.sector]);
+        const cleanSelected = selected.filter(s => s !== '__COSTOS_INDIRECTOS__');
+        const idx = cleanSelected.indexOf(key);
+        if(idx >= 0) cleanSelected.splice(idx,1); else cleanSelected.push(key);
+        state.filtros.sector = cleanSelected.length ? cleanSelected : 'Todos';
+        if(state.filtros.sector === 'Todos') state.filtros.cuartel = 'Todos';
+      }
+      refreshAll();
+    });
+  }
+  document.querySelector("#f_cultivo").onchange = e=>{
+    state.filtros.sector = e.target.value;
+    if(state.filtros.sector !== "Todos" && state.filtros.predio === "Solo Costos Indirectos") state.filtros.predio = "Todos";
+    if(state.filtros.sector === "Todos") state.filtros.cuartel = "Todos";
+    refreshAll();
+  };
   document.querySelector("#f_n1").onchange = e=>{ state.filtros.nivel1 = e.target.value.split(' — ')[0]; refreshAll(); };
   document.querySelector("#f_faena").onchange = e=>{ state.filtros.faena = e.target.value.split(' — ')[0]; refreshAll(); };
-  const faenaSearch = document.querySelector("#f_faena_search");
-  if(faenaSearch){
-    faenaSearch.addEventListener("keydown", (evt)=>{
-      if(evt.key === "Escape"){
-        faenaSearch.value = "";
-        renderFaenaOptions();
-      }
+  const categoriaWrap = document.querySelector('#f_n1_chips');
+  if(categoriaWrap && categoriaWrap.dataset.bound !== '1'){
+    categoriaWrap.dataset.bound = '1';
+    categoriaWrap.addEventListener('click', e=>{
+      const btn = e.target.closest('[data-value]');
+      if(!btn) return;
+      state.filtros.nivel1 = btn.dataset.value || 'Todos';
+      refreshAll();
     });
   }
   document.querySelector("#f_metrica").onchange = e=>{ state.filtros.metrica=e.target.value; refreshAll(); };
-  
+
+  const cuartelChips = document.querySelector('#f_cuartel_chips');
+  if(cuartelChips && cuartelChips.dataset.bound !== '1'){
+    cuartelChips.dataset.bound = '1';
+    cuartelChips.addEventListener('click', e=>{
+      const btn = e.target.closest('[data-value]');
+      if(!btn) return;
+      const key = btn.dataset.value || 'Todos';
+      if(key === 'Todos'){
+        state.filtros.cuartel = 'Todos';
+      }else{
+        const selected = state.filtros.cuartel === 'Todos'
+          ? []
+          : (Array.isArray(state.filtros.cuartel) ? state.filtros.cuartel.slice() : [state.filtros.cuartel]);
+        const idx = selected.indexOf(key);
+        if(idx >= 0) selected.splice(idx, 1); else selected.push(key);
+        state.filtros.cuartel = selected.length ? selected : 'Todos';
+      }
+      refreshAll();
+    });
+  }
+
   // Event listener para dropdown de meses
   const mesDropdown = document.querySelector("#f_mes");
   const mesBtn = mesDropdown.querySelector('.mes-dropdown-btn');
@@ -1476,13 +1716,16 @@ function initDashboardFromRawCSV(raw){
   // Toggle dropdown
   mesBtn.addEventListener('click', e=>{
     e.stopPropagation();
-    mesDropdown.classList.toggle('open');
+    const willOpen = !mesDropdown.classList.contains('open');
+    mesDropdown.classList.toggle('open', willOpen);
+    mesBtn.setAttribute('aria-expanded', willOpen ? 'true' : 'false');
   });
   
   // Cerrar al hacer click fuera
   document.addEventListener('click', e=>{
     if(!mesDropdown.contains(e.target)){
       mesDropdown.classList.remove('open');
+      mesBtn.setAttribute('aria-expanded', 'false');
     }
   });
   
@@ -1494,21 +1737,32 @@ function initDashboardFromRawCSV(raw){
     const panel = mesDropdown.querySelector('.mes-dropdown-panel');
     const todosCheck = panel.querySelector('#mes_todos');
     const mesChecks = Array.from(panel.querySelectorAll('input[data-mes]'));
+    const noneCheck = panel.querySelector('#mes_none');
     
     if(checkbox.id==='mes_todos'){
       // "Seleccionar todos" toggle
       mesChecks.forEach(c=>c.checked = checkbox.checked);
       state.filtros.mes = "Todos";
+      if(noneCheck) noneCheck.checked = false;
+    }else if(checkbox.id==='mes_none'){
+      mesChecks.forEach(c=>c.checked = false);
+      if(todosCheck) todosCheck.checked = false;
+      state.filtros.mes = [];
     }else{
       // Checkbox individual
       const checkedMeses = mesChecks.filter(c=>c.checked).map(c=>c.dataset.mes);
-      if(checkedMeses.length===0 || checkedMeses.length===mesChecks.length){
+      if(checkedMeses.length===mesChecks.length){
         state.filtros.mes = "Todos";
         todosCheck.checked = true;
-        if(checkedMeses.length===0) mesChecks.forEach(c=>c.checked=true);
+        if(noneCheck) noneCheck.checked = false;
+      }else if(checkedMeses.length===0){
+        state.filtros.mes = [];
+        todosCheck.checked = false;
+        if(noneCheck) noneCheck.checked = true;
       }else{
         state.filtros.mes = checkedMeses;
         todosCheck.checked = false;
+        if(noneCheck) noneCheck.checked = false;
       }
     }
     refreshAll();
@@ -1874,6 +2128,7 @@ function showTab(id){
     const active = t.dataset.tab===id;
     t.classList.toggle('active', active);
     t.setAttribute('aria-selected', active ? 'true' : 'false');
+    t.setAttribute('tabindex', active ? '0' : '-1');
   });
   $('#panel-resumen').classList.toggle('hidden', id!=='resumen');
   $('#panel-graficos').classList.toggle('hidden', id!=='graficos');
@@ -1885,7 +2140,25 @@ function showTab(id){
   setDenseMode(id);
   if(id==='comparativo') buildComparativo();
 }
-$$('.tab').forEach(t=> t.onclick = ()=> showTab(t.dataset.tab));
+$$('.tab').forEach((t, idx, tabs)=>{
+  t.onclick = ()=> showTab(t.dataset.tab);
+  t.addEventListener('keydown', (e)=>{
+    if(e.key === 'Enter' || e.key === ' '){
+      e.preventDefault();
+      showTab(t.dataset.tab);
+      return;
+    }
+    if(e.key === 'ArrowRight' || e.key === 'ArrowLeft'){
+      e.preventDefault();
+      const delta = e.key === 'ArrowRight' ? 1 : -1;
+      const next = tabs[(idx + delta + tabs.length) % tabs.length];
+      if(next){
+        next.focus();
+        showTab(next.dataset.tab);
+      }
+    }
+  });
+});
 document.addEventListener('click', (e)=>{
   const chipBtn = e.target.closest('.filter-chip[data-chip-key]');
   if(chipBtn){

@@ -98,6 +98,49 @@
     });
   }
 
+  function toggleStandaloneHeaderFields(){
+    var enabled = document.querySelector('input[name="dlh_standalone_header_enabled"]');
+    if(!enabled){ return; }
+
+    var rowShowLogo = document.querySelector('input[name="dlh_standalone_header_show_logo"]');
+    rowShowLogo = rowShowLogo ? rowShowLogo.closest('tr') : null;
+    var rowLogoUrl = document.querySelector('input[name="dlh_standalone_header_logo_url"]');
+    rowLogoUrl = rowLogoUrl ? rowLogoUrl.closest('tr') : null;
+    var rowLogoAlt = document.querySelector('input[name="dlh_standalone_header_logo_alt"]');
+    rowLogoAlt = rowLogoAlt ? rowLogoAlt.closest('tr') : null;
+    var rowLogoHeight = document.querySelector('input[name="dlh_standalone_header_logo_height"]');
+    rowLogoHeight = rowLogoHeight ? rowLogoHeight.closest('tr') : null;
+    var rowShowTitle = document.querySelector('input[name="dlh_standalone_header_show_title"]');
+    rowShowTitle = rowShowTitle ? rowShowTitle.closest('tr') : null;
+    var rowTitle = document.querySelector('input[name="dlh_standalone_header_title"]');
+    rowTitle = rowTitle ? rowTitle.closest('tr') : null;
+    var rowShowSubtitle = document.querySelector('input[name="dlh_standalone_header_show_subtitle"]');
+    rowShowSubtitle = rowShowSubtitle ? rowShowSubtitle.closest('tr') : null;
+    var rowSubtitle = document.querySelector('input[name="dlh_standalone_header_subtitle"]');
+    rowSubtitle = rowSubtitle ? rowSubtitle.closest('tr') : null;
+    var rowSticky = document.querySelector('input[name="dlh_standalone_header_sticky"]');
+    rowSticky = rowSticky ? rowSticky.closest('tr') : null;
+    var rowShowLogout = document.querySelector('input[name="dlh_standalone_header_show_logout"]');
+    rowShowLogout = rowShowLogout ? rowShowLogout.closest('tr') : null;
+
+    var showHeaderFields = enabled.checked;
+    [rowShowLogo, rowShowTitle, rowShowSubtitle, rowSticky, rowShowLogout].forEach(function(row){
+      if(row){ row.style.display = showHeaderFields ? '' : 'none'; }
+    });
+
+    var logoEnabled = document.querySelector('input[name="dlh_standalone_header_show_logo"]');
+    var showLogoFields = showHeaderFields && !!logoEnabled && logoEnabled.checked;
+    [rowLogoUrl, rowLogoAlt, rowLogoHeight].forEach(function(row){
+      if(row){ row.style.display = showLogoFields ? '' : 'none'; }
+    });
+
+    var titleEnabled = document.querySelector('input[name="dlh_standalone_header_show_title"]');
+    if(rowTitle){ rowTitle.style.display = (showHeaderFields && !!titleEnabled && titleEnabled.checked) ? '' : 'none'; }
+
+    var subtitleEnabled = document.querySelector('input[name="dlh_standalone_header_show_subtitle"]');
+    if(rowSubtitle){ rowSubtitle.style.display = (showHeaderFields && !!subtitleEnabled && subtitleEnabled.checked) ? '' : 'none'; }
+  }
+
   function renderApiTestResults(payload){
     var out = byId('dlh-test-api-results');
     if(!out){ return; }
@@ -164,45 +207,6 @@
     });
   }
 
-  function buildSectionCards(){
-    var form = document.querySelector('.dlh-settings-form');
-    if(!form){ return; }
-    var nodes = Array.prototype.slice.call(form.children);
-    var submit = form.querySelector('.submit');
-    var sections = [];
-    var current = null;
-
-    nodes.forEach(function(node){
-      if(node.classList && node.classList.contains('submit')){ return; }
-      if(node.tagName === 'H2'){
-        current = document.createElement('section');
-        current.className = 'dlh-settings-section';
-        var slug = 'section-' + String(node.textContent || '').trim().toLowerCase().replace(/[^a-z0-9]+/g, '-');
-        current.id = slug;
-        sections.push({ id: slug, label: String(node.textContent || '').trim() });
-        form.insertBefore(current, node);
-      }
-      if(current){ current.appendChild(node); }
-    });
-
-    if(submit){
-      var submitWrap = document.createElement('div');
-      submitWrap.className = 'dlh-settings-submit';
-      submit.parentNode.insertBefore(submitWrap, submit);
-      submitWrap.appendChild(submit);
-    }
-
-    if(sections.length){
-      var nav = document.createElement('nav');
-      nav.className = 'dlh-settings-nav';
-      nav.innerHTML = sections.map(function(item){
-        return '<a href="#' + escapeHtml(item.id) + '">' + escapeHtml(item.label) + '</a>';
-      }).join('');
-      var hero = document.querySelector('.dlh-settings-page__hero');
-      if(hero && hero.parentNode){ hero.parentNode.insertBefore(nav, hero.nextSibling); }
-    }
-  }
-
   function refreshRentOrderValues(){
     var rows = document.querySelectorAll('[data-rent-card-item]');
     rows.forEach(function(row, index){
@@ -231,6 +235,7 @@
         if(next){ wrap.insertBefore(next, item); }
       }
       refreshRentOrderValues();
+      wrap.dispatchEvent(new CustomEvent('dlh-form-dirty-signal', { bubbles: true }));
     });
     refreshRentOrderValues();
   }
@@ -316,6 +321,80 @@
     }));
   }
 
+  function normalizeCsvHeader(value){
+    var raw = String(value == null ? '' : value).trim().toLowerCase();
+    if(typeof raw.normalize === 'function'){
+      raw = raw.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+    }
+    return raw.replace(/\s+/g, ' ').replace(/[^a-z0-9 ]/g, '').trim();
+  }
+
+  function parseCsvRows(text, delimiter){
+    var rows = [];
+    var row = [];
+    var cell = '';
+    var inQuotes = false;
+    var i;
+    var ch;
+    var next;
+    var source = String(text == null ? '' : text);
+    for(i = 0; i < source.length; i += 1){
+      ch = source.charAt(i);
+      next = source.charAt(i + 1);
+      if(ch === '"'){
+        if(inQuotes && next === '"'){
+          cell += '"';
+          i += 1;
+        } else {
+          inQuotes = !inQuotes;
+        }
+        continue;
+      }
+      if(!inQuotes && ch === delimiter){
+        row.push(cell);
+        cell = '';
+        continue;
+      }
+      if(!inQuotes && (ch === '\n' || ch === '\r')){
+        if(ch === '\r' && next === '\n'){ i += 1; }
+        row.push(cell);
+        rows.push(row);
+        row = [];
+        cell = '';
+        continue;
+      }
+      cell += ch;
+    }
+    if(cell !== '' || row.length){
+      row.push(cell);
+      rows.push(row);
+    }
+    return rows;
+  }
+
+  function detectCsvDelimiterAndParse(text){
+    var parsedComma = parseCsvRows(text, ',');
+    var parsedSemicolon = parseCsvRows(text, ';');
+    function headerScore(rows){
+      if(!rows.length){ return -1; }
+      var headers = rows[0].map(normalizeCsvHeader);
+      var lookup = {};
+      headers.forEach(function(h){ lookup[h] = true; });
+      var score = 0;
+      if(lookup.predio){ score += 1; }
+      if(lookup.sector){ score += 1; }
+      if(lookup.cuartel){ score += 1; }
+      if(lookup.kilos){ score += 1; }
+      return score;
+    }
+    var commaScore = headerScore(parsedComma);
+    var semicolonScore = headerScore(parsedSemicolon);
+    if(semicolonScore > commaScore){
+      return { delimiter: ';', rows: parsedSemicolon };
+    }
+    return { delimiter: ',', rows: parsedComma };
+  }
+
   function createToast(message, type){
     var toast = document.createElement('div');
     toast.className = 'dlh-toast dlh-toast--' + (type || 'success');
@@ -338,7 +417,11 @@
     var status = builder.querySelector('[data-dlh-rent-status]');
     var stats = builder.querySelector('[data-dlh-rent-stats]');
     var refreshBtn = builder.querySelector('[data-dlh-rent-refresh]');
+    var importSummary = builder.querySelector('[data-rent-import-summary]');
+    var importPreview = builder.querySelector('[data-rent-import-preview]');
+    var importApply = builder.querySelector('[data-rent-apply-import]');
     var state = { rows: [], loading: false, source: '', savedMap: {}, hasSavedMap: false, filters: { search: '', status: 'all', order: 'cuartel', dirtyOnly: false } };
+    var importState = { rows: [], summary: { total: 0, valid: 0, unmatched: 0, duplicates: 0, errors: 0 } };
 
     function showStatus(message, type){
       if(!status){ return; }
@@ -409,6 +492,201 @@
         }
       });
       return lookup;
+    }
+
+    function getCatalogLookup(){
+      var lookup = {};
+      state.rows.forEach(function(row, index){
+        ensureRowKey(row, index);
+        if(row.is_manual_only){ return; }
+        var key = buildCompoundKey(row.predio, row.sector, row.cuartel) || row.compound_key || row._rowKey;
+        if(key && key !== '||'){
+          lookup[key] = row;
+        }
+      });
+      return lookup;
+    }
+
+    function downloadTemplateCsv(){
+      var bom = '\uFEFF';
+      var csv = bom + 'Predio,Sector,Cuartel,Kilos\n';
+      var blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+      var link = document.createElement('a');
+      link.href = URL.createObjectURL(blob);
+      link.download = 'plantilla-rentabilidad-kilos.csv';
+      document.body.appendChild(link);
+      link.click();
+      window.setTimeout(function(){
+        URL.revokeObjectURL(link.href);
+        if(link.parentNode){ link.parentNode.removeChild(link); }
+      }, 0);
+    }
+
+    function renderImportSummary(){
+      if(!importSummary){ return; }
+      var summary = importState.summary || {};
+      importSummary.innerHTML = ''
+        + '<span><strong>Total filas</strong> ' + escapeHtml(String(summary.total || 0)) + '</span>'
+        + '<span><strong>Válidas</strong> ' + escapeHtml(String(summary.valid || 0)) + '</span>'
+        + '<span><strong>Sin match</strong> ' + escapeHtml(String(summary.unmatched || 0)) + '</span>'
+        + '<span><strong>Duplicadas</strong> ' + escapeHtml(String(summary.duplicates || 0)) + '</span>'
+        + '<span><strong>Con error</strong> ' + escapeHtml(String(summary.errors || 0)) + '</span>';
+      if(importApply){
+        importApply.disabled = !summary.valid;
+      }
+    }
+
+    function renderImportPreview(){
+      if(!importPreview){ return; }
+      if(!importState.rows.length){
+        importPreview.innerHTML = '';
+        return;
+      }
+      var rows = importState.rows.slice(0, 20);
+      var html = '<table class="widefat striped"><thead><tr><th>#</th><th>Predio</th><th>Sector</th><th>Cuartel</th><th>Kilos</th><th>Estado</th><th>Detalle</th></tr></thead><tbody>';
+      rows.forEach(function(row){
+        html += '<tr>'
+          + '<td>' + escapeHtml(String(row.line || '')) + '</td>'
+          + '<td>' + escapeHtml(row.predio || '') + '</td>'
+          + '<td>' + escapeHtml(row.sector || '') + '</td>'
+          + '<td>' + escapeHtml(row.cuartel || '') + '</td>'
+          + '<td>' + escapeHtml(String(row.kilos_raw || '')) + '</td>'
+          + '<td><span class="dlh-rent-import__status is-' + escapeHtml(row.status || 'error') + '">' + escapeHtml(row.status_label || 'Error') + '</span></td>'
+          + '<td>' + escapeHtml(row.message || '—') + '</td>'
+          + '</tr>';
+      });
+      html += '</tbody></table>';
+      if(importState.rows.length > rows.length){
+        html += '<p class="description">Mostrando primeras ' + escapeHtml(String(rows.length)) + ' filas de ' + escapeHtml(String(importState.rows.length)) + '.</p>';
+      }
+      importPreview.innerHTML = html;
+    }
+
+    function resetImportPreview(){
+      importState = { rows: [], summary: { total: 0, valid: 0, unmatched: 0, duplicates: 0, errors: 0 } };
+      renderImportSummary();
+      renderImportPreview();
+    }
+
+    function processImportCsv(rawContent){
+      var text = String(rawContent || '').replace(/^\uFEFF/, '');
+      var parsed = detectCsvDelimiterAndParse(text);
+      var parsedRows = parsed.rows || [];
+      if(!parsedRows.length){
+        throw new Error((dlhSettings.labels && dlhSettings.labels.importNoRows) || 'CSV sin filas.');
+      }
+
+      var headers = parsedRows[0].map(normalizeCsvHeader);
+      var headerMap = {};
+      headers.forEach(function(header, index){
+        if(header === 'predio' || header === 'sector' || header === 'cuartel' || header === 'kilos'){
+          headerMap[header] = index;
+        }
+      });
+      if(
+        typeof headerMap.predio !== 'number' ||
+        typeof headerMap.sector !== 'number' ||
+        typeof headerMap.cuartel !== 'number' ||
+        typeof headerMap.kilos !== 'number'
+      ){
+        throw new Error((dlhSettings.labels && dlhSettings.labels.importMissingHeaders) || 'CSV sin columnas obligatorias.');
+      }
+
+      var dataRows = parsedRows.slice(1).filter(function(row){
+        return row.some(function(cell){ return String(cell || '').trim() !== ''; });
+      });
+      if(!dataRows.length){
+        throw new Error((dlhSettings.labels && dlhSettings.labels.importNoRows) || 'CSV sin filas.');
+      }
+
+      var catalogLookup = getCatalogLookup();
+      var seen = {};
+      var staged = dataRows.map(function(row, idx){
+        var predio = String(row[headerMap.predio] || '').trim();
+        var sector = String(row[headerMap.sector] || '').trim();
+        var cuartel = String(row[headerMap.cuartel] || '').trim();
+        var kilosRaw = String(row[headerMap.kilos] || '').trim();
+        var key = buildCompoundKey(predio, sector, cuartel);
+        var kilos = sanitizeNumber(kilosRaw);
+        var hasKey = !!key && key !== '||';
+        var record = {
+          line: idx + 2,
+          predio: predio,
+          sector: sector,
+          cuartel: cuartel,
+          kilos: kilos,
+          kilos_raw: kilosRaw,
+          key: key,
+          status: 'valid',
+          status_label: 'Válida',
+          message: ''
+        };
+        if(!hasKey){
+          record.status = 'error';
+          record.status_label = 'Error';
+          record.message = 'Faltan Predio, Sector o Cuartel.';
+          return record;
+        }
+        if(kilosRaw === '' || !isFinite(kilos)){
+          record.status = 'error';
+          record.status_label = 'Error';
+          record.message = 'Kilos inválido.';
+          return record;
+        }
+        if(!Object.prototype.hasOwnProperty.call(catalogLookup, key)){
+          record.status = 'unmatched';
+          record.status_label = 'Sin match';
+          record.message = 'No existe en catálogo actual.';
+          return record;
+        }
+        seen[key] = (seen[key] || 0) + 1;
+        return record;
+      });
+
+      staged.forEach(function(item){
+        if(item.status !== 'valid'){ return; }
+        if((seen[item.key] || 0) > 1){
+          item.status = 'duplicate';
+          item.status_label = 'Duplicada';
+          item.message = 'Clave repetida en el archivo.';
+        }
+      });
+
+      var summary = staged.reduce(function(acc, row){
+        acc.total += 1;
+        if(row.status === 'valid'){ acc.valid += 1; }
+        else if(row.status === 'unmatched'){ acc.unmatched += 1; }
+        else if(row.status === 'duplicate'){ acc.duplicates += 1; }
+        else { acc.errors += 1; }
+        return acc;
+      }, { total: 0, valid: 0, unmatched: 0, duplicates: 0, errors: 0 });
+
+      importState = { rows: staged, summary: summary };
+      renderImportSummary();
+      renderImportPreview();
+    }
+
+    function applyImportRows(){
+      var validRows = (importState.rows || []).filter(function(row){ return row.status === 'valid'; });
+      if(!validRows.length){
+        showStatus((dlhSettings.labels && dlhSettings.labels.importNothingToApply) || 'No hay filas válidas para aplicar.', 'warning');
+        return;
+      }
+      var map = {};
+      validRows.forEach(function(item){ map[item.key] = item.kilos; });
+      state.rows = state.rows.map(function(row, index){
+        ensureRowKey(row, index);
+        var next = Object.assign({}, row);
+        var key = buildCompoundKey(next.predio, next.sector, next.cuartel) || next.compound_key || next._rowKey;
+        if(Object.prototype.hasOwnProperty.call(map, key)){
+          next.kilos_reales = sanitizeNumber(map[key]);
+        }
+        return next;
+      });
+      render();
+      builder.dispatchEvent(new CustomEvent('dlh-form-dirty-signal', { bubbles: true }));
+      createToast((dlhSettings.labels && dlhSettings.labels.importApplied) || 'Importación aplicada.', 'success');
+      showStatus((dlhSettings.labels && dlhSettings.labels.importApplied) || 'Importación aplicada.', 'success');
     }
 
     function rowSnapshot(row){
@@ -873,6 +1151,16 @@
     });
 
     builder.addEventListener('click', function(e){
+      if(e.target.closest('[data-rent-download-template]')){
+        e.preventDefault();
+        downloadTemplateCsv();
+        return;
+      }
+      if(e.target.closest('[data-rent-apply-import]')){
+        e.preventDefault();
+        applyImportRows();
+        return;
+      }
       if(e.target.closest('[data-dlh-rent-refresh]')){
         e.preventDefault();
         loadCatalog(true);
@@ -896,6 +1184,37 @@
     });
 
     builder.addEventListener('change', function(e){
+      var importInput = e.target.closest('[data-rent-import-file]');
+      if(importInput){
+        var file = importInput.files && importInput.files[0] ? importInput.files[0] : null;
+        if(!file){
+          resetImportPreview();
+          return;
+        }
+        var fileName = String(file.name || '').toLowerCase();
+        if(fileName.slice(-4) !== '.csv'){
+          showStatus((dlhSettings.labels && dlhSettings.labels.importInvalidType) || 'Archivo inválido.', 'error');
+          importInput.value = '';
+          resetImportPreview();
+          return;
+        }
+        var reader = new FileReader();
+        reader.onload = function(evt){
+          try {
+            processImportCsv(evt && evt.target ? evt.target.result : '');
+            showStatus((dlhSettings.labels && dlhSettings.labels.importPreviewReady) || 'Vista previa lista.', 'info');
+          } catch (err) {
+            resetImportPreview();
+            showStatus(err && err.message ? err.message : 'No se pudo procesar el CSV.', 'error');
+          }
+        };
+        reader.onerror = function(){
+          resetImportPreview();
+          showStatus('No se pudo leer el archivo CSV.', 'error');
+        };
+        reader.readAsText(file, 'UTF-8');
+        return;
+      }
       var statusFilter = e.target.closest('[data-rent-filter-status]');
       if(statusFilter){ state.filters.status = statusFilter.value || 'all'; render(); return; }
       var orderFilter = e.target.closest('[data-rent-filter-order]');
@@ -935,6 +1254,7 @@
     }
     captureSavedMap();
     render();
+    resetImportPreview();
     loadCatalog(false);
 
     return {
@@ -949,7 +1269,7 @@
   function initRentWorkspace(builderApi){
     var builder = builderApi && builderApi.element ? builderApi.element : document.querySelector('[data-dlh-rent-manual-builder]');
     if(!builder){ return; }
-    var rentSection = builder.closest('.dlh-settings-section');
+    var rentSection = builder.closest('.dlh-settings-section') || builder.closest('.dlh-settings-form');
     if(!rentSection || rentSection.hasAttribute('data-dlh-rent-workspace-ready')){ return; }
     rentSection.setAttribute('data-dlh-rent-workspace-ready', '1');
 
@@ -1119,6 +1439,7 @@
         if(url){ url.textContent = src || 'Sin URL seleccionada'; }
         if(removeBtn){ removeBtn.style.display = src ? '' : 'none'; }
         selectBtn.textContent = src ? dlhSettings.labels.replaceImage : dlhSettings.labels.selectImage;
+        box.dispatchEvent(new CustomEvent('dlh-form-dirty-signal', { bubbles: true }));
       }
 
       selectBtn.addEventListener('click', function(e){
@@ -1146,6 +1467,89 @@
     });
   }
 
+  function snapshotFormValues(form){
+    var payload = [];
+    form.querySelectorAll('input, select, textarea').forEach(function(el){
+      if(!el.name){ return; }
+      if(el.type === 'submit' || el.type === 'button' || el.type === 'file'){ return; }
+      if(el.type === 'checkbox' || el.type === 'radio'){
+        payload.push(el.name + '|' + (el.value || '1') + '|' + (el.checked ? '1' : '0'));
+        return;
+      }
+      payload.push(el.name + '|' + String(el.value || ''));
+    });
+    payload.sort();
+    return payload.join('||');
+  }
+
+  function setSaveState(statusNode, state){
+    if(!statusNode){ return; }
+    var text = statusNode.querySelector('.dlh-save-indicator__text');
+    statusNode.classList.remove('is-clean', 'is-dirty', 'is-saving', 'is-saved');
+    statusNode.setAttribute('data-state', state);
+    if(state === 'dirty'){
+      statusNode.classList.add('is-dirty');
+      if(text){ text.textContent = 'Cambios sin guardar'; }
+      return;
+    }
+    if(state === 'saving'){
+      statusNode.classList.add('is-saving');
+      if(text){ text.textContent = 'Guardando cambios…'; }
+      return;
+    }
+    if(state === 'saved'){
+      statusNode.classList.add('is-saved');
+      if(text){ text.textContent = 'Guardado correcto'; }
+      return;
+    }
+    statusNode.classList.add('is-clean');
+    if(text){ text.textContent = 'Sin cambios'; }
+  }
+
+  function initModuleSaveState(){
+    var pageRoot = document.querySelector('.dlh-settings-page[data-dlh-settings-saved]');
+    var pageSaved = !!(pageRoot && pageRoot.getAttribute('data-dlh-settings-saved') === '1');
+
+    document.querySelectorAll('form[data-dlh-edit-form]').forEach(function(form){
+      var statusNode = form.parentElement ? form.parentElement.querySelector('[data-dlh-save-status]') : null;
+      if(!statusNode){ return; }
+
+      var baseline = snapshotFormValues(form);
+      var state = { dirty: false, savedTimer: null };
+
+      function applyDirtyFromSnapshot(){
+        var current = snapshotFormValues(form);
+        var isDirty = current !== baseline;
+        if(isDirty === state.dirty){ return; }
+        state.dirty = isDirty;
+        setSaveState(statusNode, isDirty ? 'dirty' : 'clean');
+      }
+
+      form.addEventListener('input', applyDirtyFromSnapshot);
+      form.addEventListener('change', applyDirtyFromSnapshot);
+      form.addEventListener('dlh-form-dirty-signal', function(){
+        state.dirty = true;
+        setSaveState(statusNode, 'dirty');
+      });
+
+      form.addEventListener('submit', function(){
+        if(state.savedTimer){ window.clearTimeout(state.savedTimer); }
+        setSaveState(statusNode, 'saving');
+      });
+
+      if(pageSaved){
+        setSaveState(statusNode, 'saved');
+        state.savedTimer = window.setTimeout(function(){
+          baseline = snapshotFormValues(form);
+          state.dirty = false;
+          setSaveState(statusNode, 'clean');
+        }, 2500);
+      } else {
+        setSaveState(statusNode, 'clean');
+      }
+    });
+  }
+
   document.addEventListener('DOMContentLoaded', function(){
     document.querySelectorAll('input[name="dlh_roles_arr[]"]').forEach(function(c){
       c.addEventListener('change', syncRoles);
@@ -1164,8 +1568,15 @@
 
     var portalEnabled = document.querySelector('input[name="dlh_password_portal_enabled"]');
     if(portalEnabled){ portalEnabled.addEventListener('change', togglePasswordPortalFields); }
+    var headerEnabled = document.querySelector('input[name="dlh_standalone_header_enabled"]');
+    if(headerEnabled){ headerEnabled.addEventListener('change', toggleStandaloneHeaderFields); }
+    var headerShowLogo = document.querySelector('input[name="dlh_standalone_header_show_logo"]');
+    if(headerShowLogo){ headerShowLogo.addEventListener('change', toggleStandaloneHeaderFields); }
+    var headerShowTitle = document.querySelector('input[name="dlh_standalone_header_show_title"]');
+    if(headerShowTitle){ headerShowTitle.addEventListener('change', toggleStandaloneHeaderFields); }
+    var headerShowSubtitle = document.querySelector('input[name="dlh_standalone_header_show_subtitle"]');
+    if(headerShowSubtitle){ headerShowSubtitle.addEventListener('change', toggleStandaloneHeaderFields); }
 
-    buildSectionCards();
     bindRentCardOrdering();
     bindIconUploaders();
     var builderApi = initRentManualBuilder();
@@ -1175,7 +1586,9 @@
     validateApiUrl();
     validatePowerBiFormula();
     togglePasswordPortalFields();
+    toggleStandaloneHeaderFields();
     bindApiTest();
+    initModuleSaveState();
 
     var savedRoot = document.querySelector('[data-dlh-settings-saved="1"]');
     if(savedRoot){
