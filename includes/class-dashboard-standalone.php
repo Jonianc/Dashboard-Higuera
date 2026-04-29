@@ -439,6 +439,7 @@ class Dashboard_Higuera_Standalone {
             last2425Updated: <?php echo wp_json_encode($last_2425_updated); ?>,
             debug: <?php echo wp_json_encode($debug); ?>,
             csvRentabilidadUrl: <?php echo wp_json_encode(rest_url('dashboard-higuera/v1/csv/rentabilidad')); ?>,
+            csvRentabilidad2425Url: <?php echo wp_json_encode(rest_url('dashboard-higuera/v1/csv/rentabilidad/2024-25')); ?>,
             csvRentabilidadDiagnosticsUrl: <?php echo wp_json_encode(rest_url('dashboard-higuera/v1/csv/rentabilidad-diagnostics')); ?>,
             rentabilidadCsvInline: <?php echo wp_json_encode($rentabilidad_inline_csv); ?>,
             rentabilidadStatus: <?php echo wp_json_encode(array(

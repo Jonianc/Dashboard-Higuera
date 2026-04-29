@@ -1,3 +1,11 @@
+## 1.28.1 - 2026-04-29
+- Fix (Standalone): se agrega `csvRentabilidad2425Url` a `dashboardHigueraData` para cargar comparativo 24-25 en `/dashboard/`.
+- Fix (Normalización 24-25): se ignoran filas resumen `PREDIO=COSTOS`, `PREDIO=TOTAL COSTOS` y `CUARTEL=TOTAL COSTOS`; `COSTOS INDIRECTOS` sigue válido.
+- Fix (Comparativo): filtros de rentabilidad unificados con `applyRentabilidadFiltersToRows(rows)` para aplicar a 24-25 y 25-26.
+- Fix (Métricas ratio): `Ingreso/kg`, `Costo/kg`, `Ingreso/ha` y `Costo/ha` se calculan desde acumulados por cuartel, no por suma de ratios.
+- Fix (Estado): en error de carga 24-25, el tab comparativo muestra mensaje explícito y evita renderizar 24-25 en cero.
+- Admin: se agrega bloque independiente para “Base comparativa rentabilidad 24-25” con activación separada.
+
 ## 1.28.0 - 2026-04-29
 - Rentabilidad: nuevo endpoint REST `dashboard-higuera/v1/csv/rentabilidad/2024-25` para base histórica comparativa.
 - Importación/normalización rentabilidad: soporte de rutas `base-rentabilidad-2024-25.(csv|xlsx)` y salida activa `uploads/dashboard-higuera/temporada-rentabilidad-2024-25.csv`.

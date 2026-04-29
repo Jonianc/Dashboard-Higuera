@@ -1280,28 +1280,39 @@ async function ensureRentabilidadComparativo2425(){
     rentabilidadComparativoStatus = 'error';
   }
 }
-function renderRentabilidadComparativo(rows25){
+function buildRentabilidadAggByCuartel(rows){
+  const grouped = new Map();
+  (rows||[]).forEach(r=>{
+    const key = strip(r.CUARTEL) || 'Sin cuartel';
+    if(!grouped.has(key)) grouped.set(key,{cuartel:key,hectareas:0,kilos:0,ingresos:0,costos:0,resultado:0});
+    const g = grouped.get(key);
+    g.hectareas += Number(r.HECTAREAS)||0;
+    g.kilos += Number(r.KILOS_REALES)||0;
+    g.ingresos += Number(r.TOTAL_INGRESOS)||0;
+    g.costos += Number(r.TOTAL_COSTOS)||0;
+    g.resultado += Number(r.RESULTADO)||0;
+  });
+  return grouped;
+}
+function getRentabilidadMetricFromAgg(agg, metric){
+  if(metric === 'ingresos') return agg.ingresos;
+  if(metric === 'costos') return agg.costos;
+  if(metric === 'kilos') return agg.kilos;
+  if(metric === 'ingreso_kg') return agg.kilos>0 ? agg.ingresos/agg.kilos : 0;
+  if(metric === 'costo_kg') return agg.kilos>0 ? agg.costos/agg.kilos : 0;
+  if(metric === 'ingreso_ha') return agg.hectareas>0 ? agg.ingresos/agg.hectareas : 0;
+  if(metric === 'costo_ha') return agg.hectareas>0 ? agg.costos/agg.hectareas : 0;
+  return agg.resultado;
+}
+function renderRentabilidadComparativo(rows24, rows25){
   const tableWrap = document.getElementById('rentabilidad-resumen');
   const metricSel = document.getElementById('rent-metrica');
   if(!tableWrap || !metricSel) return;
-  const mapMetric = {
-    resultado:['RESULTADO','RESULTADO'],
-    ingresos:['TOTAL_INGRESOS','TOTAL_INGRESOS'],
-    costos:['TOTAL_COSTOS','TOTAL_COSTOS'],
-    kilos:['KILOS_REALES','KILOS_REALES'],
-    ingreso_kg:['INGRESOS_KILO','INGRESOS_KILO'],
-    costo_kg:['COSTO_KILO','COSTO_KILO'],
-    ingreso_ha:['INGRESO_HECTAREA','INGRESO_HECTAREA'],
-    costo_ha:['COSTO_HECTAREA','COSTO_HECTAREA']
-  };
-  const keys = mapMetric[metricSel.value] || mapMetric.resultado;
-  const g24 = new Map(), g25 = new Map();
-  rentabilidadData2425.forEach(r=>{ const k=strip(r.CUARTEL)||'Sin cuartel'; g24.set(k,(g24.get(k)||0)+(Number(r[keys[0]])||0)); });
-  rows25.forEach(r=>{ const k=strip(r.CUARTEL)||'Sin cuartel'; g25.set(k,(g25.get(k)||0)+(Number(r[keys[1]])||0)); });
+  const g24 = buildRentabilidadAggByCuartel(rows24), g25 = buildRentabilidadAggByCuartel(rows25);
   const all = Array.from(new Set([...g24.keys(), ...g25.keys()])).sort((a,b)=>a.localeCompare(b,'es'));
   const totals24 = {res:0,costoKg:0,costos:0,kilos:0}, totals25={res:0,costoKg:0,costos:0,kilos:0};
-  rentabilidadData2425.forEach(r=>{totals24.res+=(r.RESULTADO||0);totals24.costos+=(r.TOTAL_COSTOS||0);totals24.kilos+=(r.KILOS_REALES||0);});
-  rows25.forEach(r=>{totals25.res+=(r.RESULTADO||0);totals25.costos+=(r.TOTAL_COSTOS||0);totals25.kilos+=(r.KILOS_REALES||0);});
+  (rows24||[]).forEach(r=>{totals24.res+=(r.RESULTADO||0);totals24.costos+=(r.TOTAL_COSTOS||0);totals24.kilos+=(r.KILOS_REALES||0);});
+  (rows25||[]).forEach(r=>{totals25.res+=(r.RESULTADO||0);totals25.costos+=(r.TOTAL_COSTOS||0);totals25.kilos+=(r.KILOS_REALES||0);});
   totals24.costoKg = totals24.kilos>0?totals24.costos/totals24.kilos:0; totals25.costoKg = totals25.kilos>0?totals25.costos/totals25.kilos:0;
   const diffRes = totals25.res - totals24.res;
   const diffPct = totals24.res!==0 ? (diffRes/totals24.res) : 0;
@@ -1313,11 +1324,14 @@ function renderRentabilidadComparativo(rows25){
   <article class="rent-card"><div class="rent-card-label">Costo/kg 24-25</div><div class="rent-card-value">${fmt(totals24.costoKg)}</div></article>
   <article class="rent-card"><div class="rent-card-label">Costo/kg 25-26</div><div class="rent-card-value">${fmt(totals25.costoKg)}</div></article>`;
   tableWrap.innerHTML = `<table class="dense-table resumen-table rent-table"><thead><tr><th>Cuartel</th><th>24-25</th><th>25-26</th><th>Diferencia</th><th>% Dif.</th></tr></thead><tbody>${
-    all.map(k=>{const v24=g24.get(k)||0;const v25=g25.get(k)||0;const d=v25-v24;const p=v24!==0?d/v24:0;return `<tr><td>${k}</td><td>${fmt(v24)}</td><td>${fmt(v25)}</td><td>${fmt(d)}</td><td>${pctFmt(p)}</td></tr>`;}).join('')
+    all.map(k=>{const base={hectareas:0,kilos:0,ingresos:0,costos:0,resultado:0};const v24=getRentabilidadMetricFromAgg(g24.get(k)||base, metricSel.value);const v25=getRentabilidadMetricFromAgg(g25.get(k)||base, metricSel.value);const d=v25-v24;const p=v24!==0?d/v24:0;return `<tr><td>${k}</td><td>${fmt(v24)}</td><td>${fmt(v25)}</td><td>${fmt(d)}</td><td>${pctFmt(p)}</td></tr>`;}).join('')
   }</tbody></table>`;
 }
 function applyRentabilidadFilters(){
-  let rows = rentabilidadData.slice();
+  return applyRentabilidadFiltersToRows(rentabilidadData);
+}
+function applyRentabilidadFiltersToRows(sourceRows){
+  let rows = Array.isArray(sourceRows) ? sourceRows.slice() : [];
   const isIndirectoRent = (row)=>{
     const values = [row.PREDIO, row.CUARTEL, row.SECTOR].map(v => strip(v||'').toUpperCase());
     return values.some(v => v === 'COSTOS INDIRECTOS');
@@ -1397,7 +1411,13 @@ function renderRentabilidadResumen(){
   const rows = applyRentabilidadFilters();
   const activeRentTab = document.querySelector('.rent-tabs .tab.active')?.dataset?.rentTab || 'resumen';
   if(activeRentTab === 'comparativo'){
-    renderRentabilidadComparativo(rows);
+    if(rentabilidadComparativoStatus === 'error'){
+      cardsWrap.innerHTML = '';
+      tableWrap.innerHTML = getRentEmptyStateHTML('No se pudo cargar la base comparativa 24-25. Revisa el importador "Base comparativa rentabilidad 24-25".', 'is-error');
+      return;
+    }
+    const rows24 = applyRentabilidadFiltersToRows(rentabilidadData2425);
+    renderRentabilidadComparativo(rows24, rows);
     return;
   }
   const config = getRentabilidadCardConfig();

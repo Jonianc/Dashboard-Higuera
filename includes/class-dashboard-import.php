@@ -256,6 +256,28 @@ class Dashboard_Higuera_Import {
         );
     }
 
+    private static function get_uploaded_rentabilidad_2425_file() {
+        if (empty($_FILES['dlh_rentabilidad_2425_file']) || !is_array($_FILES['dlh_rentabilidad_2425_file'])) {
+            return new WP_Error('missing_upload', 'Selecciona un archivo CSV o XLSX antes de validar.');
+        }
+        $file = $_FILES['dlh_rentabilidad_2425_file'];
+        if (!isset($file['error']) || (int) $file['error'] === UPLOAD_ERR_NO_FILE) {
+            return new WP_Error('missing_upload', 'Selecciona un archivo CSV o XLSX antes de validar.');
+        }
+        if ((int) $file['error'] !== UPLOAD_ERR_OK) {
+            return new WP_Error('upload_error', 'La carga del archivo falló. Código: ' . (int) $file['error']);
+        }
+        if (empty($file['tmp_name']) || !is_uploaded_file($file['tmp_name'])) {
+            return new WP_Error('upload_tmp', 'No se pudo verificar el archivo subido.');
+        }
+        $name = isset($file['name']) ? sanitize_file_name(wp_unslash($file['name'])) : '';
+        $ext = strtolower((string) pathinfo($name, PATHINFO_EXTENSION));
+        if (!in_array($ext, array('csv', 'xlsx'), true)) {
+            return new WP_Error('bad_ext', 'El archivo debe ser CSV o XLSX.');
+        }
+        return array('tmp_name'=>$file['tmp_name'],'name'=>$name !== '' ? $name : ('base-rentabilidad-2024-25.' . $ext),'ext'=>$ext,'size'=>isset($file['size'])?(int)$file['size']:0);
+    }
+
     private static function persist_uploaded_rentabilidad_file($upload) {
         $dir = self::ensure_upload_folder();
         $tmp_path = wp_tempnam('dlh-rentabilidad-' . gmdate('YmdHis'));
@@ -311,6 +333,35 @@ class Dashboard_Higuera_Import {
         return $analysis;
     }
 
+    private static function persist_uploaded_rentabilidad_2425_file($upload) {
+        $tmp_path = wp_tempnam('dlh-rentabilidad-2425-' . gmdate('YmdHis'));
+        if (!$tmp_path) return new WP_Error('tmp_file', 'No se pudo crear archivo temporal.');
+        if (!@move_uploaded_file($upload['tmp_name'], $tmp_path) && !@copy($upload['tmp_name'], $tmp_path)) {
+            @unlink($tmp_path);
+            return new WP_Error('move_upload', 'No se pudo mover el archivo temporal de rentabilidad 24-25.');
+        }
+        $validation_path = $tmp_path . '.' . $upload['ext'];
+        @rename($tmp_path, $validation_path);
+        if (!file_exists($validation_path)) $validation_path = $tmp_path;
+        $analysis = self::analyze_rentabilidad_source($validation_path);
+        if (is_wp_error($analysis)) {
+            @unlink($validation_path);
+            return $analysis;
+        }
+        $target_source = $upload['ext'] === 'xlsx' ? self::get_rent_2425_source_xlsx_path() : self::get_rent_2425_source_csv_path();
+        $alternate_source = $upload['ext'] === 'xlsx' ? self::get_rent_2425_source_csv_path() : self::get_rent_2425_source_xlsx_path();
+        if (file_exists($alternate_source)) @unlink($alternate_source);
+        if (!@rename($validation_path, $target_source) && !@copy($validation_path, $target_source)) {
+            @unlink($validation_path);
+            return new WP_Error('store_upload', 'No se pudo guardar la base comparativa rentabilidad 24-25.');
+        }
+        @unlink($validation_path);
+        update_option('dlh_rentabilidad_2425_file_meta', array('original_name'=>$upload['name'],'stored_name'=>basename($target_source),'size'=>(int)$upload['size'],'uploaded_at'=>current_time('mysql'),'source'=>'admin_upload','extension'=>$upload['ext']));
+        $analysis['path'] = $target_source;
+        $analysis['format'] = $upload['ext'];
+        return $analysis;
+    }
+
     private static function activate_rentabilidad_analysis($analysis, $source, $success_message) {
         $normalized = self::build_normalized_rentabilidad_csv($analysis);
         $target = self::get_rent_target_path();
@@ -337,6 +388,24 @@ class Dashboard_Higuera_Import {
         ));
         update_option('dlh_last_rentabilidad_activation', current_time('mysql'));
         self::redirect_with_notice('success', $success_message . (!empty($backup) ? ' Respaldo: ' . basename($backup) : ''));
+    }
+
+    private static function activate_rentabilidad_2425_analysis($analysis, $source, $success_message) {
+        $normalized = self::build_normalized_rentabilidad_csv($analysis);
+        $target = self::get_rent_2425_target_path();
+        $written = file_put_contents($target, $normalized);
+        if ($written === false) {
+            self::redirect_with_notice('error', 'No se pudo escribir la base activa de rentabilidad 24-25 en uploads/dashboard-higuera.');
+        }
+        update_option('dlh_last_validation_rentabilidad_2425', array(
+            'time' => current_time('mysql'),
+            'source' => basename($source),
+            'rows' => !empty($analysis['valid_rows']) ? (int) $analysis['valid_rows'] : 0,
+            'recognized_columns' => !empty($analysis['recognized_columns']) ? (array) $analysis['recognized_columns'] : array(),
+            'format' => !empty($analysis['format']) ? (string) $analysis['format'] : '',
+            'auto_activated' => 1,
+        ));
+        self::redirect_with_notice('success', $success_message);
     }
 
     private static function get_rentabilidad_file_meta($source_path = null) {
@@ -1333,6 +1402,18 @@ class Dashboard_Higuera_Import {
             $source = isset($analysis['path']) ? $analysis['path'] : self::resolve_rent_source_path();
             self::activate_rentabilidad_analysis($analysis, $source, 'Base de rentabilidad cargada, validada y activada correctamente.');
         }
+        if ($action === 'upload_validate_rentabilidad_2425') {
+            $upload = self::get_uploaded_rentabilidad_2425_file();
+            if (is_wp_error($upload)) {
+                self::redirect_with_notice('error', $upload->get_error_message());
+            }
+            $analysis = self::persist_uploaded_rentabilidad_2425_file($upload);
+            if (is_wp_error($analysis)) {
+                self::redirect_with_notice('error', $analysis->get_error_message());
+            }
+            $source = isset($analysis['path']) ? $analysis['path'] : self::resolve_rent_2425_source_path();
+            self::activate_rentabilidad_2425_analysis($analysis, $source, 'Base comparativa rentabilidad 24-25 cargada, validada y activada correctamente.');
+        }
 
         if ($action === 'validate_rentabilidad' || $action === 'activate_rentabilidad') {
             $source = self::resolve_rent_source_path();
@@ -1648,7 +1729,9 @@ class Dashboard_Higuera_Import {
         $especie = trim((string) self::get_rent_cell_value($row, $map, 'especie'));
         $variedad = trim((string) self::get_rent_cell_value($row, $map, 'variedad'));
         $cuartel = trim((string) self::get_rent_cell_value($row, $map, 'cuartel'));
-        if (strtoupper($cuartel) === 'TOTAL COSTOS') {
+        $predio_upper = strtoupper($predio);
+        $cuartel_upper = strtoupper($cuartel);
+        if ($predio_upper === 'COSTOS' || $predio_upper === 'TOTAL COSTOS' || $cuartel_upper === 'TOTAL COSTOS') {
             return null;
         }
 
@@ -2411,6 +2494,28 @@ class Dashboard_Higuera_Import {
                                     <strong>Automática después de validar</strong>
                                 </div>
                             </div>
+                        </div>
+                    </section>
+
+                    <section class="dlh-card dlh-card--accent">
+                        <div class="dlh-card__header">
+                            <div>
+                                <h2>Base comparativa rentabilidad 24-25</h2>
+                                <p>Sube CSV/XLSX para temporada histórica de rentabilidad. Se valida y activa en archivo separado.</p>
+                            </div>
+                            <span class="dlh-pill is-strong">Comparativo</span>
+                        </div>
+                        <div class="dlh-upload-panel">
+                            <form method="post" enctype="multipart/form-data" class="dlh-upload-form">
+                                <?php wp_nonce_field('dlh_base_2425_action'); ?>
+                                <input type="hidden" name="dlh_import_action" value="upload_validate_rentabilidad_2425" />
+                                <label for="dlh-rentabilidad-2425-file" class="dlh-field-label">Archivo comparativo rentabilidad 24-25</label>
+                                <input type="file" id="dlh-rentabilidad-2425-file" name="dlh_rentabilidad_2425_file" accept=".csv,.xlsx" class="dlh-file-input" />
+                                <p class="description">Fuente: <code>base-rentabilidad-2024-25.csv/xlsx</code> · Activo: <code>temporada-rentabilidad-2024-25.csv</code>.</p>
+                                <div class="dlh-action-row">
+                                    <button type="submit" class="button button-primary">Validar y activar comparativa 24-25</button>
+                                </div>
+                            </form>
                         </div>
                     </section>
 
