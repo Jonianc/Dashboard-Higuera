@@ -1,3 +1,7 @@
+## 1.29.1 - 2026-05-01
+- Fix (Rentabilidad comparativo): se agregan reglas específicas en `.rent-table--compare` para colorear `.is-neg-cell`/`.is-pos-cell` (rojo/verde) y asegurar semántica visual en "Comparativo temporadas".
+- Fix (Tabla comparativa): zebra/hover reforzado a nivel de `td`, incluyendo primera y última columna para consistencia visual en celdas sticky.
+
 ## 1.29.0 - 2026-05-01
 - UI/UX (Rentabilidad > Comparativo temporadas): el selector de `Métrica` pasa a chips accesibles (botones con `aria-pressed`) manteniendo `#rent-metrica` sincronizado para compatibilidad con la lógica existente.
 - UI/UX (Rentabilidad comparativo): la tabla agrega clase `rent-table--compare` con mayor legibilidad en desktop (contenedor, jerarquía de header, padding, zebra sutil, hover suave, primera columna más ancha y columnas numéricas alineadas a la derecha).

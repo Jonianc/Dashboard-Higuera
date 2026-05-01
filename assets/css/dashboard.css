@@ -826,6 +826,14 @@ button.filter-chip:hover{border-color:var(--chip-active-border)}
 .rent-table--compare tbody tr:hover{background:color-mix(in srgb, var(--primary) 8%, var(--surface))}
 .rent-table--compare th:first-child,.rent-table--compare td:first-child{min-width:240px}
 .rent-table--compare th:nth-child(n+2),.rent-table--compare td:nth-child(n+2){text-align:right}
+.rent-table--compare .is-neg-cell{color:#c0392b;font-weight:700}
+.rent-table--compare .is-pos-cell{color:#1b7f3b;font-weight:700}
+.rent-table--compare tbody tr:nth-child(even) td{background:color-mix(in srgb, var(--surface-2) 50%, var(--surface))}
+.rent-table--compare tbody tr:hover td{background:color-mix(in srgb, var(--primary) 8%, var(--surface))}
+.rent-table--compare tbody tr:nth-child(even) td:first-child,
+.rent-table--compare tbody tr:nth-child(even) td:last-child{background:color-mix(in srgb, var(--surface-2) 58%, var(--table-sticky))}
+.rent-table--compare tbody tr:hover td:first-child,
+.rent-table--compare tbody tr:hover td:last-child{background:color-mix(in srgb, var(--primary) 10%, var(--table-sticky))}
 @media (max-width: 1024px){
   .rent-metrica-chips{flex-wrap:wrap}
 }
