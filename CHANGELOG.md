@@ -1,3 +1,7 @@
+## 1.29.2 - 2026-05-01
+- Fix (Filtros): cuando `Tipo de registro` = `Solo Productivo`, el filtro `Cultivos` oculta el chip `Costos indirectos`.
+- Fix (Estado filtros): si existía selección previa `__COSTOS_INDIRECTOS__`, se limpia automáticamente al pasar a `Solo Productivo` y se mantiene compatibilidad con `refreshAll()` y limpiar filtros.
+
 ## 1.29.1 - 2026-05-01
 - Fix (Rentabilidad comparativo): se agregan reglas específicas en `.rent-table--compare` para colorear `.is-neg-cell`/`.is-pos-cell` (rojo/verde) y asegurar semántica visual en "Comparativo temporadas".
 - Fix (Tabla comparativa): zebra/hover reforzado a nivel de `td`, incluyendo primera y última columna para consistencia visual en celdas sticky.

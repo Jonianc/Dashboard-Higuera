@@ -496,12 +496,16 @@ function renderCategoriaControl(arrN1){
 function populateCombos(){
   const rowsBase = state.data.filter(r=> (state.filtros.predio==="Todos")? true : (state.filtros.predio==="Solo Productivo" ? predioClas(r)==="Productivo" : predioClas(r)==="Indirectos"));
   const sectores = Array.from(new Set(rowsBase.map(r=>strip(r.SECTOR)||"Sin dato"))).sort((a,b)=>a.localeCompare(b,'es'));
-  document.querySelector("#f_cultivo").innerHTML = `<option>Todos</option>` + sectores.map(s=>`<option${s===state.filtros.sector?' selected':''}>${s}</option>`).join('');
   renderPredioChips();
+  const selectedRaw = state.filtros.sector==="Todos" ? [] : (Array.isArray(state.filtros.sector) ? state.filtros.sector.slice() : [state.filtros.sector]);
+  const selectedSectores = selectedRaw.filter(s => s !== '__COSTOS_INDIRECTOS__');
+  if(state.filtros.predio === 'Solo Productivo' && selectedSectores.length !== selectedRaw.length){
+    state.filtros.sector = selectedSectores.length ? selectedSectores : 'Todos';
+    if(state.filtros.sector === 'Todos') state.filtros.cuartel = 'Todos';
+  }
+  document.querySelector("#f_cultivo").innerHTML = `<option>Todos</option>` + sectores.map(s=>`<option${s===state.filtros.sector?' selected':''}>${s}</option>`).join('');
   const cultivoWrap = document.querySelector('#f_cultivo_chips');
   if(cultivoWrap){
-    const selected = state.filtros.sector==="Todos" ? [] : (Array.isArray(state.filtros.sector) ? state.filtros.sector : [state.filtros.sector]);
-    const selectedSectores = selected.filter(s => s !== '__COSTOS_INDIRECTOS__');
     const priority = ['CEREZOS','OTROS CULTIVOS','VIÑA'];
     const byUpper = new Map(sectores.map(s=>[String(s||'').toUpperCase(), s]));
     const orderedSectores = [
@@ -514,7 +518,7 @@ function populateCombos(){
     const chips = [
       {k:'Todos', label:'Todos', icon:'🌱'},
       ...orderedSectores.map(s=>({k:s, label:s, icon:/cerez/i.test(s)?'🍒':(/[vV][ií]?[ñn]a/i.test(s)?'🍇':'🌿')})),
-      {k:'__COSTOS_INDIRECTOS__', label:'Costos indirectos', icon:'🏷️', multiline:true}
+      ...(state.filtros.predio === 'Solo Productivo' ? [] : [{k:'__COSTOS_INDIRECTOS__', label:'Costos indirectos', icon:'🏷️', multiline:true}])
     ];
     cultivoWrap.innerHTML = chips.map(ch=>{
       const active = ch.k==='Todos'
