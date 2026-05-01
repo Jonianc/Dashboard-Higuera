@@ -1,3 +1,10 @@
+## 1.29.0 - 2026-05-01
+- UI/UX (Rentabilidad > Comparativo temporadas): el selector de `Métrica` pasa a chips accesibles (botones con `aria-pressed`) manteniendo `#rent-metrica` sincronizado para compatibilidad con la lógica existente.
+- UI/UX (Rentabilidad comparativo): la tabla agrega clase `rent-table--compare` con mayor legibilidad en desktop (contenedor, jerarquía de header, padding, zebra sutil, hover suave, primera columna más ancha y columnas numéricas alineadas a la derecha).
+- UI/UX (Semántica visual): `Diferencia` y `% Dif.` muestran positivos en verde y negativos en rojo sin alterar cálculos.
+- UI/UX (KPI Rentabilidad): refinado visual de cards (más aire, mejor jerarquía label/valor, borde/sombra suave) conservando layout y cálculos actuales.
+- Responsive: chips con wrap en medianas, filas en móvil y tabla comparativa con scroll horizontal dentro de `table-wrap`.
+
 ## 1.28.6 - 2026-04-29
 - Fix (Tabs refresh): `refreshAll()` ahora detecta tab activa solo en `.dashboard-main-tabs .tab.active[data-tab]` para evitar conflicto con tabs internas de Rentabilidad.
 

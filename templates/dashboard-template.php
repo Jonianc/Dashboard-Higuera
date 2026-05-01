@@ -171,9 +171,19 @@ if (!defined('ABSPATH')) {
                             <div id="tab-rent-comparativo" class="tab" data-rent-tab="comparativo">Comparativo temporadas</div>
                         </div>
                         <div id="rentabilidad-comparativo-controls" class="comp-toolbar hidden">
-                            <div class="comp-control">
+                            <div class="comp-control comp-control--metric-chips">
                                 <label class="comp-control-label" for="rent-metrica">Métrica</label>
-                                <select id="rent-metrica">
+                                <div id="rent-metrica-chips" class="rent-metrica-chips" role="group" aria-label="Seleccionar métrica">
+                                    <button type="button" class="rent-metrica-chip is-active" data-rent-metrica="resultado" aria-pressed="true">Resultado</button>
+                                    <button type="button" class="rent-metrica-chip" data-rent-metrica="ingresos" aria-pressed="false">Ingresos</button>
+                                    <button type="button" class="rent-metrica-chip" data-rent-metrica="costos" aria-pressed="false">Costos</button>
+                                    <button type="button" class="rent-metrica-chip" data-rent-metrica="kilos" aria-pressed="false">Kilos</button>
+                                    <button type="button" class="rent-metrica-chip" data-rent-metrica="ingreso_kg" aria-pressed="false">Ingreso/kg</button>
+                                    <button type="button" class="rent-metrica-chip" data-rent-metrica="costo_kg" aria-pressed="false">Costo/kg</button>
+                                    <button type="button" class="rent-metrica-chip" data-rent-metrica="ingreso_ha" aria-pressed="false">Ingreso/ha</button>
+                                    <button type="button" class="rent-metrica-chip" data-rent-metrica="costo_ha" aria-pressed="false">Costo/ha</button>
+                                </div>
+                                <select id="rent-metrica" class="rent-metrica-native" aria-hidden="true" tabindex="-1">
                                     <option value="resultado">Resultado</option>
                                     <option value="ingresos">Ingresos</option>
                                     <option value="costos">Costos</option>

@@ -1294,6 +1294,14 @@ function buildRentabilidadAggByCuartel(rows){
   });
   return grouped;
 }
+function syncRentMetricaChips(activeValue){
+  const chips = document.querySelectorAll('.rent-metrica-chip[data-rent-metrica]');
+  chips.forEach(chip=>{
+    const isActive = chip.dataset.rentMetrica === activeValue;
+    chip.classList.toggle('is-active', isActive);
+    chip.setAttribute('aria-pressed', isActive ? 'true' : 'false');
+  });
+}
 function getRentabilidadMetricFromAgg(agg, metric){
   if(metric === 'ingresos') return agg.ingresos;
   if(metric === 'costos') return agg.costos;
@@ -1323,8 +1331,8 @@ function renderRentabilidadComparativo(rows24, rows25){
   <article class="rent-card"><div class="rent-card-label">Diferencia %</div><div class="rent-card-value">${pctFmt(diffPct)}</div></article>
   <article class="rent-card"><div class="rent-card-label">Costo/kg 24-25</div><div class="rent-card-value">${fmt(totals24.costoKg)}</div></article>
   <article class="rent-card"><div class="rent-card-label">Costo/kg 25-26</div><div class="rent-card-value">${fmt(totals25.costoKg)}</div></article>`;
-  tableWrap.innerHTML = `<table class="dense-table resumen-table rent-table"><thead><tr><th>Cuartel</th><th>24-25</th><th>25-26</th><th>Diferencia</th><th>% Dif.</th></tr></thead><tbody>${
-    all.map(k=>{const base={hectareas:0,kilos:0,ingresos:0,costos:0,resultado:0};const v24=getRentabilidadMetricFromAgg(g24.get(k)||base, metricSel.value);const v25=getRentabilidadMetricFromAgg(g25.get(k)||base, metricSel.value);const d=v25-v24;const p=v24!==0?d/v24:0;return `<tr><td>${k}</td><td>${fmt(v24)}</td><td>${fmt(v25)}</td><td>${fmt(d)}</td><td>${pctFmt(p)}</td></tr>`;}).join('')
+  tableWrap.innerHTML = `<table class="dense-table resumen-table rent-table rent-table--compare"><thead><tr><th>Cuartel</th><th>24-25</th><th>25-26</th><th>Diferencia</th><th>% Dif.</th></tr></thead><tbody>${
+    all.map(k=>{const base={hectareas:0,kilos:0,ingresos:0,costos:0,resultado:0};const v24=getRentabilidadMetricFromAgg(g24.get(k)||base, metricSel.value);const v25=getRentabilidadMetricFromAgg(g25.get(k)||base, metricSel.value);const d=v25-v24;const p=v24!==0?d/v24:0;const dCls=d<0?'is-neg-cell':'is-pos-cell';const pCls=p<0?'is-neg-cell':'is-pos-cell';return `<tr><td>${k}</td><td>${fmt(v24)}</td><td>${fmt(v25)}</td><td class="${dCls}">${fmt(d)}</td><td class="${pCls}">${pctFmt(p)}</td></tr>`;}).join('')
   }</tbody></table>`;
 }
 function applyRentabilidadFilters(){
@@ -2237,9 +2245,24 @@ function bindRentabilidadTabs(){
     };
   });
   const metric = document.getElementById('rent-metrica');
+  const metricChips = document.querySelectorAll('.rent-metrica-chip[data-rent-metrica]');
   if(metric){
-    metric.addEventListener('change', ()=>renderRentabilidadResumen());
+    metric.addEventListener('change', ()=>{
+      syncRentMetricaChips(metric.value);
+      renderRentabilidadResumen();
+    });
+    syncRentMetricaChips(metric.value);
   }
+  metricChips.forEach(chip=>{
+    chip.addEventListener('click', ()=>{
+      if(!metric) return;
+      const nextValue = chip.dataset.rentMetrica || '';
+      if(!nextValue || metric.value === nextValue) return;
+      metric.value = nextValue;
+      syncRentMetricaChips(nextValue);
+      renderRentabilidadResumen();
+    });
+  });
 }
 $$('.dashboard-main-tabs .tab[data-tab]').forEach((t, idx, tabs)=>{
   t.onclick = ()=> showTab(t.dataset.tab);

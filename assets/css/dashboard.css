@@ -805,6 +805,35 @@ button.filter-chip:hover{border-color:var(--chip-active-border)}
 .filters-master-grid--premium .field input,
 .filters-master-grid--premium .mes-dropdown-btn{min-height:44px;padding:9px 12px}
 
+
+.comp-control--metric-chips{display:grid;gap:8px}
+.comp-control--metric-chips .comp-control-label{font-size:12px;font-weight:700;letter-spacing:.02em;color:var(--text)}
+.rent-metrica-native{position:absolute!important;width:1px!important;height:1px!important;padding:0!important;margin:-1px!important;overflow:hidden!important;clip:rect(0,0,0,0)!important;white-space:nowrap!important;border:0!important}
+.rent-metrica-chips{display:flex;flex-wrap:wrap;gap:8px}
+.rent-metrica-chip{border:1px solid color-mix(in srgb, var(--primary) 24%, var(--border));background:color-mix(in srgb, var(--primary) 6%, var(--surface));color:var(--text);border-radius:999px;padding:8px 12px;font-size:13px;font-weight:700;line-height:1.2;cursor:pointer;transition:all .16s ease}
+.rent-metrica-chip:hover{background:color-mix(in srgb, var(--primary) 14%, var(--surface));border-color:color-mix(in srgb, var(--primary) 44%, var(--border))}
+.rent-metrica-chip:focus-visible{outline:2px solid var(--primary);outline-offset:2px}
+.rent-metrica-chip.is-active{background:var(--primary);color:#fff;border-color:var(--primary)}
+.rentabilidad-cards{gap:12px}
+.rent-card{padding:14px 16px;min-height:90px;border-color:color-mix(in srgb, var(--border) 72%, var(--accent));box-shadow:0 6px 16px rgba(15,23,42,.06)}
+.rent-card-label{font-size:11px;margin-bottom:6px}
+.rent-card-value{font-size:24px}
+.rent-table-wrap{border:1px solid var(--border);border-radius:14px;background:var(--surface);box-shadow:0 6px 16px rgba(15,23,42,.06);overflow:auto}
+.rent-table--compare{width:100%;table-layout:auto;min-width:920px}
+.rent-table--compare th{padding:12px 14px;background:color-mix(in srgb, var(--surface-2) 84%, var(--surface));font-weight:800;border-bottom:1px solid var(--border)}
+.rent-table--compare td{padding:12px 14px;vertical-align:middle;border-bottom:1px solid color-mix(in srgb, var(--border) 80%, transparent)}
+.rent-table--compare tbody tr:nth-child(even){background:color-mix(in srgb, var(--surface-2) 50%, var(--surface))}
+.rent-table--compare tbody tr:hover{background:color-mix(in srgb, var(--primary) 8%, var(--surface))}
+.rent-table--compare th:first-child,.rent-table--compare td:first-child{min-width:240px}
+.rent-table--compare th:nth-child(n+2),.rent-table--compare td:nth-child(n+2){text-align:right}
+@media (max-width: 1024px){
+  .rent-metrica-chips{flex-wrap:wrap}
+}
+@media (max-width: 700px){
+  .rent-metrica-chip{flex:1 1 calc(50% - 8px);text-align:center}
+  .rent-table--compare{min-width:760px}
+}
+
 .rent-panel{gap:12px}
 .rent-panel--aside{padding:14px;border:1px solid var(--border);border-radius:18px;background:linear-gradient(180deg,var(--surface) 0%,var(--surface-2) 100%);position:relative;top:auto}
 .rent-panel-head--compact{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap}
