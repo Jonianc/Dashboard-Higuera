@@ -1,3 +1,9 @@
+## 1.29.3 - 2026-05-02
+- Rentabilidad > Comparativo temporadas (cards): se agrega helper central `getMetricTone(metricKey, value, diffValue)` para tono semántico.
+- Cards principales: número grande usa clases `.metric-positive`, `.metric-negative`, `.metric-neutral` con lógica normal e inversa para métricas de costo.
+- Cards de temporada individual: `Resultado` por signo; `Costo/kg 25-26` usa comparación vs 24-25 cuando existe; sin comparativo queda neutro.
+- Estilo visual leve: borde lateral semántico en cards, sin alterar estructura ni cálculos del comparativo, ni colores/lógica de la tabla.
+
 ## 1.29.2 - 2026-05-01
 - Fix (Filtros): cuando `Tipo de registro` = `Solo Productivo`, el filtro `Cultivos` oculta el chip `Costos indirectos`.
 - Fix (Estado filtros): si existía selección previa `__COSTOS_INDIRECTOS__`, se limpia automáticamente al pasar a `Solo Productivo` y se mantiene compatibilidad con `refreshAll()` y limpiar filtros.

@@ -1316,6 +1316,23 @@ function getRentabilidadMetricFromAgg(agg, metric){
   if(metric === 'costo_ha') return agg.hectareas>0 ? agg.costos/agg.hectareas : 0;
   return agg.resultado;
 }
+function isRentCostMetric(metricKey){
+  return metricKey === 'costos' || metricKey === 'costo_kg' || metricKey === 'costo_ha';
+}
+function getMetricTone(metricKey, value, diffValue){
+  const hasDiff = Number.isFinite(diffValue);
+  const metricIsCost = isRentCostMetric(metricKey);
+  if(hasDiff){
+    if(diffValue === 0) return 'neutral';
+    if(metricIsCost) return diffValue < 0 ? 'positive' : 'negative';
+    return diffValue > 0 ? 'positive' : 'negative';
+  }
+  if(metricKey === 'resultado'){
+    if(value === 0 || !Number.isFinite(value)) return 'neutral';
+    return value > 0 ? 'positive' : 'negative';
+  }
+  return 'neutral';
+}
 function renderRentabilidadComparativo(rows24, rows25){
   const tableWrap = document.getElementById('rentabilidad-resumen');
   const metricSel = document.getElementById('rent-metrica');
@@ -1328,13 +1345,21 @@ function renderRentabilidadComparativo(rows24, rows25){
   totals24.costoKg = totals24.kilos>0?totals24.costos/totals24.kilos:0; totals25.costoKg = totals25.kilos>0?totals25.costos/totals25.kilos:0;
   const diffRes = totals25.res - totals24.res;
   const diffPct = totals24.res!==0 ? (diffRes/totals24.res) : 0;
+  const metricKey = metricSel.value || 'resultado';
+  const costoKgDiff = totals25.costoKg - totals24.costoKg;
+  const tRes24 = getMetricTone('resultado', totals24.res);
+  const tRes25 = getMetricTone('resultado', totals25.res, diffRes);
+  const tDiff = getMetricTone(metricKey, diffRes, diffRes);
+  const tPct = getMetricTone(metricKey, diffPct, diffPct);
+  const tCosto24 = getMetricTone('costo_kg', totals24.costoKg);
+  const tCosto25 = getMetricTone('costo_kg', totals25.costoKg, costoKgDiff);
   document.getElementById('rentabilidad-cards').innerHTML = `
-  <article class="rent-card"><div class="rent-card-label">Resultado 24-25</div><div class="rent-card-value">${fmt(totals24.res)}</div></article>
-  <article class="rent-card"><div class="rent-card-label">Resultado 25-26</div><div class="rent-card-value">${fmt(totals25.res)}</div></article>
-  <article class="rent-card"><div class="rent-card-label">Diferencia $</div><div class="rent-card-value">${fmt(diffRes)}</div></article>
-  <article class="rent-card"><div class="rent-card-label">Diferencia %</div><div class="rent-card-value">${pctFmt(diffPct)}</div></article>
-  <article class="rent-card"><div class="rent-card-label">Costo/kg 24-25</div><div class="rent-card-value">${fmt(totals24.costoKg)}</div></article>
-  <article class="rent-card"><div class="rent-card-label">Costo/kg 25-26</div><div class="rent-card-value">${fmt(totals25.costoKg)}</div></article>`;
+  <article class="rent-card metric-${tRes24}"><div class="rent-card-label">Resultado 24-25</div><div class="rent-card-value metric-${tRes24}">${fmt(totals24.res)}</div></article>
+  <article class="rent-card metric-${tRes25}"><div class="rent-card-label">Resultado 25-26</div><div class="rent-card-value metric-${tRes25}">${fmt(totals25.res)}</div></article>
+  <article class="rent-card metric-${tDiff}"><div class="rent-card-label">Diferencia $</div><div class="rent-card-value metric-${tDiff}">${fmt(diffRes)}</div></article>
+  <article class="rent-card metric-${tPct}"><div class="rent-card-label">Diferencia %</div><div class="rent-card-value metric-${tPct}">${pctFmt(diffPct)}</div></article>
+  <article class="rent-card metric-${tCosto24}"><div class="rent-card-label">Costo/kg 24-25</div><div class="rent-card-value metric-${tCosto24}">${fmt(totals24.costoKg)}</div></article>
+  <article class="rent-card metric-${tCosto25}"><div class="rent-card-label">Costo/kg 25-26</div><div class="rent-card-value metric-${tCosto25}">${fmt(totals25.costoKg)}</div></article>`;
   tableWrap.innerHTML = `<table class="dense-table resumen-table rent-table rent-table--compare"><thead><tr><th>Cuartel</th><th>24-25</th><th>25-26</th><th>Diferencia</th><th>% Dif.</th></tr></thead><tbody>${
     all.map(k=>{const base={hectareas:0,kilos:0,ingresos:0,costos:0,resultado:0};const v24=getRentabilidadMetricFromAgg(g24.get(k)||base, metricSel.value);const v25=getRentabilidadMetricFromAgg(g25.get(k)||base, metricSel.value);const d=v25-v24;const p=v24!==0?d/v24:0;const dCls=d<0?'is-neg-cell':'is-pos-cell';const pCls=p<0?'is-neg-cell':'is-pos-cell';return `<tr><td>${k}</td><td>${fmt(v24)}</td><td>${fmt(v25)}</td><td class="${dCls}">${fmt(d)}</td><td class="${pCls}">${pctFmt(p)}</td></tr>`;}).join('')
   }</tbody></table>`;

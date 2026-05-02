@@ -773,6 +773,12 @@ button.filter-chip:hover{border-color:var(--chip-active-border)}
 .rent-card{border:1px solid color-mix(in srgb, var(--accent) 30%, var(--border));border-radius:16px;padding:12px 14px;background:var(--surface);box-shadow:var(--shadow-soft);min-height:82px;display:grid;align-content:center}
 .rent-card-label{font-size:11px;color:var(--muted);margin-bottom:4px;text-transform:uppercase;letter-spacing:.04em;font-weight:700}
 .rent-card-value{font-size:22px;font-weight:800;letter-spacing:-.02em;line-height:1.05}
+.rent-card-value.metric-positive{color:#1b7f3b}
+.rent-card-value.metric-negative{color:#c0392b}
+.rent-card-value.metric-neutral{color:var(--text)}
+.rent-card.metric-positive{border-left:3px solid color-mix(in srgb, #1b7f3b 62%, transparent)}
+.rent-card.metric-negative{border-left:3px solid color-mix(in srgb, #c0392b 62%, transparent)}
+.rent-card.metric-neutral{border-left:3px solid color-mix(in srgb, var(--muted) 35%, transparent)}
 .rent-card.is-positive .rent-card-value{color:#1b7f3b}
 .rent-card.is-negative{background:var(--surface);border-color:color-mix(in srgb, var(--terracotta) 38%, var(--border))}
 .rent-card.is-negative .rent-card-value{color:#c0392b}
