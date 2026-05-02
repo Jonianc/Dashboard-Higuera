@@ -1343,21 +1343,38 @@ function renderRentabilidadComparativo(rows24, rows25){
   (rows24||[]).forEach(r=>{totals24.res+=(r.RESULTADO||0);totals24.costos+=(r.TOTAL_COSTOS||0);totals24.kilos+=(r.KILOS_REALES||0);});
   (rows25||[]).forEach(r=>{totals25.res+=(r.RESULTADO||0);totals25.costos+=(r.TOTAL_COSTOS||0);totals25.kilos+=(r.KILOS_REALES||0);});
   totals24.costoKg = totals24.kilos>0?totals24.costos/totals24.kilos:0; totals25.costoKg = totals25.kilos>0?totals25.costos/totals25.kilos:0;
-  const diffRes = totals25.res - totals24.res;
-  const diffPct = totals24.res!==0 ? (diffRes/totals24.res) : 0;
   const metricKey = metricSel.value || 'resultado';
+  const metricLabelMap = {
+    resultado: 'Resultado',
+    ingresos: 'Ingresos',
+    costos: 'Costos',
+    kilos: 'Kilos',
+    ingreso_kg: 'Ingreso/kg',
+    costo_kg: 'Costo/kg',
+    ingreso_ha: 'Ingreso/ha',
+    costo_ha: 'Costo/ha'
+  };
+  const metricLabel = metricLabelMap[metricKey] || 'Resultado';
+  const totalsAgg24 = {hectareas:0,kilos:totals24.kilos,ingresos:0,costos:totals24.costos,resultado:totals24.res};
+  const totalsAgg25 = {hectareas:0,kilos:totals25.kilos,ingresos:0,costos:totals25.costos,resultado:totals25.res};
+  (rows24||[]).forEach(r=>{ totalsAgg24.hectareas += (r.HECTAREAS || 0); totalsAgg24.ingresos += (r.TOTAL_INGRESOS || 0); });
+  (rows25||[]).forEach(r=>{ totalsAgg25.hectareas += (r.HECTAREAS || 0); totalsAgg25.ingresos += (r.TOTAL_INGRESOS || 0); });
+  const totalMetric24 = getRentabilidadMetricFromAgg(totalsAgg24, metricKey);
+  const totalMetric25 = getRentabilidadMetricFromAgg(totalsAgg25, metricKey);
+  const diffMetric = totalMetric25 - totalMetric24;
+  const diffMetricPct = totalMetric24 !== 0 ? (diffMetric / totalMetric24) : 0;
   const costoKgDiff = totals25.costoKg - totals24.costoKg;
-  const tRes24 = getMetricTone('resultado', totals24.res);
-  const tRes25 = getMetricTone('resultado', totals25.res, diffRes);
-  const tDiff = getMetricTone(metricKey, diffRes, diffRes);
-  const tPct = getMetricTone(metricKey, diffPct, diffPct);
+  const tMetric24 = getMetricTone(metricKey, totalMetric24);
+  const tMetric25 = getMetricTone(metricKey, totalMetric25, diffMetric);
+  const tDiff = getMetricTone(metricKey, diffMetric, diffMetric);
+  const tPct = getMetricTone(metricKey, diffMetricPct, diffMetricPct);
   const tCosto24 = getMetricTone('costo_kg', totals24.costoKg);
   const tCosto25 = getMetricTone('costo_kg', totals25.costoKg, costoKgDiff);
   document.getElementById('rentabilidad-cards').innerHTML = `
-  <article class="rent-card metric-${tRes24}"><div class="rent-card-label">Resultado 24-25</div><div class="rent-card-value metric-${tRes24}">${fmt(totals24.res)}</div></article>
-  <article class="rent-card metric-${tRes25}"><div class="rent-card-label">Resultado 25-26</div><div class="rent-card-value metric-${tRes25}">${fmt(totals25.res)}</div></article>
-  <article class="rent-card metric-${tDiff}"><div class="rent-card-label">Diferencia $</div><div class="rent-card-value metric-${tDiff}">${fmt(diffRes)}</div></article>
-  <article class="rent-card metric-${tPct}"><div class="rent-card-label">Diferencia %</div><div class="rent-card-value metric-${tPct}">${pctFmt(diffPct)}</div></article>
+  <article class="rent-card metric-${tMetric24}"><div class="rent-card-label">${metricLabel} 24-25</div><div class="rent-card-value metric-${tMetric24}">${fmt(totalMetric24)}</div></article>
+  <article class="rent-card metric-${tMetric25}"><div class="rent-card-label">${metricLabel} 25-26</div><div class="rent-card-value metric-${tMetric25}">${fmt(totalMetric25)}</div></article>
+  <article class="rent-card metric-${tDiff}"><div class="rent-card-label">Diferencia</div><div class="rent-card-value metric-${tDiff}">${fmt(diffMetric)}</div></article>
+  <article class="rent-card metric-${tPct}"><div class="rent-card-label">% Dif.</div><div class="rent-card-value metric-${tPct}">${pctFmt(diffMetricPct)}</div></article>
   <article class="rent-card metric-${tCosto24}"><div class="rent-card-label">Costo/kg 24-25</div><div class="rent-card-value metric-${tCosto24}">${fmt(totals24.costoKg)}</div></article>
   <article class="rent-card metric-${tCosto25}"><div class="rent-card-label">Costo/kg 25-26</div><div class="rent-card-value metric-${tCosto25}">${fmt(totals25.costoKg)}</div></article>`;
   tableWrap.innerHTML = `<table class="dense-table resumen-table rent-table rent-table--compare"><thead><tr><th>Cuartel</th><th>24-25</th><th>25-26</th><th>Diferencia</th><th>% Dif.</th></tr></thead><tbody>${

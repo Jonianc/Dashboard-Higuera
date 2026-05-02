@@ -1,3 +1,8 @@
+## 1.29.4 - 2026-05-02
+- Fix (Rentabilidad > Comparativo temporadas): las cards principales ahora respetan la métrica seleccionada (`Resultado`, `Ingresos`, `Costos`, `Kilos`, `Ingreso/kg`, `Costo/kg`, `Ingreso/ha`, `Costo/ha`).
+- Fix (Semántica visual): `Diferencia` y `% Dif.` se calculan y colorean con `diffMetric` de la métrica activa (no con `diffRes` fijo).
+- Compatibilidad: se mantiene la tabla comparativa sin cambios de estructura/cálculo y se conservan cards de `Costo/kg` como apoyo.
+
 ## 1.29.3 - 2026-05-02
 - Rentabilidad > Comparativo temporadas (cards): se agrega helper central `getMetricTone(metricKey, value, diffValue)` para tono semántico.
 - Cards principales: número grande usa clases `.metric-positive`, `.metric-negative`, `.metric-neutral` con lógica normal e inversa para métricas de costo.
