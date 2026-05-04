@@ -1,3 +1,11 @@
+## 1.30.0 - 2026-05-04
+- UI/UX (Dashboard): actualización visual general inspirada en referencia aprobada (no pixel-perfect), manteniendo lógica y cálculos existentes.
+- UI/UX (Layout): panel de filtros se presenta como sidebar más limpio en desktop y vuelve a flujo vertical en responsive.
+- UI/UX (Header): header superior más moderno con mejor jerarquía tipográfica y superficie elevada.
+- UI/UX (Rentabilidad): tabs principales más grandes, chips de métricas reforzados y tarjetas KPI con estilo semántico moderno.
+- UI/UX (Tablas): contenedores y celdas con mayor legibilidad/espaciado y ancho útil ampliado con scroll horizontal seguro.
+- Compatibilidad: sin cambios en lógica de filtros, cálculos, endpoints, ni flujo de carga CSV.
+
 ## 1.29.4 - 2026-05-02
 - Fix (Rentabilidad > Comparativo temporadas): las cards principales ahora respetan la métrica seleccionada (`Resultado`, `Ingresos`, `Costos`, `Kilos`, `Ingreso/kg`, `Costo/kg`, `Ingreso/ha`, `Costo/ha`).
 - Fix (Semántica visual): `Diferencia` y `% Dif.` se calculan y colorean con `diffMetric` de la métrica activa (no con `diffRes` fijo).
