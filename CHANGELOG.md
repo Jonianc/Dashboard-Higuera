@@ -1,3 +1,10 @@
+## 1.30.1 - 2026-05-04
+- Hotfix (Layout): se corrige colapso visual introducido en 1.30.0 por herencia de columnas en `.dashboard-main--premium`.
+- Hotfix (Grid): layout estable en desktop con 2 columnas explícitas (`sidebar 280-340px` + contenido fluido) y `min-width:0` en columna principal.
+- Hotfix (Rentabilidad): tabs, chips métricos, cards KPI y tabla recuperan distribución usable sin superposición.
+- Responsive: bajo `1320px` pasa a 1 columna; en mobile cards/chips se simplifican y tablas mantienen scroll horizontal.
+- Compatibilidad: corrección CSS-only; sin cambios en cálculos, filtros, lógica de datos ni carga CSV.
+
 ## 1.30.0 - 2026-05-04
 - UI/UX (Dashboard): actualización visual general inspirada en referencia aprobada (no pixel-perfect), manteniendo lógica y cálculos existentes.
 - UI/UX (Layout): panel de filtros se presenta como sidebar más limpio en desktop y vuelve a flujo vertical en responsive.
