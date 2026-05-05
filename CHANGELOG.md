@@ -1,3 +1,10 @@
+## 1.30.6 - 2026-05-05
+- UX sidebar: encabezado de filtros más directo (se elimina texto descriptivo largo) para partir rápidamente con controles.
+- UX sidebar: `Filtros activos` se mueve justo bajo el encabezado (opción B) con estado vacío discreto y mejor visibilidad.
+- UX sidebar: se refuerzan estados hover/focus/activo y jerarquía de acciones (`Ocultar INVERSIONES VARIAS` como toggle destacado; `Limpiar filtros` y `Restablecer vista` como secundarias).
+- UX sidebar: mejoras de densidad y escaneo (cuarteles sin mini-scroll interno, labels más claros en Faena/Meses/Métrica/Orden, responsive de selects/chips sin overflow horizontal).
+- Compatibilidad: sin cambios en cálculos, carga CSV, lógica de negocio, Rentabilidad ni Comparativo.
+
 ## 1.30.5 - 2026-05-05
 - Refinamiento compacto del sidebar: encabezado superior y caja interna de filtros con menor altura visual y jerarquía más limpia.
 - Ajuste de espaciados y tamaños en grupos/chips/acciones para reducir scroll innecesario manteniendo filtros visibles y estilo actual.

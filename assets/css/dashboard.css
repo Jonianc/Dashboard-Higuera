@@ -1446,3 +1446,55 @@ button.filter-chip:hover{border-color:var(--chip-active-border)}
 @media (max-width:1320px){
   .dashboard-command--compact{max-height:none;overflow:visible;}
 }
+
+/* UX sidebar 1.30.6: orden visual, feedback y acciones */
+.dashboard-command-copy > p,
+.filters-toolbar-copy > p{display:none}
+
+.filters-active-panel{
+  display:grid;
+  gap:6px;
+  padding:8px 10px;
+  border:1px dashed color-mix(in srgb,var(--border) 85%, transparent);
+  border-radius:12px;
+  background:color-mix(in srgb,var(--surface-2) 56%, var(--surface));
+}
+.filters-active-label{font-size:11px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:var(--muted)}
+.filters-active-panel .active-filters-chips{min-height:26px;align-items:center}
+.filters-active-panel .active-filters-chips:empty::before{content:"Sin filtros activos";font-size:12px;color:var(--muted);opacity:.8}
+
+.filters-master-grid--secondary,
+.filters-master-grid--tertiary{row-gap:8px}
+.filters-master-grid--secondary .field label,
+.filters-master-grid--tertiary .field label{font-size:11px;font-weight:700;letter-spacing:.02em}
+
+.cuartel-chips{max-height:none;overflow:visible;padding-right:0}
+
+#dashboard-higuera-wrapper .filter-chip,
+#dashboard-higuera-wrapper .filter-choice-chip,
+#dashboard-higuera-wrapper .cultivo-chip,
+#dashboard-higuera-wrapper .mes-dropdown-item,
+#dashboard-higuera-wrapper select,
+#dashboard-higuera-wrapper .mes-dropdown-btn,
+#dashboard-higuera-wrapper button{transition:background-color .18s ease,border-color .18s ease,box-shadow .18s ease,color .18s ease}
+
+#dashboard-higuera-wrapper .filter-chip:focus-visible,
+#dashboard-higuera-wrapper .filter-choice-chip:focus-visible,
+#dashboard-higuera-wrapper .cultivo-chip:focus-visible,
+#dashboard-higuera-wrapper .mes-dropdown-btn:focus-visible,
+#dashboard-higuera-wrapper select:focus-visible,
+#dashboard-higuera-wrapper button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+
+.filters-master-actions--toolbar{gap:8px;align-items:stretch}
+#btnToggleInv2425{font-weight:700;border-width:2px}
+#btnToggleInv2425.is-active{box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--accent) 65%, transparent)}
+#btnClearFilters,
+#btnResetView{opacity:.92;font-weight:600}
+
+@media (max-width: 980px){
+  .filters-master-grid--secondary,
+  .filters-master-grid--tertiary{grid-template-columns:1fr}
+  .filters-master-grid--secondary .field,
+  .filters-master-grid--tertiary .field,
+  .filters-master-grid--tertiary .filters-master-actions--toolbar{grid-column:1 / -1}
+}
