@@ -97,7 +97,7 @@ if (!defined('ABSPATH')) {
                         <div class="dashboard-command-copy">
                             <span class="dashboard-command-kicker">Workspace del dashboard</span>
                             <h2>Filtros del dashboard</h2>
-                            <p>Workspace del dashboard.</p>
+                            
                         </div>
                         <div class="dashboard-command-meta" aria-label="Estado rápido del dashboard">
                             <div class="dashboard-meta-card hidden">
@@ -111,10 +111,14 @@ if (!defined('ABSPATH')) {
                         </div>
                     </div>
 
+                    <div class="filters-active-panel" aria-label="Filtros activos">
+                        <span class="filters-active-label">Filtros activos</span>
+                        <section id="active-filters-chips" class="active-filters-chips active-filters-chips--premium"></section>
+                    </div>
+
                     <div class="filters-toolbar filters-toolbar--primary">
                         <div class="filters-toolbar-copy">
                             <span class="filters-toolbar-kicker">Filtros</span>
-                            <p>Controla universo, métrica y orden.</p>
                         </div>
                         <div class="filters-master-grid filters-master-grid--primary">
                             <div class="field field-predio"><label for="f_predio">Tipo de registro</label><select id="f_predio" class="hidden"><option>Todos</option></select><div id="f_predio_chips" class="filter-chip-group" role="group" aria-label="Tipo de registro"></div></div>
@@ -149,10 +153,6 @@ if (!defined('ABSPATH')) {
                                 <button id="btnClearFilters" type="button">Limpiar filtros</button>
                                 <button id="btnResetView" type="button">Restablecer vista</button>
                             </div>
-                        </div>
-                        <div class="filters-active-panel" aria-label="Filtros activos">
-                            <span class="filters-active-label">Filtros activos</span>
-                            <section id="active-filters-chips" class="active-filters-chips active-filters-chips--premium"></section>
                         </div>
                     </div>
                 </section>
