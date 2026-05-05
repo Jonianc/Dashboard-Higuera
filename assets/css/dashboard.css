@@ -1229,3 +1229,84 @@ button.filter-chip:hover{border-color:var(--chip-active-border)}
 @media (max-width:1320px){
   .dashboard-command--compact{max-height:none;overflow:visible}
 }
+
+
+/* v1.30.3 sidebar filtros: refinamiento visual sin cambios funcionales */
+.dashboard-command--compact{
+  padding:16px;
+  border:1px solid color-mix(in srgb,var(--border) 88%, transparent);
+  border-radius:18px;
+  background:linear-gradient(180deg,color-mix(in srgb,var(--surface) 96%, #ffffff) 0%,var(--surface) 100%);
+  box-shadow:0 6px 16px rgba(15,23,42,.05);
+}
+.sidebar-head h2{font-size:19px;line-height:1.1;letter-spacing:-.01em}
+.sidebar-head p{font-size:12px;line-height:1.5;max-width:42ch}
+
+.filters-toolbar{padding:12px 13px;border-radius:18px;background:color-mix(in srgb,var(--surface-2) 80%, var(--surface));}
+.filters-toolbar-copy{gap:5px;padding-bottom:10px;margin-bottom:2px}
+.filters-master-grid--compact,
+.filters-master-grid--secondary,
+.filters-master-grid--tertiary{padding-top:8px;margin-top:8px;border-top:1px solid color-mix(in srgb,var(--border) 84%, transparent)}
+
+.field label{font-size:11px;font-weight:700;letter-spacing:.03em;text-transform:uppercase;color:color-mix(in srgb,var(--muted) 78%, var(--text))}
+.filter-chip-group,.cultivo-chips,.cuartel-chips{gap:7px}
+#dashboard-higuera-wrapper .filter-choice-chip,
+.cultivo-chip{
+  min-height:36px;
+  padding:7px 11px;
+  border-radius:999px;
+  font-size:12px;
+  line-height:1.2;
+}
+.cultivo-chip{font-size:24px;max-width:100%;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
+.cultivo-chip .multi,
+#dashboard-higuera-wrapper .filter-choice-chip span{max-width:100%;overflow:hidden;text-overflow:ellipsis}
+#dashboard-higuera-wrapper .filter-choice-chip:hover,
+.cultivo-chip:hover{transform:translateY(-1px)}
+#dashboard-higuera-wrapper .filter-choice-chip.is-active,
+#dashboard-higuera-wrapper .filter-choice-chip[aria-pressed="true"],
+#dashboard-higuera-wrapper .filter-choice-chip[data-selected="true"],
+#dashboard-higuera-wrapper .cultivo-chip.is-active,
+#dashboard-higuera-wrapper .cultivo-chip[aria-pressed="true"],
+#dashboard-higuera-wrapper .cultivo-chip[data-selected="true"]{
+  border-width:2px;
+  font-weight:700;
+}
+
+.filters-master-actions--toolbar{gap:8px;align-items:center}
+#btnClearFilters{
+  border-style:dashed;
+  opacity:.92;
+  background:color-mix(in srgb,var(--surface) 88%, var(--surface-2));
+}
+#btnClearFilters:hover{opacity:1}
+
+#dashboard-higuera-wrapper[data-theme="dark"] .dashboard-command--compact{
+  background:linear-gradient(180deg,color-mix(in srgb,var(--surface) 94%, #0b1220) 0%,var(--surface) 100%);
+  border-color:color-mix(in srgb,var(--border) 75%, #ffffff 10%);
+  box-shadow:0 8px 20px rgba(0,0,0,.24);
+}
+#dashboard-higuera-wrapper[data-theme="dark"] .filters-toolbar{
+  background:color-mix(in srgb,var(--surface-2) 76%, #0f172a);
+  border-color:color-mix(in srgb,var(--border) 75%, #ffffff 8%);
+}
+#dashboard-higuera-wrapper[data-theme="dark"] .field label{color:color-mix(in srgb,var(--text) 78%, var(--muted))}
+#dashboard-higuera-wrapper[data-theme="dark"] #btnClearFilters{
+  background:color-mix(in srgb,var(--surface-2) 82%, #111827);
+  border-color:color-mix(in srgb,var(--border) 68%, #ffffff 10%);
+}
+
+@media (max-width:1320px){
+  .dashboard-command--compact{padding:14px;border-radius:16px}
+}
+@media (max-width:860px){
+  .filters-toolbar{padding:11px 12px}
+  #dashboard-higuera-wrapper .filter-choice-chip,
+  .cultivo-chip{min-height:35px;padding:7px 10px}
+}
+@media (max-width:640px){
+  .dashboard-command--compact{padding:12px;border-radius:14px}
+  .filters-master-grid--compact,
+  .filters-master-grid--secondary,
+  .filters-master-grid--tertiary{padding-top:7px;margin-top:7px}
+}

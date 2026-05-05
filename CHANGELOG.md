@@ -1,3 +1,8 @@
+## 1.30.3 - 2026-05-05
+- Refinamiento visual del sidebar de filtros (contenedor, jerarquía de encabezado, separación de grupos y pulido de chips/botones) sin cambios funcionales.
+- Mejora de estados hover/active/focus de chips para mayor claridad del filtro activo, manteniendo coherencia en modo claro/oscuro.
+- Ajustes responsive del panel de filtros para evitar compresión visual en tablet/mobile sin alterar el layout funcional.
+
 ## 1.30.2 - 2026-05-04
 - UI polish (Header): se ajusta jerarquía visual, altura y espaciado de acciones para una cabecera más limpia.
 - UI polish (Sidebar filtros): mejor separación entre grupos, uniformidad de chips/botones y scroll usable del panel sticky.
