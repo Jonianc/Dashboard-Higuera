@@ -1585,6 +1585,28 @@ function renderActiveFilterChips(){
     ? chips.map(c=>`<button class="filter-chip" type="button" data-chip-key="${c.key}" aria-label="Quitar filtro ${c.text}"><span>${c.text}</span><span class="filter-chip-remove" aria-hidden="true">×</span></button>`).join('')
     : `<span class="filter-chip is-muted">Sin filtros activos</span>`;
 }
+function renderCollapsedSidebarSummary(){
+  const node = document.getElementById('sidebarCollapsedFilterSummary');
+  if(!node) return;
+  const parts = [];
+  if(state.filtros.predio !== 'Todos') parts.push(`Tipo: ${state.filtros.predio}`);
+  if(state.filtros.sector !== 'Todos'){
+    const sectorTxt = Array.isArray(state.filtros.sector) ? (state.filtros.sector.length ? state.filtros.sector.join(', ') : 'Ninguno') : state.filtros.sector;
+    parts.push(`Cultivo: ${sectorTxt}`);
+  }
+  if(state.filtros.cuartel !== 'Todos'){
+    const cuTxt = Array.isArray(state.filtros.cuartel) ? (state.filtros.cuartel.length ? state.filtros.cuartel.join(', ') : 'Ninguno') : state.filtros.cuartel;
+    parts.push(`Cuartel: ${cuTxt}`);
+  }
+  if(state.filtros.nivel1 !== 'Todos') parts.push(`Categoría: ${state.filtros.nivel1}`);
+  if(state.filtros.faena !== 'Todas') parts.push(`Faena: ${state.filtros.faena}`);
+  if(state.filtros.mes !== 'Todos'){
+    const mesTxt = Array.isArray(state.filtros.mes) ? (state.filtros.mes.length ? state.filtros.mes.join(', ') : 'Ninguno') : state.filtros.mes;
+    parts.push(`Meses: ${mesTxt}`);
+  }
+  if(hideInv2425) parts.push('Inversiones varias: ocultas');
+  node.textContent = parts.length ? `Filtros activos: ${parts.join(' · ')}` : 'Sin filtros activos';
+}
 function clearFilterChip(key){
   if(key === 'hideInv2425'){
     if(!hideInv2425) return;
@@ -1657,6 +1679,7 @@ function refreshAll(){
   renderKpis();
   renderResumenSignals();
   renderActiveFilterChips();
+  renderCollapsedSidebarSummary();
   renderRentabilidadResumen();
   const activeTab = document.querySelector('.dashboard-main-tabs .tab.active[data-tab]');
   if(activeTab && activeTab.dataset.tab==='comparativo') buildComparativo();

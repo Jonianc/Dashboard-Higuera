@@ -1130,8 +1130,23 @@ button.filter-chip:hover{border-color:var(--chip-active-border)}
 .dashboard-layout--premium{display:block;}
 .dashboard-layout-toolbar{
   display:flex;
-  justify-content:flex-end;
+  justify-content:space-between;
+  align-items:center;
+  gap:10px;
   margin:0 0 10px;
+  padding:10px 12px;
+  border:1px solid var(--border);
+  border-radius:14px;
+  background:var(--surface);
+}
+.sidebar-collapsed-summary{
+  min-width:0;
+  color:var(--muted);
+  font-size:12px;
+  line-height:1.35;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
 }
 .dashboard-main--premium{
   display:grid;
@@ -1149,12 +1164,18 @@ button.filter-chip:hover{border-color:var(--chip-active-border)}
 #dashboard-higuera-wrapper.dashboard-sidebar-collapsed .dashboard-main--premium{
   grid-template-columns:minmax(0,1fr);
 }
+#dashboard-higuera-wrapper.dashboard-sidebar-collapsed .dashboard-layout-toolbar{
+  margin-bottom:6px;
+}
 #dashboard-higuera-wrapper.dashboard-sidebar-collapsed .dashboard-main--premium > section:not(.dashboard-command--compact),
 #dashboard-higuera-wrapper.dashboard-sidebar-collapsed .dashboard-main--premium > div{
   grid-column:1;
 }
 #dashboard-higuera-wrapper.dashboard-sidebar-collapsed #dashboard-sidebar{
   display:none !important;
+}
+#dashboard-higuera-wrapper.dashboard-sidebar-collapsed .rent-metrica-chips{
+  grid-template-columns:repeat(6,minmax(120px,1fr));
 }
 
 .rent-panel--aside,
@@ -1173,7 +1194,10 @@ button.filter-chip:hover{border-color:var(--chip-active-border)}
 
 @media (max-width:1320px){
   .dashboard-layout-toolbar{justify-content:stretch;}
+  .sidebar-collapsed-summary{white-space:normal;text-overflow:clip}
   .dashboard-layout-toolbar .sidebar-toggle-btn{width:100%;}
+  .dashboard-layout-toolbar{flex-direction:column;align-items:stretch;}
+  #dashboard-higuera-wrapper.dashboard-sidebar-collapsed .rent-metrica-chips{grid-template-columns:repeat(4,minmax(0,1fr));}
   .dashboard-main--premium{grid-template-columns:1fr;}
   .dashboard-command--compact{grid-column:1;position:static;}
   .dashboard-main--premium > section:not(.dashboard-command--compact),
@@ -1185,6 +1209,7 @@ button.filter-chip:hover{border-color:var(--chip-active-border)}
   #dashboard-higuera-content{padding:12px;}
   #rentabilidad-cards{grid-template-columns:1fr;}
   .rent-metrica-chips{grid-template-columns:1fr;}
+  #dashboard-higuera-wrapper.dashboard-sidebar-collapsed .rent-metrica-chips{grid-template-columns:repeat(2,minmax(0,1fr));}
   .rent-tabs{overflow:auto;}
 }
 

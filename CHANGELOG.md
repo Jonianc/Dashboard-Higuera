@@ -1,3 +1,9 @@
+## 1.30.8 - 2026-05-05
+- UX sidebar oculto: barra superior integrada con botón `Mostrar/Ocultar filtros` y resumen compacto de contexto (`Filtros activos...` / `Sin filtros activos`) para evitar estado visual aislado.
+- UX layout ancho: se reduce el vacío superior en estado colapsado y se mejora integración visual del inicio del contenido principal.
+- UX rentabilidad (modo ancho): chips de métricas aprovechan más columnas en desktop colapsado y mantienen adaptación en tablet/mobile sin overflow horizontal.
+- Compatibilidad: sin cambios en cálculos, carga CSV, lógica de filtros, persistencia `dlh_sidebar_collapsed`, Rentabilidad ni Comparativo.
+
 ## 1.30.7 - 2026-05-05
 - UX sidebar: se agrega botón accesible para ocultar/mostrar filtros (`aria-expanded` + `aria-controls`) con etiqueta contextual.
 - Layout: al ocultar filtros en desktop, el contenido principal expande a ancho completo sin dejar columna vacía.

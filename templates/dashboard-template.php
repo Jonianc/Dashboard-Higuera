@@ -92,6 +92,7 @@ if (!defined('ABSPATH')) {
 
         <div class="dashboard-layout dashboard-layout--premium">
             <div class="dashboard-layout-toolbar" aria-label="Controles de layout">
+                <div id="sidebarCollapsedFilterSummary" class="sidebar-collapsed-summary" aria-live="polite">Sin filtros activos</div>
                 <button
                     id="btnToggleSidebar"
                     class="sidebar-toggle-btn"
