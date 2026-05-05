@@ -1,3 +1,26 @@
+## 1.30.2 - 2026-05-04
+- UI polish (Header): se ajusta jerarquía visual, altura y espaciado de acciones para una cabecera más limpia.
+- UI polish (Sidebar filtros): mejor separación entre grupos, uniformidad de chips/botones y scroll usable del panel sticky.
+- UI polish (Tabs y Rentabilidad): tabs principales/rentabilidad más consistentes, chips métricos con mejor alineación y estado activo/focus.
+- UI polish (KPI y tabla): cards con altura/padding homogéneos y tabla comparativa con lectura más clara (sticky head, primera columna reforzada, numérico tabular).
+- Accesibilidad básica: foco visible consistente en botones, tabs, selects e inputs.
+- Compatibilidad: sin cambios en cálculos, filtros, carga CSV ni lógica de negocio.
+
+## 1.30.1 - 2026-05-04
+- Hotfix (Layout): se corrige colapso visual introducido en 1.30.0 por herencia de columnas en `.dashboard-main--premium`.
+- Hotfix (Grid): layout estable en desktop con 2 columnas explícitas (`sidebar 280-340px` + contenido fluido) y `min-width:0` en columna principal.
+- Hotfix (Rentabilidad): tabs, chips métricos, cards KPI y tabla recuperan distribución usable sin superposición.
+- Responsive: bajo `1320px` pasa a 1 columna; en mobile cards/chips se simplifican y tablas mantienen scroll horizontal.
+- Compatibilidad: corrección CSS-only; sin cambios en cálculos, filtros, lógica de datos ni carga CSV.
+
+## 1.30.0 - 2026-05-04
+- UI/UX (Dashboard): actualización visual general inspirada en referencia aprobada (no pixel-perfect), manteniendo lógica y cálculos existentes.
+- UI/UX (Layout): panel de filtros se presenta como sidebar más limpio en desktop y vuelve a flujo vertical en responsive.
+- UI/UX (Header): header superior más moderno con mejor jerarquía tipográfica y superficie elevada.
+- UI/UX (Rentabilidad): tabs principales más grandes, chips de métricas reforzados y tarjetas KPI con estilo semántico moderno.
+- UI/UX (Tablas): contenedores y celdas con mayor legibilidad/espaciado y ancho útil ampliado con scroll horizontal seguro.
+- Compatibilidad: sin cambios en lógica de filtros, cálculos, endpoints, ni flujo de carga CSV.
+
 ## 1.29.4 - 2026-05-02
 - Fix (Rentabilidad > Comparativo temporadas): las cards principales ahora respetan la métrica seleccionada (`Resultado`, `Ingresos`, `Costos`, `Kilos`, `Ingreso/kg`, `Costo/kg`, `Ingreso/ha`, `Costo/ha`).
 - Fix (Semántica visual): `Diferencia` y `% Dif.` se calculan y colorean con `diffMetric` de la métrica activa (no con `diffRes` fijo).
