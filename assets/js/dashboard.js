@@ -2017,8 +2017,10 @@ function setupSidebarToggle(){
     if(mobile){
       layout.classList.remove('is-sidebar-collapsed');
       root.classList.remove('sidebar-collapsed');
+      root.classList.remove('dashboard-sidebar-collapsed');
       sidebar.classList.remove('is-collapsed');
       sidebar.hidden = !mobileOpen;
+      sidebar.setAttribute('aria-hidden', mobileOpen ? 'false' : 'true');
       sidebar.classList.toggle('is-open', mobileOpen);
       btn.textContent = mobileOpen ? 'Cerrar filtros' : 'Mostrar filtros';
       btn.setAttribute('aria-expanded', mobileOpen ? 'true' : 'false');
@@ -2027,9 +2029,11 @@ function setupSidebarToggle(){
     mobileOpen = false;
     sidebar.classList.remove('is-open');
     sidebar.hidden = collapsed;
+    sidebar.setAttribute('aria-hidden', collapsed ? 'true' : 'false');
     sidebar.classList.toggle('is-collapsed', collapsed);
     layout.classList.toggle('is-sidebar-collapsed', collapsed);
     root.classList.toggle('sidebar-collapsed', collapsed);
+    root.classList.toggle('dashboard-sidebar-collapsed', collapsed);
     btn.textContent = collapsed ? 'Mostrar filtros' : 'Ocultar filtros';
     btn.setAttribute('aria-expanded', collapsed ? 'false' : 'true');
   };

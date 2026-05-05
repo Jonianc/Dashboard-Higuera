@@ -1,3 +1,10 @@
+## 1.30.7 - 2026-05-05
+- UX sidebar: se agrega botón accesible para ocultar/mostrar filtros (`aria-expanded` + `aria-controls`) con etiqueta contextual.
+- Layout: al ocultar filtros en desktop, el contenido principal expande a ancho completo sin dejar columna vacía.
+- Persistencia: estado del sidebar se conserva tras recargar usando `localStorage` (`dlh_sidebar_collapsed`).
+- Responsive/accesibilidad: en mobile el botón abre/cierra filtros en flujo simple y el panel cerrado queda no navegable mediante `hidden`/`aria-hidden`.
+- Compatibilidad: sin cambios en cálculos, carga CSV, lógica de filtros, Rentabilidad ni Comparativo.
+
 ## 1.30.6 - 2026-05-05
 - UX sidebar: encabezado de filtros más directo (se elimina texto descriptivo largo) para partir rápidamente con controles.
 - UX sidebar: `Filtros activos` se mueve justo bajo el encabezado (opción B) con estado vacío discreto y mejor visibilidad.
