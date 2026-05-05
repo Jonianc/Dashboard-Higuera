@@ -1310,3 +1310,92 @@ button.filter-chip:hover{border-color:var(--chip-active-border)}
   .filters-master-grid--secondary,
   .filters-master-grid--tertiary{padding-top:7px;margin-top:7px}
 }
+
+
+/* v1.30.4 hotfix sidebar: overflow + compactación */
+.dashboard-main--premium{
+  grid-template-columns:minmax(340px,380px) minmax(0,1fr);
+}
+.dashboard-command--compact,
+.dashboard-command--compact *,
+.filters-toolbar,
+.filters-toolbar *,
+.filters-master-grid,
+.filters-master-grid *,
+.filter-chip-group,
+.cultivo-chips,
+.cuartel-chips{
+  box-sizing:border-box;
+}
+.dashboard-command--compact,
+.filters-toolbar,
+.filters-master-grid,
+.filter-chip-group,
+.cultivo-chips,
+.cuartel-chips,
+.filters-master-actions,
+.filters-master-actions--toolbar,
+.filters-master-actions--toolbar > *{
+  min-width:0;
+  max-width:100%;
+}
+.dashboard-command--compact{overflow-x:hidden;padding:12px 13px;}
+.filters-toolbar{width:100%;padding:10px 11px;overflow-x:hidden;border-radius:14px;}
+
+.dashboard-command h2{font-size:20px;line-height:1.08;}
+.dashboard-command p{font-size:12px;line-height:1.35;max-width:none;}
+.dashboard-command-top{gap:10px;}
+.filters-toolbar-copy{padding-bottom:6px;}
+.filters-toolbar-kicker{font-size:10px;}
+
+.filters-master-grid--primary,
+.filters-master-grid--category{gap:7px;}
+.filters-master-grid--secondary,
+.filters-master-grid--tertiary{
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:8px;
+}
+.filters-master-grid--secondary .field-faena,
+.filters-master-grid--secondary .field-meses--premium,
+.filters-master-grid--tertiary .field-metrica,
+.filters-master-grid--tertiary .field-orden,
+.filters-master-grid--tertiary .filters-master-actions--toolbar{
+  grid-column:auto;
+}
+.filters-master-grid--tertiary .filters-master-actions--toolbar{
+  grid-column:1 / -1;
+}
+
+.filter-chip-group,.cultivo-chips,.cuartel-chips{
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:7px;
+  width:100%;
+}
+#dashboard-higuera-wrapper .filter-choice-chip,
+.cultivo-chip{
+  width:100%;
+  min-width:0;
+  justify-content:flex-start;
+  white-space:normal;
+  line-height:1.2;
+}
+#dashboard-higuera-wrapper .filter-choice-chip span,
+.cultivo-chip .multi{white-space:normal;word-break:break-word;overflow-wrap:anywhere;}
+
+.filters-master-actions--toolbar{display:grid;grid-template-columns:1fr;gap:7px;}
+.filters-master-actions--toolbar button{width:100%;min-height:36px;white-space:normal;text-align:center;}
+#btnToggleInv2425{min-height:36px;padding:8px 10px;}
+
+.active-filters-chips{min-width:0;overflow-x:hidden;}
+.active-filters-chips .filter-chip{max-width:100%;white-space:normal;overflow-wrap:anywhere;}
+
+@media (max-width:1320px){
+  .dashboard-main--premium{grid-template-columns:1fr;}
+  .dashboard-command--compact{overflow-x:visible;}
+}
+@media (max-width:980px){
+  .filters-master-grid--secondary,
+  .filters-master-grid--tertiary,
+  .filter-chip-group,.cultivo-chips,.cuartel-chips{grid-template-columns:1fr;}
+}

@@ -1,3 +1,8 @@
+## 1.30.4 - 2026-05-05
+- Hotfix UI sidebar: se elimina overflow horizontal del panel y contenedores internos (chips/selects/acciones) con límites de ancho y `overflow-x` controlado.
+- Hotfix UI sidebar: se compacta bloque introductorio y caja interna de filtros para reducir altura y peso visual.
+- Hotfix UI sidebar: se ajusta ancho útil del sidebar en desktop y se ordenan grillas de Faena/Meses/Métrica/Orden, botones de acción y filtros activos sin cambios funcionales.
+
 ## 1.30.3 - 2026-05-05
 - Refinamiento visual del sidebar de filtros (contenedor, jerarquía de encabezado, separación de grupos y pulido de chips/botones) sin cambios funcionales.
 - Mejora de estados hover/active/focus de chips para mayor claridad del filtro activo, manteniendo coherencia en modo claro/oscuro.
