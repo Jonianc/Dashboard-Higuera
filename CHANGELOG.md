@@ -1,3 +1,18 @@
+## 1.30.5 - 2026-05-05
+- Refinamiento compacto del sidebar: encabezado superior y caja interna de filtros con menor altura visual y jerarquía más limpia.
+- Ajuste de espaciados y tamaños en grupos/chips/acciones para reducir scroll innecesario manteniendo filtros visibles y estilo actual.
+- Cuartel integrado al scroll general del sidebar (sin mini-scroll interno) y sin reintroducir overflow horizontal.
+
+## 1.30.4 - 2026-05-05
+- Hotfix UI sidebar: se elimina overflow horizontal del panel y contenedores internos (chips/selects/acciones) con límites de ancho y `overflow-x` controlado.
+- Hotfix UI sidebar: se compacta bloque introductorio y caja interna de filtros para reducir altura y peso visual.
+- Hotfix UI sidebar: se ajusta ancho útil del sidebar en desktop y se ordenan grillas de Faena/Meses/Métrica/Orden, botones de acción y filtros activos sin cambios funcionales.
+
+## 1.30.3 - 2026-05-05
+- Refinamiento visual del sidebar de filtros (contenedor, jerarquía de encabezado, separación de grupos y pulido de chips/botones) sin cambios funcionales.
+- Mejora de estados hover/active/focus de chips para mayor claridad del filtro activo, manteniendo coherencia en modo claro/oscuro.
+- Ajustes responsive del panel de filtros para evitar compresión visual en tablet/mobile sin alterar el layout funcional.
+
 ## 1.30.2 - 2026-05-04
 - UI polish (Header): se ajusta jerarquía visual, altura y espaciado de acciones para una cabecera más limpia.
 - UI polish (Sidebar filtros): mejor separación entre grupos, uniformidad de chips/botones y scroll usable del panel sticky.

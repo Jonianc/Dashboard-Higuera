@@ -96,8 +96,8 @@ if (!defined('ABSPATH')) {
                     <div class="dashboard-command-top dashboard-command-top--stacked">
                         <div class="dashboard-command-copy">
                             <span class="dashboard-command-kicker">Workspace del dashboard</span>
-                            <h2>Filtros unificados y navegación principal</h2>
-                            <p>Usa una sola barra de control para cambiar la lectura del dashboard completo y mantener el contexto entre pestañas.</p>
+                            <h2>Filtros del dashboard</h2>
+                            <p>Workspace del dashboard.</p>
                         </div>
                         <div class="dashboard-command-meta" aria-label="Estado rápido del dashboard">
                             <div class="dashboard-meta-card hidden">
@@ -114,7 +114,7 @@ if (!defined('ABSPATH')) {
                     <div class="filters-toolbar filters-toolbar--primary">
                         <div class="filters-toolbar-copy">
                             <span class="filters-toolbar-kicker">Filtros</span>
-                            <p>Usa una sola caja de filtros para definir universo, métrica y orden de lectura.</p>
+                            <p>Controla universo, métrica y orden.</p>
                         </div>
                         <div class="filters-master-grid filters-master-grid--primary">
                             <div class="field field-predio"><label for="f_predio">Tipo de registro</label><select id="f_predio" class="hidden"><option>Todos</option></select><div id="f_predio_chips" class="filter-chip-group" role="group" aria-label="Tipo de registro"></div></div>
