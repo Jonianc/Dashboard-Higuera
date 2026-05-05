@@ -1170,3 +1170,62 @@ button.filter-chip:hover{border-color:var(--chip-active-border)}
   .rent-metrica-chips{grid-template-columns:1fr;}
   .rent-tabs{overflow:auto;}
 }
+
+/* v1.30.2 visual polish (sin cambio estructural) */
+.dlh-header{padding:12px 16px;min-height:60px}
+.dlh-header-brand{gap:12px}
+.dlh-header-copy{gap:2px}
+.dlh-header h1{font-size:clamp(1.45rem,1.9vw,1.85rem);line-height:1.08}
+.dlh-header .subtitle{font-size:.9rem;color:var(--muted)}
+.dlh-header-actions{gap:8px}
+.dlh-header .dlh-portal-logout,
+.dlh-header .theme-toggle{min-height:36px}
+
+.dashboard-command--compact{padding:14px;border-radius:16px;max-height:calc(100vh - 24px);overflow:auto}
+.filters-toolbar{gap:10px}
+.filters-toolbar-copy{padding-bottom:8px;border-bottom:1px solid color-mix(in srgb,var(--border) 85%, transparent)}
+.filters-master-grid{gap:8px}
+.filters-master-grid .field{display:grid;gap:6px}
+.filter-chip-group,.cultivo-chips,.cuartel-chips{gap:8px}
+.filter-chip,.cultivo-chip,.rent-metrica-chip{min-height:38px;line-height:1.2}
+.filter-chip,.cultivo-chip{max-width:100%;text-wrap:balance}
+
+.dashboard-main-tabs,.rent-tabs{gap:8px;align-items:center}
+.dashboard-main-tabs .tab,.rent-tabs .tab{
+  min-height:42px;
+  padding:10px 14px;
+  border-radius:10px;
+  border:1px solid var(--border);
+  background:color-mix(in srgb,var(--surface-2) 82%, var(--surface));
+  font-weight:700;
+}
+.dashboard-main-tabs .tab.active,.rent-tabs .tab.active{
+  border-color:var(--primary);
+  box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--primary) 36%, transparent);
+}
+
+#rentabilidad-cards > *{
+  min-height:120px;
+  padding:14px 16px;
+  border-radius:14px;
+  box-shadow:0 4px 12px rgba(15,23,42,.05);
+}
+#rentabilidad-cards .kpi-label,.rent-card .label,.metric-card .label{font-size:.76rem;letter-spacing:.04em}
+#rentabilidad-cards .kpi-value,.rent-card .value,.metric-card .value{line-height:1.1}
+
+.rent-table-wrap{box-shadow:none;border:1px solid color-mix(in srgb,var(--border) 86%, transparent)}
+.rent-table--compare th{position:sticky;top:0;z-index:1}
+.rent-table--compare th:first-child,.rent-table--compare td:first-child{font-weight:700;color:color-mix(in srgb,var(--text) 88%, var(--muted))}
+.rent-table--compare th:nth-child(n+2),.rent-table--compare td:nth-child(n+2){font-variant-numeric:tabular-nums}
+
+#dashboard-higuera-wrapper button:focus-visible,
+#dashboard-higuera-wrapper .tab:focus-visible,
+#dashboard-higuera-wrapper select:focus-visible,
+#dashboard-higuera-wrapper input:focus-visible{
+  outline:2px solid color-mix(in srgb,var(--primary) 80%, #2563eb);
+  outline-offset:2px;
+}
+
+@media (max-width:1320px){
+  .dashboard-command--compact{max-height:none;overflow:visible}
+}

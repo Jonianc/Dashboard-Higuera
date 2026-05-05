@@ -1,3 +1,11 @@
+## 1.30.2 - 2026-05-04
+- UI polish (Header): se ajusta jerarquía visual, altura y espaciado de acciones para una cabecera más limpia.
+- UI polish (Sidebar filtros): mejor separación entre grupos, uniformidad de chips/botones y scroll usable del panel sticky.
+- UI polish (Tabs y Rentabilidad): tabs principales/rentabilidad más consistentes, chips métricos con mejor alineación y estado activo/focus.
+- UI polish (KPI y tabla): cards con altura/padding homogéneos y tabla comparativa con lectura más clara (sticky head, primera columna reforzada, numérico tabular).
+- Accesibilidad básica: foco visible consistente en botones, tabs, selects e inputs.
+- Compatibilidad: sin cambios en cálculos, filtros, carga CSV ni lógica de negocio.
+
 ## 1.30.1 - 2026-05-04
 - Hotfix (Layout): se corrige colapso visual introducido en 1.30.0 por herencia de columnas en `.dashboard-main--premium`.
 - Hotfix (Grid): layout estable en desktop con 2 columnas explícitas (`sidebar 280-340px` + contenido fluido) y `min-width:0` en columna principal.
