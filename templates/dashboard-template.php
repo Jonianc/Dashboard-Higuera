@@ -91,8 +91,20 @@ if (!defined('ABSPATH')) {
         <input id="fileSwap" type="file" accept=".csv,text/csv" style="display:none;">
 
         <div class="dashboard-layout dashboard-layout--premium">
+            <div class="dashboard-layout-toolbar" aria-label="Controles de layout">
+                <div id="sidebarCollapsedFilterSummary" class="sidebar-collapsed-summary" aria-live="polite">Sin filtros activos</div>
+                <button
+                    id="btnToggleSidebar"
+                    class="sidebar-toggle-btn"
+                    type="button"
+                    aria-controls="dashboard-sidebar"
+                    aria-expanded="true"
+                >
+                    Ocultar filtros
+                </button>
+            </div>
             <main class="dashboard-main dashboard-main--premium">
-                <section class="card dashboard-command dashboard-command--compact" aria-label="Controles principales del dashboard">
+                <section id="dashboard-sidebar" class="card dashboard-command dashboard-command--compact" aria-label="Controles principales del dashboard">
                     <div class="dashboard-command-top dashboard-command-top--stacked">
                         <div class="dashboard-command-copy">
                             <span class="dashboard-command-kicker">Workspace del dashboard</span>

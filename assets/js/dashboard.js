@@ -1585,6 +1585,28 @@ function renderActiveFilterChips(){
     ? chips.map(c=>`<button class="filter-chip" type="button" data-chip-key="${c.key}" aria-label="Quitar filtro ${c.text}"><span>${c.text}</span><span class="filter-chip-remove" aria-hidden="true">×</span></button>`).join('')
     : `<span class="filter-chip is-muted">Sin filtros activos</span>`;
 }
+function renderCollapsedSidebarSummary(){
+  const node = document.getElementById('sidebarCollapsedFilterSummary');
+  if(!node) return;
+  const parts = [];
+  if(state.filtros.predio !== 'Todos') parts.push(`Tipo: ${state.filtros.predio}`);
+  if(state.filtros.sector !== 'Todos'){
+    const sectorTxt = Array.isArray(state.filtros.sector) ? (state.filtros.sector.length ? state.filtros.sector.join(', ') : 'Ninguno') : state.filtros.sector;
+    parts.push(`Cultivo: ${sectorTxt}`);
+  }
+  if(state.filtros.cuartel !== 'Todos'){
+    const cuTxt = Array.isArray(state.filtros.cuartel) ? (state.filtros.cuartel.length ? state.filtros.cuartel.join(', ') : 'Ninguno') : state.filtros.cuartel;
+    parts.push(`Cuartel: ${cuTxt}`);
+  }
+  if(state.filtros.nivel1 !== 'Todos') parts.push(`Categoría: ${state.filtros.nivel1}`);
+  if(state.filtros.faena !== 'Todas') parts.push(`Faena: ${state.filtros.faena}`);
+  if(state.filtros.mes !== 'Todos'){
+    const mesTxt = Array.isArray(state.filtros.mes) ? (state.filtros.mes.length ? state.filtros.mes.join(', ') : 'Ninguno') : state.filtros.mes;
+    parts.push(`Meses: ${mesTxt}`);
+  }
+  if(hideInv2425) parts.push('Inversiones varias: ocultas');
+  node.textContent = parts.length ? `Filtros activos: ${parts.join(' · ')}` : 'Sin filtros activos';
+}
 function clearFilterChip(key){
   if(key === 'hideInv2425'){
     if(!hideInv2425) return;
@@ -1657,6 +1679,7 @@ function refreshAll(){
   renderKpis();
   renderResumenSignals();
   renderActiveFilterChips();
+  renderCollapsedSidebarSummary();
   renderRentabilidadResumen();
   const activeTab = document.querySelector('.dashboard-main-tabs .tab.active[data-tab]');
   if(activeTab && activeTab.dataset.tab==='comparativo') buildComparativo();
@@ -2017,9 +2040,12 @@ function setupSidebarToggle(){
     if(mobile){
       layout.classList.remove('is-sidebar-collapsed');
       root.classList.remove('sidebar-collapsed');
+      root.classList.remove('dashboard-sidebar-collapsed');
       sidebar.classList.remove('is-collapsed');
       sidebar.hidden = !mobileOpen;
+      sidebar.setAttribute('aria-hidden', mobileOpen ? 'false' : 'true');
       sidebar.classList.toggle('is-open', mobileOpen);
+      root.classList.toggle('dlh-show-collapsed-summary', !mobileOpen);
       btn.textContent = mobileOpen ? 'Cerrar filtros' : 'Mostrar filtros';
       btn.setAttribute('aria-expanded', mobileOpen ? 'true' : 'false');
       return;
@@ -2027,9 +2053,12 @@ function setupSidebarToggle(){
     mobileOpen = false;
     sidebar.classList.remove('is-open');
     sidebar.hidden = collapsed;
+    sidebar.setAttribute('aria-hidden', collapsed ? 'true' : 'false');
     sidebar.classList.toggle('is-collapsed', collapsed);
     layout.classList.toggle('is-sidebar-collapsed', collapsed);
     root.classList.toggle('sidebar-collapsed', collapsed);
+    root.classList.toggle('dashboard-sidebar-collapsed', collapsed);
+    root.classList.toggle('dlh-show-collapsed-summary', collapsed);
     btn.textContent = collapsed ? 'Mostrar filtros' : 'Ocultar filtros';
     btn.setAttribute('aria-expanded', collapsed ? 'false' : 'true');
   };
