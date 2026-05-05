@@ -2045,6 +2045,7 @@ function setupSidebarToggle(){
       sidebar.hidden = !mobileOpen;
       sidebar.setAttribute('aria-hidden', mobileOpen ? 'false' : 'true');
       sidebar.classList.toggle('is-open', mobileOpen);
+      root.classList.toggle('dlh-show-collapsed-summary', !mobileOpen);
       btn.textContent = mobileOpen ? 'Cerrar filtros' : 'Mostrar filtros';
       btn.setAttribute('aria-expanded', mobileOpen ? 'true' : 'false');
       return;
@@ -2057,6 +2058,7 @@ function setupSidebarToggle(){
     layout.classList.toggle('is-sidebar-collapsed', collapsed);
     root.classList.toggle('sidebar-collapsed', collapsed);
     root.classList.toggle('dashboard-sidebar-collapsed', collapsed);
+    root.classList.toggle('dlh-show-collapsed-summary', collapsed);
     btn.textContent = collapsed ? 'Mostrar filtros' : 'Ocultar filtros';
     btn.setAttribute('aria-expanded', collapsed ? 'false' : 'true');
   };

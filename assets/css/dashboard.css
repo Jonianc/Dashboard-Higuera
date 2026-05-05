@@ -1140,6 +1140,7 @@ button.filter-chip:hover{border-color:var(--chip-active-border)}
   background:var(--surface);
 }
 .sidebar-collapsed-summary{
+  display:none;
   min-width:0;
   color:var(--muted);
   font-size:12px;
@@ -1147,6 +1148,15 @@ button.filter-chip:hover{border-color:var(--chip-active-border)}
   white-space:nowrap;
   overflow:hidden;
   text-overflow:ellipsis;
+}
+#dashboard-higuera-wrapper.dlh-show-collapsed-summary .sidebar-collapsed-summary{
+  display:block;
+}
+#dashboard-higuera-wrapper:not(.dlh-show-collapsed-summary) .dashboard-layout-toolbar{
+  justify-content:flex-end;
+  padding:6px 8px;
+  border-color:transparent;
+  background:transparent;
 }
 .dashboard-main--premium{
   display:grid;

@@ -1,3 +1,8 @@
+## 1.30.9 - 2026-05-05
+- UX sidebar ocultable: se elimina duplicación de contexto; el resumen global de filtros activos ahora solo se muestra cuando el sidebar está oculto.
+- UX toolbar: con sidebar visible la barra superior se compacta y prioriza el botón; con sidebar oculto mantiene resumen compacto + acción `Mostrar filtros`.
+- Compatibilidad: sin cambios en cálculos, carga CSV, lógica de filtros, Rentabilidad, Comparativo ni persistencia `dlh_sidebar_collapsed`.
+
 ## 1.30.8 - 2026-05-05
 - UX sidebar oculto: barra superior integrada con botón `Mostrar/Ocultar filtros` y resumen compacto de contexto (`Filtros activos...` / `Sin filtros activos`) para evitar estado visual aislado.
 - UX layout ancho: se reduce el vacío superior en estado colapsado y se mejora integración visual del inicio del contenido principal.
