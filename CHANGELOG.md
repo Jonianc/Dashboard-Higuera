@@ -1,3 +1,8 @@
+## 1.30.5 - 2026-05-05
+- Refinamiento compacto del sidebar: encabezado superior y caja interna de filtros con menor altura visual y jerarquía más limpia.
+- Ajuste de espaciados y tamaños en grupos/chips/acciones para reducir scroll innecesario manteniendo filtros visibles y estilo actual.
+- Cuartel integrado al scroll general del sidebar (sin mini-scroll interno) y sin reintroducir overflow horizontal.
+
 ## 1.30.4 - 2026-05-05
 - Hotfix UI sidebar: se elimina overflow horizontal del panel y contenedores internos (chips/selects/acciones) con límites de ancho y `overflow-x` controlado.
 - Hotfix UI sidebar: se compacta bloque introductorio y caja interna de filtros para reducir altura y peso visual.
