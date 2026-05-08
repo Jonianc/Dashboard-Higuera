@@ -1631,11 +1631,16 @@ function renderResumenSignals(){
 function syncGlobalInvToggleUI(btn){
   if(!btn) return;
   const title = btn.querySelector('.global-inv-toggle__title');
-  const meta = btn.querySelector('.global-inv-toggle__meta');
+  const help = document.getElementById('globalInvToggleHelp');
   const on = !!hideInv2425;
-  if(title) title.textContent = on ? 'Inversiones ocultas' : 'Inversiones incluidas';
-  if(meta) meta.textContent = on ? 'Se excluyen INVERSIONES VARIAS' : 'Costos completos';
+  const label = on ? 'Sin INVERSIONES VARIAS' : 'Inversiones incluidas';
+  if(title) title.textContent = label;
   btn.setAttribute('aria-pressed', on ? 'true' : 'false');
+  btn.setAttribute('title', label);
+  btn.setAttribute('aria-label', label);
+  if(help) help.textContent = on
+    ? 'Filtro global activo. En Rentabilidad solo modifica costos; ingresos y kilos no cambian.'
+    : 'Filtro global disponible. Al activarlo se excluyen INVERSIONES VARIAS.';
   btn.classList.toggle('is-active', on);
 }
 function renderKpis(){
@@ -1673,7 +1678,6 @@ function renderActiveFilterChips(){
     const mesValue = Array.isArray(state.filtros.mes) ? (state.filtros.mes.length ? state.filtros.mes.join(', ') : 'Ninguno') : state.filtros.mes;
     chips.push({ key:'mes', value: mesValue, text:`Meses: ${mesValue}` });
   }
-  if(hideInv2425) chips.push({ key:'hideInv2425', value:'ocultas', text:'Sin INVERSIONES VARIAS' });
   wrap.innerHTML = chips.length
     ? chips.map(c=>`<button class="filter-chip" type="button" data-chip-key="${c.key}" aria-label="Quitar filtro ${c.text}"><span>${c.text}</span><span class="filter-chip-remove" aria-hidden="true">×</span></button>`).join('')
     : `<span class="filter-chip is-muted">Sin filtros activos</span>`;
@@ -1697,7 +1701,6 @@ function renderCollapsedSidebarSummary(){
     const mesTxt = Array.isArray(state.filtros.mes) ? (state.filtros.mes.length ? state.filtros.mes.join(', ') : 'Ninguno') : state.filtros.mes;
     parts.push(`Meses: ${mesTxt}`);
   }
-  if(hideInv2425) parts.push('Sin INVERSIONES VARIAS');
   node.textContent = parts.length ? `Filtros activos: ${parts.join(' · ')}` : 'Sin filtros activos';
 }
 function clearFilterChip(key){

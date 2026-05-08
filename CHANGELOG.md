@@ -1,3 +1,8 @@
+## 1.31.3 - 2026-05-08
+- UI global filtros: el control `Ocultar INVERSIONES VARIAS` se mueve al bloque superior `Filtros activos`, integrado visualmente con los chips activos.
+- UX estado: el toggle muestra `Inversiones incluidas` (apagado) y `Sin INVERSIONES VARIAS` (encendido) con estilo clickeable y estado activo claro.
+- UX texto dinámico: ayuda contextual cambia por estado del toggle y evita duplicar `Sin INVERSIONES VARIAS` en el listado de chips activos.
+
 ## 1.31.2 - 2026-05-08
 - UI global filtros: `Ocultar INVERSIONES VARIAS` se presenta como toggle de estado dentro del bloque principal de filtros, con texto dinámico de estado (`Inversiones incluidas` / `Inversiones ocultas`) y subtexto contextual.
 - UX global: se agrega leyenda aclaratoria del alcance global del filtro y que en Rentabilidad solo afecta costos (ingresos y kilos no cambian).
