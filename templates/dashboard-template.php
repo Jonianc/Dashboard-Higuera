@@ -161,7 +161,11 @@ if (!defined('ABSPATH')) {
                             <div class="field field-metrica"><label for="f_metrica">Métrica</label><select id="f_metrica"><option value="VALOR">Gasto total</option><option value="COSTO_HA">Costo por hectárea</option></select></div>
                             <div class="field field-orden"><label for="f_orden">Orden</label><select id="f_orden"><option value="Desc">Descendente</option><option value="Asc">Ascendente</option></select></div>
                             <div class="filters-master-actions filters-master-actions--toolbar">
-                                <button id="btnToggleInv2425" type="button">Ocultar INVERSIONES VARIAS</button>
+                                <button id="btnToggleInv2425" class="global-inv-toggle" type="button" aria-pressed="false" aria-describedby="globalInvToggleHelp">
+                                    <span class="global-inv-toggle__title">Inversiones incluidas</span>
+                                    <span class="global-inv-toggle__meta">Costos completos</span>
+                                </button>
+                                <p id="globalInvToggleHelp" class="global-inv-toggle-help">Filtro global activo. En Rentabilidad solo modifica costos; ingresos y kilos no cambian.</p>
                                 <button id="btnClearFilters" type="button">Limpiar filtros</button>
                                 <button id="btnResetView" type="button">Restablecer vista</button>
                             </div>

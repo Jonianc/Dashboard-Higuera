@@ -1550,3 +1550,10 @@ button.filter-chip:hover{border-color:var(--chip-active-border)}
   .filters-master-grid--tertiary .field,
   .filters-master-grid--tertiary .filters-master-actions--toolbar{grid-column:1 / -1}
 }
+
+
+.global-inv-toggle{display:flex;flex-direction:column;align-items:flex-start;justify-content:center;gap:2px;min-height:44px;padding:8px 10px;text-align:left;font-weight:700;border-width:2px;}
+.global-inv-toggle__title{font-size:12px;line-height:1.2;}
+.global-inv-toggle__meta{font-size:11px;line-height:1.2;color:var(--muted);font-weight:600;}
+.global-inv-toggle-help{margin:4px 0 0;font-size:11px;color:var(--muted);line-height:1.35;grid-column:1 / -1;}
+#btnToggleInv2425.global-inv-toggle.is-active{background:color-mix(in srgb, var(--accent) 16%, var(--surface));border-color:var(--accent);box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--accent) 65%, transparent);}

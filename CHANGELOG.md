@@ -1,3 +1,9 @@
+## 1.31.2 - 2026-05-08
+- UI global filtros: `Ocultar INVERSIONES VARIAS` se presenta como toggle de estado dentro del bloque principal de filtros, con texto dinámico de estado (`Inversiones incluidas` / `Inversiones ocultas`) y subtexto contextual.
+- UX global: se agrega leyenda aclaratoria del alcance global del filtro y que en Rentabilidad solo afecta costos (ingresos y kilos no cambian).
+- Filtros activos: al activarse el toggle se muestra chip global `Sin INVERSIONES VARIAS` junto al resto de filtros activos.
+- Accesibilidad: se mantiene control único con `aria-pressed` y navegación por teclado.
+
 ## 1.31.1 - 2026-05-08
 - Fix (Rentabilidad): detección de inversiones ahora considera coincidencia exacta normalizada en `FAENA=INVERSIONES VARIAS`, `NIVEL 2=INVERSIONES` o `NIVEL TRANSVERSAL=INVERSIONES`.
 - Fix (Ingesta detalle): `ingestCSV` e `ingestCSV2425` preservan `NIVEL_2` y `NIVEL_TRANSVERSAL` para cálculo de costos con toggle.
