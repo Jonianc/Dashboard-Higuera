@@ -1,3 +1,8 @@
+## 1.31.4 - 2026-05-08
+- UI global filtros: `Ocultar INVERSIONES VARIAS` se reubica correctamente en la barra superior global de `Filtros activos`, visible y usable incluso con el sidebar cerrado.
+- UX barra superior: el resumen de filtros activos convive con el toggle global (estado `Inversiones incluidas` / `Sin INVERSIONES VARIAS`) sin duplicar texto del estado.
+- UX ayuda dinámica: texto contextual del filtro global permanece en la barra superior y cambia según estado activo/inactivo.
+
 ## 1.31.3 - 2026-05-08
 - UI global filtros: el control `Ocultar INVERSIONES VARIAS` se mueve al bloque superior `Filtros activos`, integrado visualmente con los chips activos.
 - UX estado: el toggle muestra `Inversiones incluidas` (apagado) y `Sin INVERSIONES VARIAS` (encendido) con estilo clickeable y estado activo claro.

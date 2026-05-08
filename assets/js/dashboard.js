@@ -1683,7 +1683,7 @@ function renderActiveFilterChips(){
     : `<span class="filter-chip is-muted">Sin filtros activos</span>`;
 }
 function renderCollapsedSidebarSummary(){
-  const node = document.getElementById('sidebarCollapsedFilterSummary');
+  const node = document.getElementById('sidebarCollapsedFilterText');
   if(!node) return;
   const parts = [];
   if(state.filtros.predio !== 'Todos') parts.push(`Tipo: ${state.filtros.predio}`);

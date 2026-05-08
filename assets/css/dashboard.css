@@ -1564,3 +1564,11 @@ button.filter-chip:hover{border-color:var(--chip-active-border)}
 .global-inv-toggle--chip .global-inv-toggle__meta{display:none}
 .filters-active-panel .global-inv-toggle-help{margin:6px 0 0}
 @media (max-width:980px){.active-filters-toprow{align-items:flex-start}}
+
+.dashboard-layout-toolbar{flex-wrap:wrap;align-items:flex-start}
+.sidebar-collapsed-summary{display:flex;flex-wrap:wrap;align-items:center;gap:8px;flex:1 1 auto}
+.sidebar-collapsed-summary__label{font-weight:700;color:var(--muted)}
+.sidebar-collapsed-summary__text{color:var(--text)}
+.global-inv-toggle-help--toolbar{margin:4px 0 0;flex:1 1 100%;font-size:11px;color:var(--muted)}
+@media (min-width:981px){.dashboard-layout-toolbar .sidebar-toggle-btn{margin-left:auto}.global-inv-toggle-help--toolbar{order:3}}
+@media (max-width:980px){.dashboard-layout-toolbar{flex-direction:column;align-items:stretch}.sidebar-collapsed-summary{width:100%}}
