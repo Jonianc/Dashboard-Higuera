@@ -1,3 +1,6 @@
+## 1.31.5 - 2026-05-08
+- Fix UI (barra superior): se corrige duplicación de texto `Filtros activos:` en el resumen superior; ahora solo se renderiza el contenido de filtros activos en el nodo dinámico.
+
 ## 1.31.4 - 2026-05-08
 - UI global filtros: `Ocultar INVERSIONES VARIAS` se reubica correctamente en la barra superior global de `Filtros activos`, visible y usable incluso con el sidebar cerrado.
 - UX barra superior: el resumen de filtros activos convive con el toggle global (estado `Inversiones incluidas` / `Sin INVERSIONES VARIAS`) sin duplicar texto del estado.

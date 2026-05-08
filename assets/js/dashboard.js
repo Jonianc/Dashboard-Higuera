@@ -1701,7 +1701,7 @@ function renderCollapsedSidebarSummary(){
     const mesTxt = Array.isArray(state.filtros.mes) ? (state.filtros.mes.length ? state.filtros.mes.join(', ') : 'Ninguno') : state.filtros.mes;
     parts.push(`Meses: ${mesTxt}`);
   }
-  node.textContent = parts.length ? `Filtros activos: ${parts.join(' · ')}` : 'Sin filtros activos';
+  node.textContent = parts.length ? parts.join(' · ') : 'Sin filtros activos';
 }
 function clearFilterChip(key){
   if(key === 'hideInv2425'){
