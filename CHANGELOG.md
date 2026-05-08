@@ -1,3 +1,34 @@
+## 1.31.5 - 2026-05-08
+- Fix UI (barra superior): se corrige duplicación de texto `Filtros activos:` en el resumen superior; ahora solo se renderiza el contenido de filtros activos en el nodo dinámico.
+
+## 1.31.4 - 2026-05-08
+- UI global filtros: `Ocultar INVERSIONES VARIAS` se reubica correctamente en la barra superior global de `Filtros activos`, visible y usable incluso con el sidebar cerrado.
+- UX barra superior: el resumen de filtros activos convive con el toggle global (estado `Inversiones incluidas` / `Sin INVERSIONES VARIAS`) sin duplicar texto del estado.
+- UX ayuda dinámica: texto contextual del filtro global permanece en la barra superior y cambia según estado activo/inactivo.
+
+## 1.31.3 - 2026-05-08
+- UI global filtros: el control `Ocultar INVERSIONES VARIAS` se mueve al bloque superior `Filtros activos`, integrado visualmente con los chips activos.
+- UX estado: el toggle muestra `Inversiones incluidas` (apagado) y `Sin INVERSIONES VARIAS` (encendido) con estilo clickeable y estado activo claro.
+- UX texto dinámico: ayuda contextual cambia por estado del toggle y evita duplicar `Sin INVERSIONES VARIAS` en el listado de chips activos.
+
+## 1.31.2 - 2026-05-08
+- UI global filtros: `Ocultar INVERSIONES VARIAS` se presenta como toggle de estado dentro del bloque principal de filtros, con texto dinámico de estado (`Inversiones incluidas` / `Inversiones ocultas`) y subtexto contextual.
+- UX global: se agrega leyenda aclaratoria del alcance global del filtro y que en Rentabilidad solo afecta costos (ingresos y kilos no cambian).
+- Filtros activos: al activarse el toggle se muestra chip global `Sin INVERSIONES VARIAS` junto al resto de filtros activos.
+- Accesibilidad: se mantiene control único con `aria-pressed` y navegación por teclado.
+
+## 1.31.1 - 2026-05-08
+- Fix (Rentabilidad): detección de inversiones ahora considera coincidencia exacta normalizada en `FAENA=INVERSIONES VARIAS`, `NIVEL 2=INVERSIONES` o `NIVEL TRANSVERSAL=INVERSIONES`.
+- Fix (Ingesta detalle): `ingestCSV` e `ingestCSV2425` preservan `NIVEL_2` y `NIVEL_TRANSVERSAL` para cálculo de costos con toggle.
+- Fix (Costos Rentabilidad): cálculo por llave compuesta `PREDIO|SECTOR|CUARTEL` en `total_costos_bruto`, `total_costos_inversiones_varias` y `total_costos_sin_inversiones_varias`, con fallback a `TOTAL_COSTOS` cuando falta detalle.
+- Fix (Comparativo Rentabilidad): al abrir pestaña comparativo se asegura carga de base detallada 24-25 para descontar inversiones de forma consistente.
+
+## 1.31.0 - 2026-05-08
+- Rentabilidad (resumen/comparativo/cards/tabla): al activar `Ocultar INVERSIONES VARIAS` ahora se recalculan **solo costos** usando base detallada por `FAENA` y `CUARTEL` (25-26 y comparativo 24-25).
+- Rentabilidad: se agregan cálculos por cuartel `total_costos_bruto`, `total_costos_inversiones_varias` y `total_costos_sin_inversiones_varias` para elegir costo mostrado sin alterar ingresos ni kilos.
+- Detección de `INVERSIONES VARIAS`: normalización robusta (trim, mayúsculas, sin acentos, espacios normalizados).
+- UX discreta: en rentabilidad se muestra nota `Costos excluyen INVERSIONES VARIAS` cuando el toggle está activo.
+
 ## 1.30.9 - 2026-05-05
 - UX sidebar ocultable: se elimina duplicación de contexto; el resumen global de filtros activos ahora solo se muestra cuando el sidebar está oculto.
 - UX toolbar: con sidebar visible la barra superior se compacta y prioriza el botón; con sidebar oculto mantiene resumen compacto + acción `Mostrar filtros`.

@@ -92,7 +92,14 @@ if (!defined('ABSPATH')) {
 
         <div class="dashboard-layout dashboard-layout--premium">
             <div class="dashboard-layout-toolbar" aria-label="Controles de layout">
-                <div id="sidebarCollapsedFilterSummary" class="sidebar-collapsed-summary" aria-live="polite">Sin filtros activos</div>
+                <div id="sidebarCollapsedFilterSummary" class="sidebar-collapsed-summary" aria-live="polite">
+                    <span class="sidebar-collapsed-summary__label">Filtros activos:</span>
+                    <span id="sidebarCollapsedFilterText" class="sidebar-collapsed-summary__text">Sin filtros activos</span>
+                    <button id="btnToggleInv2425" class="global-inv-toggle global-inv-toggle--chip" type="button" aria-pressed="false" aria-describedby="globalInvToggleHelp" title="Inversiones incluidas">
+                        <span class="global-inv-toggle__title">Inversiones incluidas</span>
+                    </button>
+                </div>
+                <p id="globalInvToggleHelp" class="global-inv-toggle-help global-inv-toggle-help--toolbar">Filtro global disponible. Al activarlo se excluyen INVERSIONES VARIAS.</p>
                 <button
                     id="btnToggleSidebar"
                     class="sidebar-toggle-btn"
@@ -161,7 +168,6 @@ if (!defined('ABSPATH')) {
                             <div class="field field-metrica"><label for="f_metrica">Métrica</label><select id="f_metrica"><option value="VALOR">Gasto total</option><option value="COSTO_HA">Costo por hectárea</option></select></div>
                             <div class="field field-orden"><label for="f_orden">Orden</label><select id="f_orden"><option value="Desc">Descendente</option><option value="Asc">Ascendente</option></select></div>
                             <div class="filters-master-actions filters-master-actions--toolbar">
-                                <button id="btnToggleInv2425" type="button">Ocultar INVERSIONES VARIAS</button>
                                 <button id="btnClearFilters" type="button">Limpiar filtros</button>
                                 <button id="btnResetView" type="button">Restablecer vista</button>
                             </div>
