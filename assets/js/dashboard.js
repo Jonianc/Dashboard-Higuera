@@ -3,7 +3,8 @@ const $$ = s=>Array.from(document.querySelectorAll(s));
 const fmt = n => (n===null || n===undefined || Number.isNaN(n)) ? "—" : Math.round(n).toLocaleString('es-CL');
 const pctFmt = x => (x===null||x===undefined||Number.isNaN(x)) ? "—" : Math.round(x*100).toLocaleString('es-CL') + '%';
 const strip = s => String(s||'').trim();
-const isInversionFaena = v => strip(v||'').toUpperCase()==='INVERSIONES VARIAS';
+const normalizeFaenaName = v => normalizeHeader(String(v||'')).replace(/\s+/g,' ').trim();
+const isInversionFaena = v => normalizeFaenaName(v)==='INVERSIONES VARIAS';
 function splitLines(text){ return text.replace(/\r\n/g,'\n').replace(/\r/g,'\n').split('\n'); }
 function detectDelimiter(text){
   const sample = splitLines(text).slice(0,20).filter(l=>strip(l));
@@ -1407,6 +1408,39 @@ function applyRentabilidadFiltersToRows(sourceRows){
   }
   return rows;
 }
+
+function getRentabilidadCostMapFromDetailRows(detailRows){
+  const map = new Map();
+  (Array.isArray(detailRows) ? detailRows : []).forEach(r=>{
+    const cuartel = strip(r.CUARTEL||'');
+    if(!cuartel) return;
+    const value = Number(r.VALOR)||0;
+    if(!map.has(cuartel)) map.set(cuartel, {bruto:0, inversiones:0});
+    const item = map.get(cuartel);
+    item.bruto += value;
+    if(isInversionFaena(r.FAENA)) item.inversiones += value;
+  });
+  return map;
+}
+function enrichRentabilidadRowsWithCostBreakdown(rows, detailRows){
+  const costMap = getRentabilidadCostMapFromDetailRows(detailRows);
+  return (Array.isArray(rows) ? rows : []).map(r=>{
+    const key = strip(r.CUARTEL||'');
+    const costs = costMap.get(key);
+    const bruto = costs ? Number(costs.bruto)||0 : Number(r.TOTAL_COSTOS)||0;
+    const inversiones = costs ? Number(costs.inversiones)||0 : 0;
+    const sinInv = bruto - inversiones;
+    const totalCostos = hideInv2425 ? sinInv : bruto;
+    const totalIngresos = Number(r.TOTAL_INGRESOS)||0;
+    return Object.assign({}, r, {
+      total_costos_bruto: bruto,
+      total_costos_inversiones_varias: inversiones,
+      total_costos_sin_inversiones_varias: sinInv,
+      TOTAL_COSTOS: totalCostos,
+      RESULTADO: totalIngresos - totalCostos
+    });
+  });
+}
 function getRentMetricValue(rows, key){
   if(!rows.length) return 0;
   if(key === 'total_ingresos') return rows.reduce((a,r)=>a+(r.TOTAL_INGRESOS||0),0);
@@ -1462,7 +1496,9 @@ function renderRentabilidadResumen(){
     return;
   }
 
-  const rows = applyRentabilidadFilters();
+  const rowsBase = applyRentabilidadFilters();
+  const detailRows25 = applyFilters();
+  const rows = enrichRentabilidadRowsWithCostBreakdown(rowsBase, detailRows25);
   const activeRentTab = document.querySelector('.rent-tabs .tab.active')?.dataset?.rentTab || 'resumen';
   if(activeRentTab === 'comparativo'){
     if(rentabilidadComparativoStatus === 'error'){
@@ -1470,7 +1506,9 @@ function renderRentabilidadResumen(){
       tableWrap.innerHTML = getRentEmptyStateHTML('No se pudo cargar la base comparativa 24-25. Revisa el importador "Base comparativa rentabilidad 24-25".', 'is-error');
       return;
     }
-    const rows24 = applyRentabilidadFiltersToRows(rentabilidadData2425);
+    const rows24Base = applyRentabilidadFiltersToRows(rentabilidadData2425);
+    const detailRows24 = comp2425 && Array.isArray(comp2425.rows) ? applyRentabilidadFiltersToRows(comp2425.rows) : [];
+    const rows24 = enrichRentabilidadRowsWithCostBreakdown(rows24Base, detailRows24);
     renderRentabilidadComparativo(rows24, rows);
     return;
   }
@@ -1504,7 +1542,8 @@ function renderRentabilidadResumen(){
     ['resultado','Resultado']
   ];
   const table = data.length ? `<table class="dense-table resumen-table rent-table"><thead><tr>${headers.map(([key,label])=>`<th><button type="button" class="rent-sort-btn ${rentabilidadState.sortBy===key?'is-active':''}" data-rent-sort="${key}">${label}${rentabilidadState.sortBy===key ? `<span>${rentabilidadState.sortDir==='asc'?'↑':'↓'}</span>` : ''}</button></th>`).join('')}</tr></thead><tbody>${data.map(r=>`<tr><td>${r.CUARTEL}</td><td>${fmt(r.HECTAREAS)}</td><td>${fmt(r.KILOS_REALES)}</td><td>${fmt(r.TOTAL_INGRESOS)}</td><td>${fmt(r.TOTAL_COSTOS)}</td><td class="${r.RESULTADO<0?'is-neg-cell':'is-pos-cell'}">${fmt(r.RESULTADO)}</td></tr>`).join('')}</tbody></table>` : getRentEmptyStateHTML('No hay filas para los filtros seleccionados.');
-  tableWrap.innerHTML = table;
+  const rentNote = hideInv2425 ? '<div class="rent-filter-note">Costos excluyen INVERSIONES VARIAS</div>' : '';
+  tableWrap.innerHTML = rentNote + table;
   tableWrap.querySelectorAll('[data-rent-sort]').forEach(btn=>btn.addEventListener('click', ()=>{
     const key = btn.dataset.rentSort;
     if(rentabilidadState.sortBy === key){
