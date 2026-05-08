@@ -1,3 +1,9 @@
+## 1.31.1 - 2026-05-08
+- Fix (Rentabilidad): detección de inversiones ahora considera coincidencia exacta normalizada en `FAENA=INVERSIONES VARIAS`, `NIVEL 2=INVERSIONES` o `NIVEL TRANSVERSAL=INVERSIONES`.
+- Fix (Ingesta detalle): `ingestCSV` e `ingestCSV2425` preservan `NIVEL_2` y `NIVEL_TRANSVERSAL` para cálculo de costos con toggle.
+- Fix (Costos Rentabilidad): cálculo por llave compuesta `PREDIO|SECTOR|CUARTEL` en `total_costos_bruto`, `total_costos_inversiones_varias` y `total_costos_sin_inversiones_varias`, con fallback a `TOTAL_COSTOS` cuando falta detalle.
+- Fix (Comparativo Rentabilidad): al abrir pestaña comparativo se asegura carga de base detallada 24-25 para descontar inversiones de forma consistente.
+
 ## 1.31.0 - 2026-05-08
 - Rentabilidad (resumen/comparativo/cards/tabla): al activar `Ocultar INVERSIONES VARIAS` ahora se recalculan **solo costos** usando base detallada por `FAENA` y `CUARTEL` (25-26 y comparativo 24-25).
 - Rentabilidad: se agregan cálculos por cuartel `total_costos_bruto`, `total_costos_inversiones_varias` y `total_costos_sin_inversiones_varias` para elegir costo mostrado sin alterar ingresos ni kilos.

@@ -5,6 +5,13 @@ const pctFmt = x => (x===null||x===undefined||Number.isNaN(x)) ? "—" : Math.ro
 const strip = s => String(s||'').trim();
 const normalizeFaenaName = v => normalizeHeader(String(v||'')).replace(/\s+/g,' ').trim();
 const isInversionFaena = v => normalizeFaenaName(v)==='INVERSIONES VARIAS';
+const normalizeInversionToken = v => normalizeHeader(String(v||'')).replace(/\s+/g,' ').trim();
+const isInversionRow = row => {
+  const faena = normalizeInversionToken(row && row.FAENA);
+  const nivel2 = normalizeInversionToken(row && row.NIVEL_2);
+  const nivelTransversal = normalizeInversionToken(row && row.NIVEL_TRANSVERSAL);
+  return faena === 'INVERSIONES VARIAS' || nivel2 === 'INVERSIONES' || nivelTransversal === 'INVERSIONES';
+};
 function splitLines(text){ return text.replace(/\r\n/g,'\n').replace(/\r/g,'\n').split('\n'); }
 function detectDelimiter(text){
   const sample = splitLines(text).slice(0,20).filter(l=>strip(l));
@@ -108,6 +115,8 @@ function ingestCSV(raw){
   const iCUAR = idxOf("CUARTEL");
   const iFAEN = idxOf("FAENA");
   const iN1   = idxOf("NIVEL 1");
+  const iN2   = idxOf("NIVEL 2");
+  const iNT   = idxOf("NIVEL TRANSVERSAL");
   const iSUP  = header.findIndex(h=>normalizeHeader(h).startsWith("SUPERFICIE REAL"));
   const iTOT  = idxOf("TOTAL CUARTEL");
   const data = [];
@@ -127,6 +136,8 @@ function ingestCSV(raw){
     const CUARTEL = row[iCUAR]||"";
     const FAENA = row[iFAEN]||"";
     const NIVEL_1 = row[iN1]||"";
+    const NIVEL_2 = iN2>=0 ? (row[iN2]||"") : "";
+    const NIVEL_TRANSVERSAL = iNT>=0 ? (row[iNT]||"") : "";
     const SUP = strip(row[iSUP]||"").replace(/\./g,'').replace(',','.');
     const SUPF = SUP? parseFloat(SUP): NaN;
     const TOT = strip(row[iTOT]||"");
@@ -139,7 +150,7 @@ function ingestCSV(raw){
       data.push({
         FECHA_STR: ok? d.toISOString().slice(0,10):"",
         MES_STR: ok? `${MES_ABR[d.getMonth()]}-${String(d.getFullYear()).slice(-2)}`:"",
-        TEMPORADA: TEMP, PREDIO, SECTOR, CUARTEL, FAENA, NIVEL_1,
+        TEMPORADA: TEMP, PREDIO, SECTOR, CUARTEL, FAENA, NIVEL_1, NIVEL_2, NIVEL_TRANSVERSAL,
         VALOR: Number.isFinite(VALOR)? VALOR:0
       });
     }
@@ -161,6 +172,8 @@ function ingestCSV2425(raw){
   const iCUAR = idxOf("CUARTEL");
   const iFAEN = idxOf("FAENA");
   const iN1   = idxOf("NIVEL 1");
+  const iN2   = idxOf("NIVEL 2");
+  const iNT   = idxOf("NIVEL TRANSVERSAL");
   const iSUP  = header.findIndex(h=>normalizeHeader(h).startsWith("SUPERFICIE REAL"));
   const iTOT  = idxOf("TOTAL CUARTEL");
   const data = [];
@@ -180,6 +193,8 @@ function ingestCSV2425(raw){
     const CUARTEL = row[iCUAR]||"";
     const FAENA = row[iFAEN]||"";
     const NIVEL_1 = row[iN1]||"";
+    const NIVEL_2 = iN2>=0 ? (row[iN2]||"") : "";
+    const NIVEL_TRANSVERSAL = iNT>=0 ? (row[iNT]||"") : "";
     const SUP = strip(row[iSUP]||"").replace(/\./g,'').replace(',','.');
     const SUPF = SUP? parseFloat(SUP): NaN;
     const TOT = strip(row[iTOT]||"");
@@ -192,7 +207,7 @@ function ingestCSV2425(raw){
       data.push({
         FECHA_STR: ok? d.toISOString().slice(0,10):"",
         MES_STR: ok? `${MES_ABR[d.getMonth()]}-${String(d.getFullYear()).slice(-2)}`:"",
-        TEMPORADA: TEMP, PREDIO, SECTOR, CUARTEL, FAENA, NIVEL_1,
+        TEMPORADA: TEMP, PREDIO, SECTOR, CUARTEL, FAENA, NIVEL_1, NIVEL_2, NIVEL_TRANSVERSAL,
         VALOR: Number.isFinite(VALOR)? VALOR:0
       });
     }
@@ -413,7 +428,7 @@ function applyFilters(){
   }
   if(state.filtros.nivel1!=="Todos") rows = rows.filter(r => strip(r.NIVEL_1||"")===state.filtros.nivel1);
   if(state.filtros.faena!=="Todas") rows = rows.filter(r => strip(r.FAENA||"")===state.filtros.faena);
-  if(hideInv2425) rows = rows.filter(r => !isInversionFaena(r.FAENA));
+  if(hideInv2425) rows = rows.filter(r => !isInversionRow(r));
   if(state.filtros.mes!=="Todos"){
     const fm = state.filtros.mes;
     if(Array.isArray(fm) && fm.length){
@@ -775,7 +790,7 @@ function buildDetalle(){
         if(r.MES_STR!==fm) return false;
       }
     }
-    if(hideInv2425 && isInversionFaena(r.FAENA)) return false;
+    if(hideInv2425 && isInversionRow(r)) return false;
     return true;
   });
   const rows = (state.detalle.nivel1==="Todos")? base : base.filter(r=>strip(r.NIVEL_1||"")===state.detalle.nivel1);
@@ -894,7 +909,7 @@ function buildComparativo(){
     if(filtros.nivel1!=="Todos") out = out.filter(r => strip(r.NIVEL_1||"")===filtros.nivel1);
     if(filtros.faena!=="Todas") out = out.filter(r => strip(r.FAENA||"")===filtros.faena);
     if(hideInv2425){
-      out = out.filter(r => !isInversionFaena(r.FAENA));
+      out = out.filter(r => !isInversionRow(r));
     }
     
     if(incluirMes && filtros.mes!=="Todos"){
@@ -1382,6 +1397,25 @@ function renderRentabilidadComparativo(rows24, rows25){
     all.map(k=>{const base={hectareas:0,kilos:0,ingresos:0,costos:0,resultado:0};const v24=getRentabilidadMetricFromAgg(g24.get(k)||base, metricSel.value);const v25=getRentabilidadMetricFromAgg(g25.get(k)||base, metricSel.value);const d=v25-v24;const p=v24!==0?d/v24:0;const dCls=d<0?'is-neg-cell':'is-pos-cell';const pCls=p<0?'is-neg-cell':'is-pos-cell';return `<tr><td>${k}</td><td>${fmt(v24)}</td><td>${fmt(v25)}</td><td class="${dCls}">${fmt(d)}</td><td class="${pCls}">${pctFmt(p)}</td></tr>`;}).join('')
   }</tbody></table>`;
 }
+
+function applyRentabilidadDetailFilters(sourceRows){
+  let rows = Array.isArray(sourceRows) ? sourceRows.slice() : [];
+  if(state.filtros.predio!=="Todos"){
+    rows = rows.filter(r => (state.filtros.predio==="Solo Productivo" ? predioClas(r)==="Productivo" : predioClas(r)==="Indirectos"));
+  }
+  const selectedSectores = state.filtros.sector==="Todos"
+    ? []
+    : (Array.isArray(state.filtros.sector) ? state.filtros.sector : [state.filtros.sector]).filter(Boolean).filter(s => s !== '__COSTOS_INDIRECTOS__');
+  if(selectedSectores.length){
+    rows = rows.filter(r => selectedSectores.includes(strip(r.SECTOR||"") || "Sin dato"));
+  }
+  if(state.filtros.cuartel!=="Todos"){
+    const cuarteles = Array.isArray(state.filtros.cuartel) ? state.filtros.cuartel : [state.filtros.cuartel];
+    if(!cuarteles.length) return [];
+    rows = rows.filter(r => cuarteles.includes(strip(r.CUARTEL||"") || "—"));
+  }
+  return rows;
+}
 function applyRentabilidadFilters(){
   return applyRentabilidadFiltersToRows(rentabilidadData);
 }
@@ -1409,23 +1443,26 @@ function applyRentabilidadFiltersToRows(sourceRows){
   return rows;
 }
 
+function getRentabilidadCompoundKey(row){
+  return [strip(row.PREDIO||''), strip(row.SECTOR||''), strip(row.CUARTEL||'')].join('|');
+}
 function getRentabilidadCostMapFromDetailRows(detailRows){
   const map = new Map();
   (Array.isArray(detailRows) ? detailRows : []).forEach(r=>{
-    const cuartel = strip(r.CUARTEL||'');
-    if(!cuartel) return;
+    const key = getRentabilidadCompoundKey(r);
+    if(key === '||') return;
     const value = Number(r.VALOR)||0;
-    if(!map.has(cuartel)) map.set(cuartel, {bruto:0, inversiones:0});
-    const item = map.get(cuartel);
+    if(!map.has(key)) map.set(key, {bruto:0, inversiones:0});
+    const item = map.get(key);
     item.bruto += value;
-    if(isInversionFaena(r.FAENA)) item.inversiones += value;
+    if(isInversionRow(r)) item.inversiones += value;
   });
   return map;
 }
 function enrichRentabilidadRowsWithCostBreakdown(rows, detailRows){
   const costMap = getRentabilidadCostMapFromDetailRows(detailRows);
   return (Array.isArray(rows) ? rows : []).map(r=>{
-    const key = strip(r.CUARTEL||'');
+    const key = getRentabilidadCompoundKey(r);
     const costs = costMap.get(key);
     const bruto = costs ? Number(costs.bruto)||0 : Number(r.TOTAL_COSTOS)||0;
     const inversiones = costs ? Number(costs.inversiones)||0 : 0;
@@ -1497,7 +1534,7 @@ function renderRentabilidadResumen(){
   }
 
   const rowsBase = applyRentabilidadFilters();
-  const detailRows25 = applyFilters();
+  const detailRows25 = applyRentabilidadDetailFilters(state.data);
   const rows = enrichRentabilidadRowsWithCostBreakdown(rowsBase, detailRows25);
   const activeRentTab = document.querySelector('.rent-tabs .tab.active')?.dataset?.rentTab || 'resumen';
   if(activeRentTab === 'comparativo'){
@@ -1507,7 +1544,13 @@ function renderRentabilidadResumen(){
       return;
     }
     const rows24Base = applyRentabilidadFiltersToRows(rentabilidadData2425);
-    const detailRows24 = comp2425 && Array.isArray(comp2425.rows) ? applyRentabilidadFiltersToRows(comp2425.rows) : [];
+    if(comp2425Status === 'idle' || comp2425Status === 'loading'){
+      cardsWrap.innerHTML = '';
+      tableWrap.innerHTML = getRentEmptyStateHTML('Cargando base detallada 24-25 para comparativo de rentabilidad…', 'is-loading');
+      ensureComparativo2425Data().then(()=>renderRentabilidadResumen());
+      return;
+    }
+    const detailRows24 = comp2425 && Array.isArray(comp2425.rows) ? applyRentabilidadDetailFilters(comp2425.rows) : [];
     const rows24 = enrichRentabilidadRowsWithCostBreakdown(rows24Base, detailRows24);
     renderRentabilidadComparativo(rows24, rows);
     return;
