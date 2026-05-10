@@ -92,23 +92,26 @@ if (!defined('ABSPATH')) {
 
         <div class="dashboard-layout dashboard-layout--premium">
             <div class="dashboard-layout-toolbar" aria-label="Controles de layout">
-                <div id="sidebarCollapsedFilterSummary" class="sidebar-collapsed-summary" aria-live="polite">
-                    <span class="sidebar-collapsed-summary__label">Filtros activos:</span>
-                    <span id="sidebarCollapsedFilterText" class="sidebar-collapsed-summary__text">Sin filtros activos</span>
+                <div id="sidebarCollapsedFilterSummary" class="sidebar-collapsed-summary context-filters-bar" aria-live="polite">
+                    <div class="context-filters-head">
+                        <span class="context-filters-icon" aria-hidden="true">⛃</span>
+                        <span class="sidebar-collapsed-summary__label">Filtros activos</span>
+                    </div>
+                    <div id="sidebarCollapsedFilterText" class="sidebar-collapsed-summary__text context-filters-chips"><span class="filter-chip is-muted">Sin filtros activos</span></div>
                     <button id="btnToggleInv2425" class="global-inv-toggle global-inv-toggle--chip" type="button" aria-pressed="false" aria-describedby="globalInvToggleHelp" title="Inversiones incluidas">
                         <span class="global-inv-toggle__title">Inversiones incluidas</span>
                     </button>
+                    <button
+                        id="btnToggleSidebar"
+                        class="sidebar-toggle-btn"
+                        type="button"
+                        aria-controls="dashboard-sidebar"
+                        aria-expanded="true"
+                    >
+                        Ocultar filtros
+                    </button>
+                    <p id="globalInvToggleHelp" class="global-inv-toggle-help global-inv-toggle-help--toolbar">Filtro global disponible. Al activarlo se excluyen INVERSIONES VARIAS.</p>
                 </div>
-                <p id="globalInvToggleHelp" class="global-inv-toggle-help global-inv-toggle-help--toolbar">Filtro global disponible. Al activarlo se excluyen INVERSIONES VARIAS.</p>
-                <button
-                    id="btnToggleSidebar"
-                    class="sidebar-toggle-btn"
-                    type="button"
-                    aria-controls="dashboard-sidebar"
-                    aria-expanded="true"
-                >
-                    Ocultar filtros
-                </button>
             </div>
             <main class="dashboard-main dashboard-main--premium">
                 <section id="dashboard-sidebar" class="card dashboard-command dashboard-command--compact" aria-label="Controles principales del dashboard">
@@ -128,11 +131,6 @@ if (!defined('ABSPATH')) {
                                 <strong id="dashboardMetaGenerated">—</strong>
                             </div>
                         </div>
-                    </div>
-
-                    <div class="filters-active-panel" aria-label="Filtros activos">
-                        <span class="filters-active-label">Filtros activos</span>
-                        <section id="active-filters-chips" class="active-filters-chips active-filters-chips--premium"></section>
                     </div>
 
                     <div class="filters-toolbar filters-toolbar--primary">

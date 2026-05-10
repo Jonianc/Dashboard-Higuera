@@ -1,3 +1,19 @@
+## 1.31.8 - 2026-05-10
+- UI: se elimina la duplicación visual de `Filtros activos` dentro del sidebar (se retira el bloque interno duplicado).
+- UX: la context bar global superior queda como única zona visible de chips y estado activo de filtros.
+- Compatibilidad: sin cambios en cálculos ni lógica de datos/filtros/rentabilidad/comparativo/API.
+
+## 1.31.7 - 2026-05-10
+- Corrección UI: la context bar global `Filtros activos` queda visible permanentemente sobre las KPIs, con sidebar abierto o colapsado.
+- Corrección estructural: el botón `Ocultar filtros` / `Mostrar filtros` se integra dentro de la misma barra global.
+- Se mantiene intacta la lógica de datos, cálculos, filtros, rentabilidad, comparativo y API.
+
+## 1.31.6 - 2026-05-10
+- Refinamiento visual de la barra global `Filtros activos` como context bar superior con jerarquía más clara, chips compactos y estado vacío limpio (`Sin filtros activos`).
+- Integración visual del toggle global como pastilla destacada con estados `Inversiones incluidas` / `Sin INVERSIONES VARIAS`, manteniendo la lógica existente.
+- Mejora de ubicación del botón `Ocultar filtros` / `Mostrar filtros`, alineado dentro de la barra superior.
+- Compatibilidad: sin cambios en cálculos, lógica de filtros/datos, rentabilidad, comparativo ni API.
+
 ## 1.31.5 - 2026-05-08
 - Fix UI (barra superior): se corrige duplicación de texto `Filtros activos:` en el resumen superior; ahora solo se renderiza el contenido de filtros activos en el nodo dinámico.
 
