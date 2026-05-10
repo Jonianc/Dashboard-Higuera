@@ -1594,3 +1594,75 @@ button.filter-chip:hover{border-color:var(--chip-active-border)}
   .sidebar-collapsed-summary__text.context-filters-chips{overflow-x:auto;flex-wrap:nowrap;padding-bottom:2px}
   .context-filters-bar .sidebar-toggle-btn{margin-left:0;width:100%}
 }
+
+/* Sidebar filters refinement 1.31.9 */
+.filters-toolbar--primary{
+  gap:12px;
+  padding:12px;
+  background:color-mix(in srgb,var(--surface-2) 82%, white);
+}
+.filters-section{
+  display:grid;
+  gap:10px;
+  padding:11px 12px;
+  border:1px solid color-mix(in srgb,var(--border) 88%, transparent);
+  border-radius:14px;
+  background:color-mix(in srgb,var(--surface) 90%, var(--surface-2));
+}
+.filters-section + .filters-section{margin-top:2px}
+.filters-section-title{
+  margin:0;
+  font-size:12px;
+  line-height:1.2;
+  letter-spacing:.04em;
+  text-transform:uppercase;
+  color:var(--accent-strong);
+}
+.filters-section .filters-master-grid--category,
+.filters-section .filters-master-grid--secondary,
+.filters-section .filters-master-grid--tertiary{
+  margin-top:0;
+  padding-top:0;
+  border-top:0;
+}
+.filters-section .field{gap:7px}
+.filters-section .field label{font-size:11px;font-weight:700;letter-spacing:.02em}
+.filters-section .field select,
+.filters-section .mes-dropdown-btn{
+  min-height:40px;
+  border-radius:12px;
+  transition:border-color .18s ease, box-shadow .18s ease, background-color .18s ease;
+}
+.filters-section .field select:hover,
+.filters-section .mes-dropdown-btn:hover{border-color:color-mix(in srgb,var(--accent) 42%, var(--border));}
+.filters-section .field select:focus,
+.filters-section .mes-dropdown-btn:focus,
+.filters-section .field select:focus-visible,
+.filters-section .mes-dropdown-btn:focus-visible{
+  outline:none;
+  border-color:var(--accent);
+  box-shadow:0 0 0 3px color-mix(in srgb,var(--accent) 22%, transparent);
+}
+.filters-master-actions--sidebar-bottom{
+  display:grid;
+  grid-template-columns:1fr;
+  gap:8px;
+  margin-top:6px;
+}
+.filters-master-actions--sidebar-bottom #btnClearFilters,
+.filters-master-actions--sidebar-bottom #btnResetView{width:100%;min-height:42px}
+.filters-master-actions--sidebar-bottom #btnClearFilters{font-weight:700}
+
+#dashboard-higuera-wrapper[data-theme="dark"] .filters-section{
+  background:color-mix(in srgb,#000 90%, #101010);
+  border-color:#2a2a2a;
+}
+
+@media (max-width: 960px){
+  .filters-toolbar--primary{padding:10px}
+  .filters-section{padding:10px}
+  .filters-master-grid--secondary .field-faena,
+  .filters-master-grid--secondary .field-meses--premium,
+  .filters-master-grid--tertiary .field-metrica,
+  .filters-master-grid--tertiary .field-orden{grid-column:1 / -1}
+}

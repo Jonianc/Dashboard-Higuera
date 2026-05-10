@@ -1,3 +1,9 @@
+## 1.31.9 - 2026-05-10
+- Refinamiento visual del sidebar de filtros para mejorar escaneo, jerarquía y legibilidad, sin cambios funcionales.
+- Agrupación de controles en secciones `Base`, `Detalle` y `Vista` con separación visual y espaciado consistente.
+- Mejora de acciones inferiores: `Limpiar filtros` como acción principal visual y `Restablecer vista` como secundaria, agrupadas al final.
+- Compatibilidad: sin cambios en cálculos, lógica de filtros, datos/API, rentabilidad ni comparativo.
+
 ## 1.31.8 - 2026-05-10
 - UI: se elimina la duplicación visual de `Filtros activos` dentro del sidebar (se retira el bloque interno duplicado).
 - UX: la context bar global superior queda como única zona visible de chips y estado activo de filtros.
