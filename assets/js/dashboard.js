@@ -1685,23 +1685,25 @@ function renderActiveFilterChips(){
 function renderCollapsedSidebarSummary(){
   const node = document.getElementById('sidebarCollapsedFilterText');
   if(!node) return;
-  const parts = [];
-  if(state.filtros.predio !== 'Todos') parts.push(`Tipo: ${state.filtros.predio}`);
+  const chips = [];
+  if(state.filtros.predio !== 'Todos') chips.push({ key:'predio', text:`Tipo: ${state.filtros.predio}` });
   if(state.filtros.sector !== 'Todos'){
     const sectorTxt = Array.isArray(state.filtros.sector) ? (state.filtros.sector.length ? state.filtros.sector.join(', ') : 'Ninguno') : state.filtros.sector;
-    parts.push(`Cultivo: ${sectorTxt}`);
+    chips.push({ key:'sector', text:`Cultivo: ${sectorTxt}` });
   }
   if(state.filtros.cuartel !== 'Todos'){
     const cuTxt = Array.isArray(state.filtros.cuartel) ? (state.filtros.cuartel.length ? state.filtros.cuartel.join(', ') : 'Ninguno') : state.filtros.cuartel;
-    parts.push(`Cuartel: ${cuTxt}`);
+    chips.push({ key:'cuartel', text:`Cuartel: ${cuTxt}` });
   }
-  if(state.filtros.nivel1 !== 'Todos') parts.push(`Categoría: ${state.filtros.nivel1}`);
-  if(state.filtros.faena !== 'Todas') parts.push(`Faena: ${state.filtros.faena}`);
+  if(state.filtros.nivel1 !== 'Todos') chips.push({ key:'nivel1', text:`Categoría: ${state.filtros.nivel1}` });
+  if(state.filtros.faena !== 'Todas') chips.push({ key:'faena', text:`Faena: ${state.filtros.faena}` });
   if(state.filtros.mes !== 'Todos'){
     const mesTxt = Array.isArray(state.filtros.mes) ? (state.filtros.mes.length ? state.filtros.mes.join(', ') : 'Ninguno') : state.filtros.mes;
-    parts.push(`Meses: ${mesTxt}`);
+    chips.push({ key:'mes', text:`Meses: ${mesTxt}` });
   }
-  node.textContent = parts.length ? parts.join(' · ') : 'Sin filtros activos';
+  node.innerHTML = chips.length
+    ? chips.map(c=>`<button class="filter-chip filter-chip--context" type="button" data-chip-key="${c.key}" aria-label="Quitar filtro ${c.text}"><span>${c.text}</span><span class="filter-chip-remove" aria-hidden="true">×</span></button>`).join('')
+    : '<span class="filter-chip is-muted">Sin filtros activos</span>';
 }
 function clearFilterChip(key){
   if(key === 'hideInv2425'){

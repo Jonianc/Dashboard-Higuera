@@ -1,3 +1,9 @@
+## 1.31.6 - 2026-05-10
+- Refinamiento visual de la barra global `Filtros activos` como context bar superior con jerarquía más clara, chips compactos y estado vacío limpio (`Sin filtros activos`).
+- Integración visual del toggle global como pastilla destacada con estados `Inversiones incluidas` / `Sin INVERSIONES VARIAS`, manteniendo la lógica existente.
+- Mejora de ubicación del botón `Ocultar filtros` / `Mostrar filtros`, alineado dentro de la barra superior.
+- Compatibilidad: sin cambios en cálculos, lógica de filtros/datos, rentabilidad, comparativo ni API.
+
 ## 1.31.5 - 2026-05-08
 - Fix UI (barra superior): se corrige duplicación de texto `Filtros activos:` en el resumen superior; ahora solo se renderiza el contenido de filtros activos en el nodo dinámico.
 
