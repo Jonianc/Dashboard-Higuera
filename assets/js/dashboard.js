@@ -1661,6 +1661,7 @@ function renderKpis(){
 }
 function renderActiveFilterChips(){
   const wrap = document.getElementById('active-filters-chips');
+  // Compatibilidad: si el contenedor interno no existe (UI consolidada en context bar), no hacer nada.
   if(!wrap) return;
   const chips = [];
   if(state.filtros.predio !== 'Todos') chips.push({ key:'predio', value: state.filtros.predio, text:`Tipo de registro: ${state.filtros.predio}` });

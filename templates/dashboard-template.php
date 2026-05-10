@@ -133,11 +133,6 @@ if (!defined('ABSPATH')) {
                         </div>
                     </div>
 
-                    <div class="filters-active-panel" aria-label="Filtros activos">
-                        <span class="filters-active-label">Filtros activos</span>
-                        <section id="active-filters-chips" class="active-filters-chips active-filters-chips--premium"></section>
-                    </div>
-
                     <div class="filters-toolbar filters-toolbar--primary">
                         <div class="filters-toolbar-copy">
                             <span class="filters-toolbar-kicker">Filtros</span>

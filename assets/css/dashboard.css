@@ -1559,7 +1559,6 @@ button.filter-chip:hover{border-color:var(--chip-active-border)}
   background:color-mix(in srgb,var(--accent) 6%, var(--surface));
 }
 #btnToggleInv2425.global-inv-toggle--chip.is-active .global-inv-toggle__title::before{content:"✓";color:var(--accent)}
-.filters-active-panel .global-inv-toggle-help{margin:6px 0 0}
 @media (max-width:980px){.active-filters-toprow{align-items:flex-start}}
 
 .dashboard-layout-toolbar{flex-wrap:wrap;align-items:flex-start}

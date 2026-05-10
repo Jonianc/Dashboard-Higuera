@@ -1,3 +1,8 @@
+## 1.31.8 - 2026-05-10
+- UI: se elimina la duplicación visual de `Filtros activos` dentro del sidebar (se retira el bloque interno duplicado).
+- UX: la context bar global superior queda como única zona visible de chips y estado activo de filtros.
+- Compatibilidad: sin cambios en cálculos ni lógica de datos/filtros/rentabilidad/comparativo/API.
+
 ## 1.31.7 - 2026-05-10
 - Corrección UI: la context bar global `Filtros activos` queda visible permanentemente sobre las KPIs, con sidebar abierto o colapsado.
 - Corrección estructural: el botón `Ocultar filtros` / `Mostrar filtros` se integra dentro de la misma barra global.
