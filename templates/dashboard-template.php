@@ -137,35 +137,47 @@ if (!defined('ABSPATH')) {
                         <div class="filters-toolbar-copy">
                             <span class="filters-toolbar-kicker">Filtros</span>
                         </div>
-                        <div class="filters-master-grid filters-master-grid--primary">
-                            <div class="field field-predio"><label for="f_predio">Tipo de registro</label><select id="f_predio" class="hidden"><option>Todos</option></select><div id="f_predio_chips" class="filter-chip-group" role="group" aria-label="Tipo de registro"></div></div>
-                            <div class="field field-cultivo"><label for="f_cultivo">Cultivos</label><select id="f_cultivo" class="hidden"><option>Todos</option></select><div id="f_cultivo_chips" class="cultivo-chips" role="group" aria-label="Cultivos"></div></div>
-                            <div class="field field-cuartel hidden">
-                                <label for="f_cuartel">Cuartel</label>
-                                <div id="f_cuartel" class="cuartel-chip-control" data-value="Todos">
-                                    <div id="f_cuartel_chips" class="filter-chip-group cuartel-chips" role="group" aria-label="Cuartel"></div>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="filters-master-grid filters-master-grid--category filters-master-grid--compact">
-                            <div class="field field-categoria"><label for="f_n1">Categoría</label><select id="f_n1"><option>Todos</option></select><div id="f_n1_chips" class="filter-chip-group hidden" role="group" aria-label="Categoría"></div></div>
-                        </div>
-                        <div class="filters-master-grid filters-master-grid--secondary">
-                            <div class="field field-faena"><label for="f_faena">Faena</label><select id="f_faena"><option>Todas</option></select></div>
-                            <div class="field field-meses field-meses--premium">
-                                <label for="f_mes">Meses</label>
-                                <div id="f_mes" class="mes-dropdown">
-                                    <button type="button" class="mes-dropdown-btn" aria-haspopup="true" aria-expanded="false"><span class="mes-label">Todos</span><span class="arrow">▼</span></button>
-                                    <div class="mes-dropdown-panel">
-                                        <div class="mes-dropdown-item todos"><input type="checkbox" id="mes_todos" checked><label for="mes_todos">Seleccionar todos</label></div>
+
+                        <div class="filters-section filters-section--base" aria-label="Sección base">
+                            <h3 class="filters-section-title">Base</h3>
+                            <div class="filters-master-grid filters-master-grid--primary">
+                                <div class="field field-predio"><label for="f_predio">Tipo de registro</label><select id="f_predio" class="hidden"><option>Todos</option></select><div id="f_predio_chips" class="filter-chip-group" role="group" aria-label="Tipo de registro"></div></div>
+                                <div class="field field-cultivo"><label for="f_cultivo">Cultivo</label><select id="f_cultivo" class="hidden"><option>Todos</option></select><div id="f_cultivo_chips" class="cultivo-chips" role="group" aria-label="Cultivo"></div></div>
+                                <div class="field field-cuartel hidden">
+                                    <label for="f_cuartel">Cuartel</label>
+                                    <div id="f_cuartel" class="cuartel-chip-control" data-value="Todos">
+                                        <div id="f_cuartel_chips" class="filter-chip-group cuartel-chips" role="group" aria-label="Cuartel"></div>
                                     </div>
                                 </div>
                             </div>
                         </div>
-                        <div class="filters-master-grid filters-master-grid--tertiary">
-                            <div class="field field-metrica"><label for="f_metrica">Métrica</label><select id="f_metrica"><option value="VALOR">Gasto total</option><option value="COSTO_HA">Costo por hectárea</option></select></div>
-                            <div class="field field-orden"><label for="f_orden">Orden</label><select id="f_orden"><option value="Desc">Descendente</option><option value="Asc">Ascendente</option></select></div>
-                            <div class="filters-master-actions filters-master-actions--toolbar">
+
+                        <div class="filters-section filters-section--detalle" aria-label="Sección detalle">
+                            <h3 class="filters-section-title">Detalle</h3>
+                            <div class="filters-master-grid filters-master-grid--category filters-master-grid--compact">
+                                <div class="field field-categoria"><label for="f_n1">Categoría</label><select id="f_n1"><option>Todos</option></select><div id="f_n1_chips" class="filter-chip-group hidden" role="group" aria-label="Categoría"></div></div>
+                            </div>
+                            <div class="filters-master-grid filters-master-grid--secondary">
+                                <div class="field field-faena"><label for="f_faena">Faena</label><select id="f_faena"><option>Todas</option></select></div>
+                                <div class="field field-meses field-meses--premium">
+                                    <label for="f_mes">Meses</label>
+                                    <div id="f_mes" class="mes-dropdown">
+                                        <button type="button" class="mes-dropdown-btn" aria-haspopup="true" aria-expanded="false"><span class="mes-label">Todos</span><span class="arrow">▼</span></button>
+                                        <div class="mes-dropdown-panel">
+                                            <div class="mes-dropdown-item todos"><input type="checkbox" id="mes_todos" checked><label for="mes_todos">Seleccionar todos</label></div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="filters-section filters-section--vista" aria-label="Sección vista">
+                            <h3 class="filters-section-title">Vista</h3>
+                            <div class="filters-master-grid filters-master-grid--tertiary">
+                                <div class="field field-metrica"><label for="f_metrica">Métrica</label><select id="f_metrica"><option value="VALOR">Gasto total</option><option value="COSTO_HA">Costo por hectárea</option></select></div>
+                                <div class="field field-orden"><label for="f_orden">Orden</label><select id="f_orden"><option value="Desc">Descendente</option><option value="Asc">Ascendente</option></select></div>
+                            </div>
+                            <div class="filters-master-actions filters-master-actions--sidebar-bottom">
                                 <button id="btnClearFilters" type="button">Limpiar filtros</button>
                                 <button id="btnResetView" type="button">Restablecer vista</button>
                             </div>
