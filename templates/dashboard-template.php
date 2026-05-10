@@ -101,17 +101,17 @@ if (!defined('ABSPATH')) {
                     <button id="btnToggleInv2425" class="global-inv-toggle global-inv-toggle--chip" type="button" aria-pressed="false" aria-describedby="globalInvToggleHelp" title="Inversiones incluidas">
                         <span class="global-inv-toggle__title">Inversiones incluidas</span>
                     </button>
+                    <button
+                        id="btnToggleSidebar"
+                        class="sidebar-toggle-btn"
+                        type="button"
+                        aria-controls="dashboard-sidebar"
+                        aria-expanded="true"
+                    >
+                        Ocultar filtros
+                    </button>
                     <p id="globalInvToggleHelp" class="global-inv-toggle-help global-inv-toggle-help--toolbar">Filtro global disponible. Al activarlo se excluyen INVERSIONES VARIAS.</p>
                 </div>
-                <button
-                    id="btnToggleSidebar"
-                    class="sidebar-toggle-btn"
-                    type="button"
-                    aria-controls="dashboard-sidebar"
-                    aria-expanded="true"
-                >
-                    Ocultar filtros
-                </button>
             </div>
             <main class="dashboard-main dashboard-main--premium">
                 <section id="dashboard-sidebar" class="card dashboard-command dashboard-command--compact" aria-label="Controles principales del dashboard">

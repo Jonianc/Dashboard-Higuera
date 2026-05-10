@@ -3,7 +3,7 @@
  * Plugin Name: Dashboard La Higuera
  * Plugin URI: https://github.com/Jonianc/Dashboard-Higuera
  * Description: Dashboard interactivo para visualizar datos de costos y faenas de Agrícola La Higuera
- * Version: 1.31.6
+ * Version: 1.31.7
  * Author: Agrícola La Higuera S.A.
  * Author URI: https://lahiguera.cl
  * License: GPL v2 or later
@@ -18,7 +18,7 @@ if (!defined('WPINC')) {
 }
 
 // Definir constantes del plugin
-define('DASHBOARD_HIGUERA_VERSION', '1.31.6');
+define('DASHBOARD_HIGUERA_VERSION', '1.31.7');
 define('DASHBOARD_HIGUERA_PLUGIN_DIR', plugin_dir_path(__FILE__));
 define('DASHBOARD_HIGUERA_PLUGIN_URL', plugin_dir_url(__FILE__));
 

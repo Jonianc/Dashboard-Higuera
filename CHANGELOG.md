@@ -1,3 +1,8 @@
+## 1.31.7 - 2026-05-10
+- Corrección UI: la context bar global `Filtros activos` queda visible permanentemente sobre las KPIs, con sidebar abierto o colapsado.
+- Corrección estructural: el botón `Ocultar filtros` / `Mostrar filtros` se integra dentro de la misma barra global.
+- Se mantiene intacta la lógica de datos, cálculos, filtros, rentabilidad, comparativo y API.
+
 ## 1.31.6 - 2026-05-10
 - Refinamiento visual de la barra global `Filtros activos` como context bar superior con jerarquía más clara, chips compactos y estado vacío limpio (`Sin filtros activos`).
 - Integración visual del toggle global como pastilla destacada con estados `Inversiones incluidas` / `Sin INVERSIONES VARIAS`, manteniendo la lógica existente.
